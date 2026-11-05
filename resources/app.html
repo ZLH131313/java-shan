@@ -1306,6 +1306,10 @@ $('phoneBtn').onclick = function(){
 };
 window.__onBridgeReady = boot;
 if (window.bridge) boot();
+else if (/^https?:$/.test(location.protocol)) {
+  /* 手机/电脑浏览器直接打开: 没有 Java 桥接, 用 HTTP 接口启动(本脚本在 body 末尾, DOM 已就绪) */
+  boot();
+}
 </script>
 </body>
 </html>
