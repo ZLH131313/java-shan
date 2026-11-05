@@ -111,4 +111,12 @@ public class Bridge {
     /** 手机访问服务的地址(由 App 启动后回填), 界面 📱 按钮展示用 */
     public volatile String webUrl = "";
     public String webUrl() { return webUrl; }
+
+    /** 用系统默认浏览器打开(手机访问弹窗里的按钮); 用 cmd start 规避字段名 java 与包名冲突 */
+    public void openUrl(String url) {
+        try {
+            new ProcessBuilder("cmd", "/c", "start", "", url).start();
+        } catch (Exception ignored) {
+        }
+    }
 }
