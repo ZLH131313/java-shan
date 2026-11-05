@@ -99,8 +99,11 @@ cp cards-java.jsonl demos-java.jsonl cards-algo.jsonl demos-algo.jsonl cards-co.
 2. 界面改动保持在 app.html 单文件内, 离线自包含, 遵守第六节性能纪律
 3. 加课程步骤: 写 cards-X.jsonl/demos-X.jsonl → Engine 加 X_CHAPTERS → Bridge 加实例+of()映射 → WebServer.course() 加映射 → app.html 加标签和 switchCourse 分支 → 自测/打包
 4. 用户沟通用中文; 交付说明路径与验证方法; 测试要拿数据说话(本项目的传统)
+5. **Git 纪律**: 本项目已用 Git 管理(仓库在项目根目录, 主分支 main)。每完成一项修改必须提交: `git add -A && git commit -m "简述改了什么"`; 修复 bug 时先确认能回到上一版本(`git log --oneline` 查历史, `git checkout -- 文件` 回退单文件)。禁止提交 out/dist/dist-input/jfx(见 .gitignore)。改动较大或拿不准时, 先提交一次"保存点"再动手。
+6. 历史上可能有多个不同 agent 参与开发(本项目已发生过): 发现不认识的代码先读注释和 git log, 不要假设是错误而删除。
 
 ## 九、变更记录(每次对话后追加)
 
 - 2026-11-04: v1 初版(控制台50卡) → 图形版(JavaFX WebView, 209卡8章)
 - 2026-11-05: 错题本/当场重做/音效/会话续做/键盘答题(含IME)/选项洗牌/看答案(K)/概念词典/代码演示/新图标/分色toast淡入淡出; 三课程(Java/算法/计组); 手机访问服务; 一系列 JavaFX 深坑修复(详见第六节)
+- 2026-11-05(晚): 项目纳入 Git 管理(main 分支, .gitignore 排除构建产物与 jfx SDK); 发现并确认外部新增的「每日打卡」功能(CheckinStore.java, 答满10张打卡/连续统计, 已接线并随包部署, 来源为另一 agent 或用户本人)
