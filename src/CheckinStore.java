@@ -35,7 +35,13 @@ public class CheckinStore {
 
     static CheckinStore load(Path file) throws IOException {
         CheckinStore store = new CheckinStore(file);
-        if (!Files.exists(file)) return store;
+        readInto(file, store.counts);
+        return store;
+    }
+
+    /** 解析 checkin.jsonl(坏行直接跳过, 不让打卡功能整体失效) */
+    private static void readInto(Path file, Map<String, Integer> into) throws IOException {
+        if (!Files.exists(file)) return;
         Pattern kv = Pattern.compile("\"(\\w+)\"\\s*:\\s*(\"([^\"]*)\"|-?\\d+)");
         for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
             line = line.trim();
@@ -47,13 +53,13 @@ public class CheckinStore {
                 raw.put(m.group(1), value.startsWith("\"") ? m.group(3) : value);
             }
             String d = raw.get("d");
-            if (d == null || !raw.containsKey("n")) continue;      // 坏行直接跳过, 不让打卡功能整体失效
+            if (d == null || !raw.containsKey("n")) continue;
             try {
-                store.counts.put(LocalDate.parse(d).toString(), Integer.parseInt(raw.get("n")));
+                String key = LocalDate.parse(d).toString();      // 顺手校验日期格式, 垃圾键不进统计
+                into.merge(key, Integer.parseInt(raw.get("n")), Math::max);
             } catch (RuntimeException ignored) {
             }
         }
-        return store;
     }
 
     /** 写盘失败不能打断答题, 因此静默忽略(进度文件本身另有 SrsStore 兜底) */
@@ -68,9 +74,18 @@ public class CheckinStore {
         }
     }
 
-    /** 每答一张卡调用一次 */
+    /** 每答一张卡调用一次(写盘前先吸收磁盘变化, 多实例/手机端同时在线也不丢计数) */
     synchronized void tick() {
+        syncFromDisk();
         addDay(LocalDate.now().toString(), 1);
+    }
+
+    /** 与文件对齐: 同一天取较大值, 所以永远不会倒退, 只是不让别的实例(另一个窗口或手机)白答 */
+    private void syncFromDisk() {
+        try {
+            readInto(file, counts);
+        } catch (IOException ignored) {
+        }
     }
 
     /** 给某天加 n 张(自测与未来可能的补录都走这里) */
@@ -217,6 +232,19 @@ public class CheckinStore {
         Files.write(bad, java.util.List.of("{oops}", "{\"d\":\"2026-01-01\",\"n\":12}", "   "), StandardCharsets.UTF_8);
         String s5 = CheckinStore.load(bad).statusJson();
         System.out.println("[测试] 坏行不影响读取(应 total=1): " + s5);
+
+        /* 多实例并发(桌面开两个窗口 / 手机同时在线): 写盘前先读文件, 不丢别人的计数 */
+        Path shared = tmp.resolve("multi.jsonl");
+        CheckinStore a = CheckinStore.load(shared);
+        CheckinStore bb = CheckinStore.load(shared);
+        for (int i = 0; i < 3; i++) a.tick();
+        for (int i = 0; i < 2; i++) bb.tick();
+        String now = LocalDate.now().toString();
+        boolean merged = a.counts.get(now) == 3 && bb.counts.get(now) == 5
+                && Files.readString(shared, StandardCharsets.UTF_8).contains("\"n\":5");
+        System.out.println("[测试] 多实例互不覆盖(应=true): " + merged
+                + " | A内存=" + a.counts.get(now) + " B内存=" + bb.counts.get(now)
+                + " 文件=" + Files.readString(shared, StandardCharsets.UTF_8).trim());
 
         String m = c.monthJson(today.substring(0, 7));
         System.out.println("[测试] 本月日历: " + m);
