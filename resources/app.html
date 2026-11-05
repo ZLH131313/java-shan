@@ -33,7 +33,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .statChip.fire b{color:var(--warn)}
 .iconBtn{background:#fff;border:1px solid var(--line);border-radius:12px;width:38px;height:38px;
   font-size:17px;cursor:pointer;transition:.15s;line-height:1}
-.phoneBtn{width:auto;padding:0 13px;font-size:13.5px;font-weight:700;color:var(--brand);gap:4px}
 .iconBtn:hover{border-color:#c7d2fe;transform:translateY(-2px)}
 
 /* ============ 屏幕切换 ============ */
@@ -153,10 +152,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
   opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;transform:translateY(6px)}
 #glossTip.show{opacity:1;pointer-events:auto;transform:none}
 #glossTip b{display:block;color:#a5b4fc;font-size:15px;margin-bottom:4px}
-.phoneUrl{background:#f1f5f9;border:1px dashed #94a3b8;border-radius:12px;padding:13px;
-  text-align:center;font-family:Consolas,monospace;font-size:16.5px;font-weight:700;
-  color:#4f46e5;word-break:break-all;-webkit-user-select:all;user-select:all;margin:6px 0}
-.phoneSteps{font-size:13px;color:#64748b;line-height:1.8;text-align:left;margin:8px 0 16px}
 .opt:hover{border-color:#a5b4fc;transform:translateY(-2px);background:#f5f7ff}
 .opt.correct{border-color:var(--ok);background:var(--okBg);animation:winPop .45s ease}
 @keyframes winPop{0%{transform:scale(1)}30%{transform:scale(1.1)}55%{transform:scale(.98)}75%{transform:scale(1.04)}100%{transform:scale(1)}}
@@ -289,35 +284,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 #dnCheck{font-size:13.5px;font-weight:700;color:var(--warn);margin:-14px 0 22px;min-height:19px}
 #dnCheck.ok{color:var(--ok)}
 
-/* ============ 手机小屏适配 ============ */
-@media (max-width: 640px){
-  body{font-size:14px}
-  #app{padding:0 10px}
-  header{flex-wrap:wrap;padding-top:10px}
-  .logo{font-size:19px}
-  .logo .mark{width:32px;height:32px}
-  #headerStats{order:3;width:100%;justify-content:flex-start;flex-wrap:wrap}
-  .hero{flex-direction:column;align-items:stretch;text-align:center}
-  .hero .hi h2{font-size:16px}
-  .bigBtn{width:100%}
-  #chapterList{grid-template-columns:1fr}
-  .chSide{min-width:64px}
-  .cTab{font-size:13.5px;padding:11px 6px}
-  .question{font-size:18px}
-  .options{grid-template-columns:1fr}
-  .opt{font-size:15px}
-  .sheetIn{flex-wrap:wrap;gap:10px;padding:0 14px}
-  .sheetNext{width:100%}
-  .doneBox{width:88vw;padding:26px 18px}
-  .code{font-size:12px}
-  .resumeBar{flex-wrap:wrap;font-size:12.5px}
-  .ckBox{width:88vw;padding:20px 16px}
-  .ckDay{height:30px;font-size:11.5px}
-  .ckDay.part{font-size:10px}
-  .ckStats .n b{font-size:16px}
-  .ckStats .n span{font-size:10px}
-  .ckPill{display:flex;width:100%;justify-content:center}
-}
 </style>
 </head>
 <body>
@@ -333,7 +299,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
       Java 百词斩
     </div>
     <div id="headerStats"></div>
-    <button class="iconBtn phoneBtn" id="phoneBtn" title="用手机刷题(与电脑进度同步)">📱 手机</button>
     <button class="iconBtn" id="soundBtn" title="音效开关">🔊</button>
   </header>
 
@@ -437,25 +402,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 <div id="toast"></div>
 <div id="streakTip"><span class="stFire">🔥</span><span id="streakTipText"></span><span class="stFire">🔥</span></div>
 <div id="glossTip"></div>
-
-<!-- 手机访问弹窗 -->
-<div class="overlay" id="phonePanel">
-  <div class="doneBox">
-    <div class="big">📱</div>
-    <h2>手机刷题</h2>
-    <div class="sub2">手机与电脑连同一个 WiFi, 用手机浏览器打开:</div>
-    <div class="phoneUrl" id="phoneUrl">(服务未启动)</div>
-    <div class="phoneSteps">
-      1. 上面的地址长按 / 双击可复制<br>
-      2. 手机浏览器打开后, 菜单选「添加到桌面」, 像App一样用<br>
-      3. 手机与电脑的进度、错题本实时同步
-    </div>
-    <div style="display:flex;gap:10px">
-      <button class="bigBtn" id="phoneOpen" style="flex:1">电脑浏览器打开</button>
-      <button class="bigBtn alt" id="phoneClose" style="flex:1">关闭</button>
-    </div>
-  </div>
-</div>
 
 <script>
 'use strict';
@@ -1264,84 +1210,13 @@ Array.prototype.forEach.call(document.querySelectorAll('.screen'), function(el){
   }, { passive: false });
 });
 
-/* ================= 浏览器(手机)模式: 用 HTTP 接口替代 Java 桥接 ================= */
-function sfxWeb(type){
-  try {
-    var AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    sfxWeb.ctx = sfxWeb.ctx || new AC();
-    var ctx = sfxWeb.ctx, t0 = ctx.currentTime;
-    var notes = type === 'ok'  ? [[659,0,.10],[988,.10,.15]]
-              : type === 'bad' ? [[196,0,.14],[147,.14,.20]]
-              : [[523,0,.10],[659,.10,.10],[784,.20,.10],[1047,.30,.24]];
-    notes.forEach(function(n){
-      var o = ctx.createOscillator(), g = ctx.createGain();
-      o.frequency.value = n[0];
-      g.gain.setValueAtTime(.25, t0 + n[1]);
-      g.gain.exponentialRampToValueAtTime(.001, t0 + n[1] + n[2]);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(t0 + n[1]); o.stop(t0 + n[1] + n[2] + .02);
-    });
-  } catch (e) { }
-}
-function installHttpBridge(){
-  function get(url){
-    var x = new XMLHttpRequest();
-    x.open('GET', url, false);
-    x.send(null);
-    return x.responseText;
-  }
-  window.bridge = {
-    chapters:    function(c){ return get('/api/chapters?course=' + c); },
-    session:     function(c, ch){ return get('/api/session?course=' + c + '&ch=' + ch); },
-    sessionWarm: function(c, ch){ return get('/api/warm?course=' + c + '&ch=' + ch); },
-    cardsByIds:  function(c, ids){ return get('/api/ids?course=' + c + '&ids=' + encodeURIComponent(ids)); },
-    answer:      function(c, id, ok){ get('/api/answer?course=' + c + '&id=' + id + '&ok=' + (ok ? 1 : 0)); },
-    zhan:        function(c, id){ get('/api/zhan?course=' + c + '&id=' + id); },
-    stats:       function(c){ return get('/api/stats?course=' + c); },
-    checkinStatus: function(){ return get('/api/checkin'); },
-    checkinMonth:  function(ym){ return get('/api/checkinmonth?ym=' + encodeURIComponent(ym || '')); },
-    loadSession: function(c){ return get('/api/loadsession?course=' + c); },
-    saveSession: function(c, j){
-      try {
-        var x = new XMLHttpRequest();
-        x.open('POST', '/api/savesession?course=' + c, false);
-        x.send(j || '');
-      } catch (e) { }
-    },
-    soundOn: function(){ try { return localStorage.jsound !== '0'; } catch (e) { return true; } },
-    setSound: function(on){ try { localStorage.jsound = on ? '1' : '0'; } catch (e) { } },
-    sfx: sfxWeb,
-    webUrl: function(){ return ''; }
-  };
-}
-
 /* ================= 启动 ================= */
 function boot(){
-  if (!window.bridge) installHttpBridge();   /* 浏览器(手机)模式: 走 HTTP 接口 */
   $('soundBtn').textContent = bridge.soundOn() ? '🔊' : '🔇';
-  var isPhone = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
-  $('phoneBtn').style.display = isPhone ? 'none' : '';
   refreshHome();
 }
-$('phoneBtn').onclick = function(){
-  var u = '';
-  try { u = bridge.webUrl() || ''; } catch (e) { u = ''; }   /* 任何情况都要弹出说明 */
-  $('phoneUrl').textContent = u || '(手机服务未启动, 关闭软件重新打开试试)';
-  $('phoneOpen').style.display = u ? '' : 'none';
-  $('phonePanel').classList.add('show');
-};
-$('phoneClose').onclick = function(){ $('phonePanel').classList.remove('show'); };
-$('phoneOpen').onclick = function(){
-  var u = bridge.webUrl();
-  if (u) { try { bridge.openUrl(u); } catch (e) { toast('打开失败: ' + e); } }
-};
 window.__onBridgeReady = boot;
 if (window.bridge) boot();
-else if (/^https?:$/.test(location.protocol)) {
-  /* 手机/电脑浏览器直接打开: 没有 Java 桥接, 用 HTTP 接口启动(本脚本在 body 末尾, DOM 已就绪) */
-  boot();
-}
 </script>
 </body>
 </html>

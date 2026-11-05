@@ -32,20 +32,6 @@ public class App extends Application {
                     win.setMember("bridge", bridge);
                     engine.executeScript("window.__onBridgeReady && window.__onBridgeReady()");
                     System.out.println("[App] bridge ready");
-
-                    /* 顺手启动手机访问服务(同一 WiFi 的手机浏览器可刷, 数据同步) */
-                    final Bridge b = bridge;
-                    new Thread(() -> {
-                        try {
-                            String url = WebServer.start(b);
-                            if (!url.isEmpty()) {
-                                b.webUrl = url;
-                                System.out.println("[App] 手机访问服务: " + url);
-                            }
-                        } catch (Exception e) {
-                            System.out.println("[App] 手机服务启动失败: " + e.getMessage());
-                        }
-                    }, "webserver").start();
                 } catch (Exception e) {
                     System.out.println("[App] bridge failed: " + e.getMessage());
                 }
@@ -54,7 +40,7 @@ public class App extends Application {
 
         engine.load(App.class.getResource("/app.html").toExternalForm());
 
-        stage.setTitle("Java 百词斩 v1.6");
+        stage.setTitle("Java 百词斩 v1.7");
         try {
             stage.getIcons().add(new javafx.scene.image.Image(
                     App.class.getResource("/icon.png").toExternalForm()));

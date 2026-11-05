@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
  *   连续打卡天数 = 从今天(未打满则从昨天)往前数连续的打卡日; 断一天则连续归零重计, 最长连击永久保留。
  * 存储: ~/.javashan/checkin.jsonl, 每行一天 {"d":"2026-11-05","n":12}
  *   d=日期, n=当日作答张数。只保留最近 KEEP_DAYS 天, 文件不会无限增长。
- * 说明: 手机与电脑共用同一份文件, 打卡进度天然同步; 读写全部 synchronized(手机服务是多线程)。
+ * 说明: 读写全部 synchronized —— 桌面上可能同时开着多个实例, 它们共用这一份文件。
  */
 public class CheckinStore {
 
@@ -74,13 +74,13 @@ public class CheckinStore {
         }
     }
 
-    /** 每答一张卡调用一次(写盘前先吸收磁盘变化, 多实例/手机端同时在线也不丢计数) */
+    /** 每答一张卡调用一次(写盘前先吸收磁盘变化, 多个窗口实例同时在线也不丢计数) */
     synchronized void tick() {
         syncFromDisk();
         addDay(LocalDate.now().toString(), 1);
     }
 
-    /** 与文件对齐: 同一天取较大值, 所以永远不会倒退, 只是不让别的实例(另一个窗口或手机)白答 */
+    /** 与文件对齐: 同一天取较大值, 所以永远不会倒退, 只是不让别的实例(另一个窗口)白答 */
     private void syncFromDisk() {
         try {
             readInto(file, counts);
@@ -233,7 +233,7 @@ public class CheckinStore {
         String s5 = CheckinStore.load(bad).statusJson();
         System.out.println("[测试] 坏行不影响读取(应 total=1): " + s5);
 
-        /* 多实例并发(桌面开两个窗口 / 手机同时在线): 写盘前先读文件, 不丢别人的计数 */
+        /* 多实例并发(桌面开两个及以上窗口): 写盘前先读文件, 不丢别人的计数 */
         Path shared = tmp.resolve("multi.jsonl");
         CheckinStore a = CheckinStore.load(shared);
         CheckinStore bb = CheckinStore.load(shared);
