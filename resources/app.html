@@ -33,6 +33,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .statChip.fire b{color:var(--warn)}
 .iconBtn{background:#fff;border:1px solid var(--line);border-radius:12px;width:38px;height:38px;
   font-size:17px;cursor:pointer;transition:.15s;line-height:1}
+.phoneBtn{width:auto;padding:0 13px;font-size:13.5px;font-weight:700;color:var(--brand);gap:4px}
 .iconBtn:hover{border-color:#c7d2fe;transform:translateY(-2px)}
 
 /* ============ 屏幕切换 ============ */
@@ -332,7 +333,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
       Java 百词斩
     </div>
     <div id="headerStats"></div>
-    <button class="iconBtn" id="phoneBtn" title="手机访问">📱</button>
+    <button class="iconBtn phoneBtn" id="phoneBtn" title="用手机刷题(与电脑进度同步)">📱 手机</button>
     <button class="iconBtn" id="soundBtn" title="音效开关">🔊</button>
   </header>
 
@@ -1324,8 +1325,9 @@ function boot(){
   refreshHome();
 }
 $('phoneBtn').onclick = function(){
-  var u = bridge.webUrl();
-  $('phoneUrl').textContent = u || '(手机服务未启动, 重启软件试试)';
+  var u = '';
+  try { u = bridge.webUrl() || ''; } catch (e) { u = ''; }   /* 任何情况都要弹出说明 */
+  $('phoneUrl').textContent = u || '(手机服务未启动, 关闭软件重新打开试试)';
   $('phoneOpen').style.display = u ? '' : 'none';
   $('phonePanel').classList.add('show');
 };

@@ -122,3 +122,4 @@ cp cards-java.jsonl demos-java.jsonl cards-algo.jsonl demos-algo.jsonl cards-co.
 - 2026-11-05(深夜二): 打卡补强 —— 实测桌面上会同时开着多个实例(最多同时 3 个), 而旧写法每次 save() 整体重写文件, 会让后写的实例把先写的当日计数覆盖掉。现 CheckinStore.tick() 写盘前先用 readInto() 把文件里的当日计数按「取较大值」吸收进内存再累加, 多窗口/手机同时刷题不丢打卡数(读取非法日期直接丢弃, 不再污染累计天数); 新增自测项「多实例互不覆盖」(A答3张+B答2张 → 文件为5), 现共 9 项全 true。注意: checkin.jsonl 只在第一次答题时才创建, 刚装好看不到文件是正常的。
 - 2026-11-05(晚二): 远程仓库配置完成 —— GitHub 私有仓库 https://github.com/ZLH131313/java-shan (HTTPS 凭证已存, git 身份 ZLH131313 <3340654782@qq.com> 全局生效); v1.5+v1.6 已推送。日常同步: git add -A → git commit → git push
 - 2026-11-05(夜): 修复 📱 手机按钮 —— 长URL撑破toast(加word-break); 升级为正规弹窗(大号可复制地址+使用步骤+一键电脑浏览器打开, Bridge.openUrl 用 cmd start 规避 java 字段名与包名冲突)
+- 2026-11-05(夜二): 📱按钮改为「📱 手机」带文字标签; 点击逻辑加保险(任何异常都会弹出说明弹窗)
