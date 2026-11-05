@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Java 百词斩</title>
+<style>
+:root{
+  --ink:#1e293b; --sub:#64748b; --line:#e2e8f0;
+  --brand:#4f46e5; --brand2:#06b6d4; --brandGrad:linear-gradient(135deg,#4f46e5,#06b6d4);
+  --ok:#10b981; --okBg:#ecfdf5; --bad:#ef4444; --badBg:#fef2f2;
+  --warn:#f59e0b; --gold:#f59e0b;
+  --card:#ffffff; --bg1:#eef2ff; --bg2:#f0fdfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none}
+input{-webkit-user-select:text}
+html,body{height:100%}
+body{
+  font-family:'Segoe UI','Microsoft YaHei',sans-serif;color:var(--ink);
+  background:linear-gradient(160deg,var(--bg1) 0%,#ffffff 45%,var(--bg2) 100%);
+  overflow:hidden;
+}
+#app{height:100vh;display:flex;flex-direction:column;max-width:1020px;margin:0 auto;padding:0 22px}
+
+/* ============ 顶栏 ============ */
+header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
+.logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:800;letter-spacing:.5px}
+.logo .mark{width:38px;height:38px;flex:none;display:block}
+#headerStats{margin-left:auto;display:flex;gap:10px;align-items:center}
+.statChip{background:#fff;border:1px solid var(--line);border-radius:999px;
+  padding:7px 14px;font-size:13px;color:var(--sub)}
+.statChip b{color:var(--brand);font-size:15px;margin:0 2px}
+.statChip.fire b{color:var(--warn)}
+.iconBtn{background:#fff;border:1px solid var(--line);border-radius:12px;width:38px;height:38px;
+  font-size:17px;cursor:pointer;transition:.15s;line-height:1}
+.iconBtn:hover{border-color:#c7d2fe;transform:translateY(-2px)}
+
+/* ============ 屏幕切换 ============ */
+.screen{flex:1;overflow-y:auto;padding:6px 4px 26px}
+/* !important 压过 #study 的 ID 选择器, 否则做题页永远藏不起来 */
+.screen.hidden{display:none !important}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* ============ 首页 ============ */
+.courseTabs{display:flex;gap:10px;margin-bottom:12px}
+.cTab{flex:1;border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px 10px;
+  font-size:15px;font-weight:700;color:var(--sub);cursor:pointer;transition:.15s;font-family:inherit}
+.cTab.on{background:#4f46e5;color:#fff;border-color:#4f46e5}
+.cTab:not(.on):hover{border-color:#c7d2fe;color:var(--brand)}
+.hero{display:flex;align-items:center;gap:18px;background:var(--brandGrad);border-radius:20px;
+  padding:14px 20px;color:#fff;margin-bottom:12px;border:1px solid rgba(79,70,229,.25);
+  animation:fadeUp .4s ease both}
+.hero .hi{flex:1}
+.hero .hi h2{font-size:18px;margin-bottom:3px}
+.hero .hi p{font-size:12.5px;opacity:.85}
+.bigBtn{border:none;cursor:pointer;border-radius:14px;padding:11px 20px;font-size:14px;
+  font-weight:700;color:var(--brand);background:#fff;transition:transform .15s;
+  border:1px solid rgba(15,23,42,.08)}
+.bigBtn:hover{transform:translateY(-2px)}
+.bigBtn:active{transform:scale(.96)}
+.bigBtn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+.bigBtn.alt{background:rgba(255,255,255,.18);color:#fff;box-shadow:none;border:2px solid rgba(255,255,255,.65)}
+.bigBtn.alt:hover{background:rgba(255,255,255,.3)}
+
+/* 章节地图: 两列网格一屏放下, 首页不需要滚动(滚动是这台机器的性能瓶颈) */
+#chapterList{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.resumeBar{display:flex;align-items:center;gap:12px;background:#ecfdf5;border:1px solid #a7f3d0;
+  border-radius:14px;padding:10px 16px;margin-bottom:12px;color:#065f46;font-size:13.5px;
+  animation:fadeUp .4s ease both}
+.resumeBar b{color:#047857}
+.resumeBar button{margin-left:auto;border:none;background:#10b981;color:#fff;font-weight:700;
+  font-size:13px;border-radius:10px;padding:8px 16px;cursor:pointer;transition:.15s}
+.resumeBar button:hover{filter:brightness(1.08)}
+.resumeBar .x{margin-left:6px;border:none;background:none;color:#6ee7b7;font-size:15px;cursor:pointer}
+
+.chapterCard{background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:13px 15px;display:flex;align-items:center;gap:12px;
+  cursor:pointer;transition:transform .18s;
+  animation:fadeUp .45s ease both}
+.chapterCard:hover{transform:translateY(-3px)}
+.chapterCard.locked{cursor:not-allowed;opacity:.62;filter:grayscale(.5)}
+.chapterCard.locked:hover{transform:none}
+.chNum{width:40px;height:40px;border-radius:12px;background:#4f46e5;color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex:none}
+.chapterCard.locked .chNum{background:#94a3b8}
+.chInfo{flex:1;min-width:0}
+.chInfo h3{font-size:14.5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chInfo .desc{display:none}
+.chBar{height:6px;background:#eef2f7;border-radius:99px;overflow:hidden}
+.chFill{height:100%;background:#4f46e5;border-radius:99px;transition:width .6s ease}
+.chSide{flex:none;text-align:right;font-size:11px;color:var(--sub);min-width:72px}
+.chSide .go{display:inline-block;margin-top:4px;font-size:12px;font-weight:700;color:var(--brand);
+  background:#eef2ff;padding:5px 11px;border-radius:99px}
+.chSide .go.hasDue{background:#fff7ed;color:var(--warn)}
+.chapterCard.locked .go{background:#f1f5f9;color:#94a3b8}
+.badge{display:inline-block;background:#fff7ed;color:var(--warn);border-radius:99px;
+  padding:2px 9px;font-size:11.5px;font-weight:600;margin-left:6px}
+
+/* ============ 学习页 ============ */
+#study{display:flex;flex-direction:column;overflow:hidden}
+.studyTop{display:flex;align-items:center;gap:14px;padding:10px 2px 14px}
+.backBtn{border:none;background:#fff;border:1px solid var(--line);width:38px;height:38px;
+  border-radius:12px;font-size:17px;cursor:pointer;color:var(--sub);transition:.15s}
+.backBtn:hover{color:var(--brand);border-color:#c7d2fe}
+.pbar{flex:1;height:12px;background:#e8edf5;border-radius:99px;overflow:hidden}
+.pfill{height:100%;width:0;background:#4f46e5;border-radius:99px;transition:width .35s ease}
+.streakBox{display:flex;align-items:center;gap:5px;font-weight:800;font-size:19px;color:var(--warn);
+  min-width:64px;justify-content:flex-end}
+.streakBox.pop{animation:flamePop .4s ease}
+@keyframes flamePop{0%{transform:scale(1)}45%{transform:scale(1.45)}100%{transform:scale(1)}}
+
+.cardStage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;padding-bottom:12px}
+.qcard{width:100%;max-width:640px;background:var(--card);border:1px solid var(--line);
+  border-radius:24px;padding:30px 34px;position:relative;
+  animation:cardIn .38s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes cardIn{from{opacity:0;transform:translateY(26px) scale(.97)}to{opacity:1;transform:none}}
+.qcard.out{animation:cardOut .32s ease both}
+@keyframes cardOut{to{opacity:0;transform:translateX(60px) rotate(3deg)}}
+.qcard.zhaned{animation:zhanFly .5s ease both}
+@keyframes zhanFly{30%{transform:rotate(-6deg) scale(1.04)}100%{opacity:0;transform:translateY(-70px) rotate(9deg) scale(.8)}}
+
+.zhanBtn{position:absolute;top:18px;right:18px;border:1px solid var(--line);background:#fffdf7;
+  color:var(--warn);border-radius:12px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.zhanBtn:hover{background:#fff7ed;transform:rotate(-6deg)}
+.peekBtn{position:absolute;top:18px;right:86px;border:1px solid var(--line);background:#f8f7ff;
+  color:#6d28d9;border-radius:12px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.peekBtn:hover{background:#ede9fe;transform:translateY(-2px)}
+
+.chips{display:flex;gap:8px;margin-bottom:16px}
+.chip{font-size:12px;font-weight:600;padding:5px 12px;border-radius:99px;background:#eef2ff;color:var(--brand)}
+.chip.tag{background:#f0fdfa;color:#0d9488}
+.chip.review{background:#fff7ed;color:var(--warn)}
+.chip.wrong{background:#fef2f2;color:var(--bad)}
+.question{font-size:21px;line-height:1.55;font-weight:600;margin-bottom:22px;white-space:pre-wrap}
+
+.options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{display:flex;align-items:center;gap:12px;border:2px solid var(--line);background:#fff;
+  border-radius:15px;padding:13px 15px;font-size:15.5px;cursor:pointer;transition:.15s;text-align:left}
+.opt .letter{width:30px;height:30px;flex:none;border-radius:9px;background:#f1f5f9;color:var(--sub);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+.opt > span:nth-child(2){flex:1}
+.mk{flex:none;align-self:center;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px}
+.mkYou{background:#fee2e2;color:#b91c1c}
+.mkAns{background:#d1fae5;color:#047857}
+
+/* ============ 概念词典: 点击高亮术语看解释 ============ */
+.term{border-bottom:1px dashed #818cf8;color:#4f46e5;cursor:pointer}
+.term:hover{background:#eef2ff}
+#glossTip{position:fixed;z-index:99;max-width:330px;padding:13px 16px;border-radius:14px;
+  background:linear-gradient(135deg,#111827 0%,#1e1b4b 100%);color:#e2e8f0;
+  border:1px solid rgba(129,140,248,.5);font-size:13.5px;line-height:1.65;
+  opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;transform:translateY(6px)}
+#glossTip.show{opacity:1;pointer-events:auto;transform:none}
+#glossTip b{display:block;color:#a5b4fc;font-size:15px;margin-bottom:4px}
+.opt:hover{border-color:#a5b4fc;transform:translateY(-2px);background:#f5f7ff}
+.opt.correct{border-color:var(--ok);background:var(--okBg);animation:winPop .45s ease}
+@keyframes winPop{0%{transform:scale(1)}30%{transform:scale(1.1)}55%{transform:scale(.98)}75%{transform:scale(1.04)}100%{transform:scale(1)}}
+.opt.correct .letter{background:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--badBg);animation:shake .4s ease}
+.opt.wrong .letter{background:var(--bad);color:#fff}
+.opt.reveal{border-color:var(--ok)}
+.opt.reveal .letter{background:var(--ok);color:#fff}
+/* 已作答的选项: 用锁定类代替 disabled(disabled 会吞掉子元素术语的点击) */
+.opt.locked{cursor:default;pointer-events:none}
+.opt.locked:hover{transform:none;background:#fff}
+.opt.locked .term{pointer-events:auto}   /* 术语高亮仍可点击查看解释 */
+@keyframes optPop{0%{transform:scale(1)}40%{transform:scale(1.05)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+.fillRow{display:flex;gap:10px}
+.fillRow input{flex:1;border:2px solid var(--line);border-radius:14px;padding:13px 16px;
+  font-size:17px;font-family:Consolas,monospace;outline:none;transition:.15s}
+.fillRow input:focus{border-color:var(--brand)}
+.fillRow input.fillWin{border-color:var(--ok);background:var(--okBg);animation:winPop .45s ease}
+.fillRow button{border:none;background:var(--brandGrad);color:#fff;font-size:15px;font-weight:700;
+  border-radius:14px;padding:0 26px;cursor:pointer;transition:.15s}
+.fillRow button:hover{filter:brightness(1.08)}
+
+/* ============ 解析面板 ============ */
+.sheet{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);
+  padding:22px 0 26px;transform:translateY(110%);
+  transition:transform .32s cubic-bezier(.2,.9,.3,1.1);z-index:40}
+.sheet.show{transform:none}
+.sheetIn{max-width:1020px;margin:0 auto;padding:0 26px;display:flex;gap:18px;align-items:flex-start}
+.verdict{font-size:19px;font-weight:800;white-space:nowrap;padding:6px 16px;border-radius:12px}
+.verdict.ok{color:var(--ok);background:var(--okBg)}
+.verdict.bad{color:var(--bad);background:var(--badBg)}
+.verdict.peek{color:#6d28d9;background:#f5f3ff}
+.explText{flex:1;font-size:15px;line-height:1.7;color:#334155}
+.explText b{color:var(--ink)}
+.code{background:#0f172a;color:#e2e8f0;font-family:Consolas,'Courier New',monospace;font-size:13px;
+  line-height:1.6;padding:12px 14px;border-radius:10px;margin-top:10px;white-space:pre-wrap;
+  word-break:break-all;text-align:left}
+.sheetNext{border:none;background:var(--brandGrad);color:#fff;font-size:15px;font-weight:700;
+  border-radius:13px;padding:13px 28px;cursor:pointer;transition:.15s;flex:none}
+.sheetNext:hover{filter:brightness(1.08);transform:translateY(-2px)}
+
+/* ============ 完成弹层 ============ */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;
+  align-items:center;justify-content:center;z-index:60;opacity:0;pointer-events:none;transition:.3s}
+.overlay.show{opacity:1;pointer-events:auto}
+.doneBox{background:#fff;border-radius:26px;padding:40px 48px;text-align:center;width:420px;
+  transform:scale(.85);transition:.35s cubic-bezier(.2,.9,.3,1.3)}
+.overlay.show .doneBox{transform:scale(1)}
+.doneBox .big{font-size:56px;animation:optPop .5s ease .1s both}
+.doneBox h2{font-size:24px;margin:10px 0 6px}
+.doneBox .sub2{color:var(--sub);font-size:14px;margin-bottom:20px}
+.doneNums{display:flex;gap:12px;justify-content:center;margin-bottom:24px}
+.doneNums .n{background:#f8fafc;border:1px solid var(--line);border-radius:16px;padding:12px 20px;min-width:96px}
+.doneNums .n b{display:block;font-size:24px;color:var(--brand)}
+.doneNums .n span{font-size:12px;color:var(--sub)}
+
+/* ============ 其他 ============ */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:80}
+#toast{position:fixed;top:26px;left:50%;transform:translate(-50%,0);z-index:90;
+  display:flex;align-items:center;padding:11px 24px;border-radius:999px;
+  background:linear-gradient(135deg,#111827 0%,#1e1b4b 100%);color:#fff;
+  font-weight:600;font-size:15px;letter-spacing:.3px;max-width:80vw;
+  border:1px solid rgba(148,163,184,.4);
+  opacity:0;pointer-events:none;transition:opacity .28s ease}
+#toast.show{opacity:1;pointer-events:auto}
+#toast.bad{background:linear-gradient(135deg,#7f1d1d 0%,#450a0a 100%);border-color:rgba(252,165,165,.75)}
+#toast.good{background:linear-gradient(135deg,#065f46 0%,#022c22 100%);border-color:rgba(110,231,183,.75)}
+#toast.zhan{background:linear-gradient(135deg,#92400e 0%,#451a03 100%);border-color:rgba(253,230,138,.75)}
+#toast.info{background:linear-gradient(135deg,#111827 0%,#1e1b4b 100%);border:1px solid rgba(129,140,248,.5)}
+/* 连击庆祝横幅: 深色玻璃质感 + 琥珀描边 + 火焰脉动 */
+#streakTip{position:fixed;top:26px;left:50%;transform:translate(-50%,0);z-index:95;
+  display:flex;align-items:center;gap:12px;padding:11px 26px;border-radius:999px;
+  background:linear-gradient(135deg,#111827 0%,#1e1b4b 100%);
+  border:1px solid rgba(251,191,36,.55);color:#fff;font-weight:800;font-size:16.5px;letter-spacing:1px;
+  opacity:0;pointer-events:none;transition:opacity .28s ease}
+#streakTip.show{opacity:1;pointer-events:auto}
+#streakTip b{color:#fbbf24;font-size:20px;margin:0 3px}
+#streakTip .stFire{font-size:21px;animation:stFlame .9s ease-in-out infinite alternate}
+@keyframes stFlame{from{transform:scale(.92) rotate(-6deg)}to{transform:scale(1.14) rotate(6deg)}}
+.noBridge{background:#fff7ed;color:#92400e;border-radius:14px;padding:14px 18px;font-size:14px;margin-bottom:16px}
+::-webkit-scrollbar{width:9px}
+::-webkit-scrollbar-thumb{background:#c7d2fe;border-radius:99px}
+
+/* ============ 打卡: 今日进度 + 月历 ============ */
+/* 首页打卡胶囊(在 hero 渐变块里): 火焰脉动沿用连击横幅的 stFlame, 只用 transform */
+.ckPill{display:inline-flex;align-items:center;gap:9px;margin-top:9px;
+  background:rgba(255,255,255,.17);border:1px solid rgba(255,255,255,.5);border-radius:999px;
+  padding:6px 13px;cursor:pointer;transition:.15s}
+.ckPill:hover{background:rgba(255,255,255,.3);transform:translateY(-1px)}
+.ckPill .ckFire{font-size:16px;line-height:1;flex:none}
+.ckPill.blaze .ckFire{animation:stFlame .9s ease-in-out infinite alternate}
+.ckPill .ckTxt{font-size:12.5px;font-weight:700;white-space:nowrap}
+.ckPill .ckTxt b{font-size:14.5px}
+.ckBar{width:86px;height:7px;flex:none;background:rgba(15,23,42,.28);border-radius:99px;overflow:hidden}
+.ckFill{display:block;height:100%;width:0;background:#fbbf24;border-radius:99px;transition:width .55s ease}
+.ckPill.done .ckFill{background:#a7f3d0}
+.statChip.btn{cursor:pointer;transition:.15s}
+.statChip.btn:hover{border-color:#c7d2fe;transform:translateY(-1px)}
+.statChip.urge{background:#fff7ed;border-color:#fed7aa}
+.statChip.lit b{color:var(--ok)}
+
+.ckBox{background:#fff;border-radius:26px;padding:26px 28px;width:400px;
+  transform:scale(.85);transition:.35s cubic-bezier(.2,.9,.3,1.3)}
+.overlay.show .ckBox{transform:scale(1)}
+.ckHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
+.ckHead h3{font-size:16.5px;flex:1;text-align:center}
+.ckNav{border:1px solid var(--line);background:#fff;border-radius:10px;width:32px;height:32px;
+  cursor:pointer;font-size:16px;color:var(--sub);line-height:1;flex:none;transition:.15s}
+.ckNav:hover{color:var(--brand);border-color:#c7d2fe}
+.ckNav[disabled]{opacity:.3;cursor:not-allowed;transform:none}
+.ckGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.ckDow{font-size:11px;font-weight:700;color:var(--sub);text-align:center;padding-bottom:2px}
+.ckDay{height:33px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:12.5px;color:#94a3b8;background:#f8fafc;border:1px solid var(--line)}
+.ckDay.on{background:var(--brandGrad);color:#fff;border-color:transparent;font-weight:700}
+.ckDay.part{background:#fff7ed;color:var(--warn);border-color:#fed7aa;font-size:11px;font-weight:800}
+.ckDay.now{border:2px solid var(--warn);font-weight:800;color:var(--ink)}
+.ckDay.on.now{border:2px solid #fbbf24;color:#fff}
+.ckDay.blank{background:none;border-color:transparent}
+.ckStats{display:flex;gap:8px;margin-top:16px}
+.ckStats .n{flex:1;background:#f8fafc;border:1px solid var(--line);border-radius:14px;
+  padding:9px 4px;text-align:center}
+.ckStats .n b{display:block;font-size:19px;color:var(--brand)}
+.ckStats .n span{font-size:11px;color:var(--sub)}
+.ckFoot{font-size:12.5px;color:var(--sub);margin-top:14px;line-height:1.65;text-align:left}
+.ckFoot b{color:var(--warn)}
+#dnCheck{font-size:13.5px;font-weight:700;color:var(--warn);margin:-14px 0 22px;min-height:19px}
+#dnCheck.ok{color:var(--ok)}
+
+/* ============ 手机小屏适配 ============ */
+@media (max-width: 640px){
+  body{font-size:14px}
+  #app{padding:0 10px}
+  header{flex-wrap:wrap;padding-top:10px}
+  .logo{font-size:19px}
+  .logo .mark{width:32px;height:32px}
+  #headerStats{order:3;width:100%;justify-content:flex-start;flex-wrap:wrap}
+  .hero{flex-direction:column;align-items:stretch;text-align:center}
+  .hero .hi h2{font-size:16px}
+  .bigBtn{width:100%}
+  #chapterList{grid-template-columns:1fr}
+  .chSide{min-width:64px}
+  .cTab{font-size:13.5px;padding:11px 6px}
+  .question{font-size:18px}
+  .options{grid-template-columns:1fr}
+  .opt{font-size:15px}
+  .sheetIn{flex-wrap:wrap;gap:10px;padding:0 14px}
+  .sheetNext{width:100%}
+  .doneBox{width:88vw;padding:26px 18px}
+  .code{font-size:12px}
+  .resumeBar{flex-wrap:wrap;font-size:12.5px}
+  .ckBox{width:88vw;padding:20px 16px}
+  .ckDay{height:30px;font-size:11.5px}
+  .ckDay.part{font-size:10px}
+  .ckStats .n b{font-size:16px}
+  .ckStats .n span{font-size:10px}
+  .ckPill{display:flex;width:100%;justify-content:center}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">
+      <svg class="mark" viewBox="0 0 44 44" width="38" height="38">
+        <rect x="1" y="1" width="42" height="42" rx="10.5" fill="#0f172a"/>
+        <path d="M27 8.8 L27 23.3 Q27 34.8 17.6 34.8 Q9 34.8 9 26.4"
+              stroke="#ffffff" stroke-width="6.8" fill="none" stroke-linecap="round"/>
+        <circle cx="34.6" cy="10" r="3.2" fill="#22d3ee"/>
+      </svg>
+      Java 百词斩
+    </div>
+    <div id="headerStats"></div>
+    <button class="iconBtn" id="phoneBtn" title="手机访问">📱</button>
+    <button class="iconBtn" id="soundBtn" title="音效开关">🔊</button>
+  </header>
+
+  <!-- 首页: 章节地图 -->
+  <main id="home" class="screen">
+    <div id="bridgeTip"></div>
+    <div class="courseTabs">
+      <button id="tabJava" class="cTab on">☕ Java</button>
+      <button id="tabAlgo" class="cTab">📐 算法</button>
+      <button id="tabCo" class="cTab">🖧 计组</button>
+    </div>
+    <div class="hero">
+      <div class="hi">
+        <h2>今天也要挥剑前行 ⚔</h2>
+        <p id="heroSub">学过的知识会按遗忘曲线回来找你, 别放走它们。</p>
+        <div class="ckPill" id="ckPill" title="点击查看打卡日历">
+          <span class="ckFire">🔥</span>
+          <span class="ckTxt" id="ckTxt">今日 0/10 张</span>
+          <span class="ckBar"><span class="ckFill" id="ckFill"></span></span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="bigBtn" id="allReviewBtn">复习全部</button>
+        <button class="bigBtn alt" id="wrongBtn">错题本</button>
+      </div>
+    </div>
+    <div class="resumeBar" id="resumeBar" style="display:none">
+      <span id="resumeText"></span>
+      <button id="resumeBtn">继续上次</button>
+      <button class="x" id="resumeDrop" title="放弃这次进度">✕</button>
+    </div>
+    <div id="chapterList"></div>
+  </main>
+
+  <!-- 学习页 -->
+  <main id="study" class="screen hidden">
+    <div class="studyTop">
+      <button class="backBtn" id="backBtn" title="返回">←</button>
+      <div class="pbar"><div class="pfill" id="pfill"></div></div>
+      <div class="streakBox" id="streakBox">🔥<b id="streakN">0</b></div>
+    </div>
+    <div class="cardStage">
+      <!-- 隐形按键收集器: JavaFX 里 keypress 不稳定, 但文本输入路径可靠 -->
+      <input id="keycap" autocomplete="off" style="position:fixed;top:-60px;left:0;width:8px;height:8px;opacity:0;border:none;padding:0">
+      <div class="qcard" id="qcard">
+        <button class="peekBtn" id="peekBtn" title="直接看答案(按K), 按错题处理">👀 看答案</button>
+        <button class="zhanBtn" id="zhanBtn">⚔ 斩</button>
+        <div class="chips" id="chips"></div>
+        <div class="question" id="question"></div>
+        <div class="options" id="options"></div>
+        <div class="fillRow" id="fillRow" style="display:none">
+          <input id="fillInput" placeholder="输入答案, 回车确认" autocomplete="off">
+          <button id="fillOk">确认</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- 解析底部面板 -->
+<div class="sheet" id="sheet">
+  <div class="sheetIn">
+    <div class="verdict" id="verdict">答对了!</div>
+    <div class="explText" id="explText"></div>
+    <button class="sheetNext" id="nextBtn">继续 →</button>
+  </div>
+</div>
+
+<!-- 完成弹层 -->
+<div class="overlay" id="doneOverlay">
+  <div class="doneBox">
+    <div class="big">🎉</div>
+    <h2>今日份的剑, 挥完了!</h2>
+    <div class="sub2" id="doneSub">错题不会溜走, 它们明天还会回来。</div>
+    <div class="doneNums">
+      <div class="n"><b id="dn1">0</b><span>本次刷卡</span></div>
+      <div class="n"><b id="dn2">0%</b><span>正确率</span></div>
+      <div class="n"><b id="dn3">x0</b><span>最高连击</span></div>
+    </div>
+    <div id="dnCheck"></div>
+    <button class="bigBtn" id="doneBack">返回章节地图</button>
+  </div>
+</div>
+
+<!-- 打卡日历弹层 -->
+<div class="overlay" id="ckOverlay">
+  <div class="ckBox">
+    <div class="ckHead">
+      <button class="ckNav" id="ckPrev" title="上一月">‹</button>
+      <h3 id="ckTitle">打卡日历</h3>
+      <button class="ckNav" id="ckNext" title="下一月">›</button>
+    </div>
+    <div class="ckGrid" id="ckGrid"></div>
+    <div class="ckStats" id="ckStats"></div>
+    <div class="ckFoot" id="ckFoot"></div>
+    <button class="bigBtn" id="ckClose" style="width:100%;margin-top:16px">知道了</button>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+<div id="toast"></div>
+<div id="streakTip"><span class="stFire">🔥</span><span id="streakTipText"></span><span class="stFire">🔥</span></div>
+<div id="glossTip"></div>
+
+<script>
+'use strict';
+/* 任何界面异常都弹出来, 不再静默失败 */
+window.onerror = function(msg, src, line){
+  var t = document.getElementById('toast');
+  if (t){ t.textContent = '界面异常: ' + msg + ' (行' + line + ')'; t.classList.add('show');
+    clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove('show'); }, 4000); }
+  return false;
+};
+
+/* ================= 状态 ================= */
+var chaptersCache = [], queue = [], qidx = -1;
+var dispOrder = [];   /* 当前卡片的选项洗牌映射: dispOrder[显示位]=原始下标 */
+var currentCourse = 'java';   /* 当前课程: 'java' | 'algo' */
+var answered = 0, correct = 0, streak = 0, bestStreak = 0;
+var unlockedBefore = [], currentChapter = 0, waiting = false;
+
+/* ================= 概念词典: 高亮术语, 点击弹解释 ================= */
+var GLOSS = {
+  'JVM':'Java 虚拟机, 负责执行字节码的翻译官, Java 跨平台的核心',
+  'JDK':'Java 开发工具包 = JRE + 编译器等开发工具, 写代码必装',
+  'JRE':'Java 运行环境, 只想运行程序装它就够',
+  '字节码':'.class 文件里的指令, 由 JVM 解释执行, 与操作系统无关',
+  '字节':'计算机存储单位, 1 字节 = 8 个二进制位; int 占 4 字节',
+  '编译':'把人能读的源代码翻译成机器可执行指令的过程',
+  '标识符':'自己起的名字(类名/变量名/方法名), 不能用关键字, 不能数字开头',
+  '关键字':'语言保留的单词(public/class/int 等), 有固定含义, 不能当名字',
+  '字面量':'代码里直接写出的值, 如 100、3.14、true',
+  '基本类型':'8 种: byte/short/int/long/float/double/char/boolean, 存值本身',
+  '引用类型':'除 8 种基本类型外都是, 变量里存的是对象的地址',
+  '包装类':'基本类型的对象版, 如 int→Integer, double→Double',
+  '自动装箱':'int 自动变 Integer 的过程, 编译器偷偷调用 valueOf',
+  '自动拆箱':'Integer 自动变回 int 的过程',
+  '强制转换':'手写括号类型的转换, 如 (int) 3.7, 可能丢失精度',
+  '类型转换':'把一种类型的值变成另一种类型(自动或强制)',
+  '取余':'% 运算, 求除法的余数, 10 % 3 = 1',
+  '短路':'&& 和 || 左边已能定结果时, 右边不再计算的行为',
+  '三元运算符':'条件 ? 值1 : 值2, 一行完成二选一',
+  '位运算':'直接对二进制位操作的运算, 如 << 左移、& 按位与',
+  '分支':'if/switch 这类按条件选择执行路径的结构',
+  '死循环':'永不结束的循环, 如 while(true), 靠 break 退出',
+  '二维数组':'数组的数组, 像表格的行列 grid[i][j]',
+  '下标':'元素在数组里的编号, 从 0 数起, 长度 n 最大下标 n-1',
+  '越界':'访问了不存在的下标, 运行时抛异常',
+  '默认值':'未赋值时系统给的初始值(int 为 0, 引用为 null, boolean 为 false)',
+  '遍历':'从头到尾把每个元素过一遍',
+  '增强 for':'for(元素 : 容器) 的简洁遍历写法, 拿不到下标',
+  '数组':'一组同类型数据的连续容器, 下标从 0 开始',
+  '形参':'方法定义里的占位参数',
+  '实参':'调用时真正传进去的值',
+  '返回值':'方法执行完交回的结果, void 表示没有',
+  '方法重载':'同一个类里方法名相同但参数不同, 调用时按参数自动匹配',
+  '重载':'同一个类里方法名相同但参数不同',
+  '值传递':'Java 唯一的传参方式, 传的是值的副本',
+  '递归':'方法自己调自己, 必须有出口否则栈溢出',
+  '对象':'按类造出来的实体, new 出来的东西',
+  '实例':'对象的同义词, 「创建实例」就是 new 对象',
+  '成员变量':'类里方法外定义的变量, 属于对象, 有默认值',
+  '局部变量':'方法内定义的变量, 必须先赋值才能使用',
+  '构造方法':'与类同名无返回类型的特殊方法, new 时自动执行, 用于初始化',
+  '构造器':'与类同名无返回类型的特殊方法, new 时自动执行',
+  '封装':'把数据藏起来(private), 只留公开方法窗口访问',
+  '继承':'子类自动获得父类的属性和方法, 用 extends',
+  '父类':'被继承的一方, 子类通过 super 访问它',
+  '子类':'继承别人的一方, 能用父类非私有成员',
+  '多态':'父类引用指向子类对象, 调方法时执行子类版本',
+  '抽象类':'含抽象方法的半成品类, 不能 new, 专供继承',
+  '抽象方法':'只有声明没有方法体的方法, 以分号结尾',
+  '接口':'一组行为规范, 类用 implements 实现, 一个类可实现多个',
+  '实例化':'new 一个对象的过程',
+  '静态':'static 修饰, 属于类不属于某个对象, 类名直接调用',
+  '泛型':'集合尖括号里的类型约束, 如 List<String>, 存错类型编译期报错',
+  '集合':'存多个对象的容器体系(List/Set/Map)',
+  '动态数组':'会自动扩容的数组(ArrayList 的底层)',
+  '链表':'元素靠指针串联的结构, 插删快但随机访问慢',
+  '哈希表':'按哈希值定位存储的结构, 查找极快',
+  '键值对':'一个键配一个值的成对数据(如 学号→学生)',
+  '去重':'保证容器里没有重复元素',
+  '迭代器':'专门安全遍历并可删除集合元素的工具',
+  '异常':'程序运行时的错误信号, 用 try-catch 处理',
+  '捕获':'用 catch 接住异常并处理',
+  '检查异常':'编译器强制要求处理的异常(如 IOException)',
+  '运行时异常':'运行时才暴露的异常(如空指针), 编译器不强制处理',
+  '空指针':'对 null 调用方法, 最常见的异常',
+  '堆':'内存中存 new 出来的对象的区域',
+  '栈':'内存中存局部变量和方法调用的区域',
+  '线程':'进程内的并发执行单元',
+  '进程':'一个运行中的程序实例',
+  '线程安全':'多线程同时操作也不出错的性质',
+  '字节流':'以字节为单位读写数据的流, 任何文件都能处理',
+  '字符流':'以字符为单位读写文本的流, 自动处理编码',
+  '渐近上界':'大 O 记号刻画的增长率不超过的界',
+  '渐近下界':'Ω 记号刻画的增长率不低于的界',
+  '主定理':'解分治型方程 T(n)=aT(n/b)+f(n) 的通用工具, 比较三种情形',
+  '最优子结构':'问题的最优解由子问题的最优解组成, 是 DP 与贪心的前提',
+  '重叠子问题':'递归展开后同一子问题反复出现, DP 存表避免重复计算',
+  '贪心选择性质':'局部最优选择能导致全局最优解的性质, 贪心算法成立的条件',
+  '解空间树':'把所有可能解按逐步赋值组织成的树(子集树/排列树)',
+  '子集树':'每个元素取/不取两种分支的解空间树, 共 2ⁿ 个叶结点',
+  '排列树':'按全排列组织的解空间树, 共 n! 个叶结点',
+  '剪枝':'在搜索中提前放弃不可能产生解/更优解的分支',
+  '限界函数':'估计子树最好能达到的界, 不优于当前最优即剪枝',
+  '松弛':'最短路算法中尝试经 u 中转更新 d[v] 的基本操作',
+  '并查集':'支持合并集合与查询所属集合的结构, 判连通利器',
+  '前缀码':'任何码字都不是其他码字前缀的编码, 解码无歧义',
+  'WPL':'带权路径长度 = Σ(权值×深度), 哈夫曼树使其最小',
+  '活结点':'已生成但儿子尚未全部生成的结点',
+  '扩展结点':'正在生成其全部儿子的活结点',
+  '死结点':'不再扩展的结点',
+  '备忘录':'自顶向下递归时缓存已算结果的技术',
+  'for-each':'增强 for 循环的俗称: for(类型 变量 : 容器) 的简洁遍历写法, 不是关键字',
+  'forEach':'JDK8 给集合提供的方法, 如 list.forEach(x -> ...), 与增强 for 是两回事',
+  '循环变量':'循环中承接每次迭代的变量, 如增强 for 里的 x、普通 for 里的 i',
+  '递归方程':'刻画算法运行时间的递推关系式, 形如 T(n)=aT(n/b)+f(n), 用主定理或迭代展开求解',
+  '状态转移方程':'动态规划中描述子问题最优值之间递推关系的公式, 是 DP 的核心',
+  '转移方程':'DP 中描述状态间递推关系的公式',
+  '主定理':'解 T(n)=aT(n/b)+f(n) 型递归方程的标准工具: 比较 f(n) 与 n^(log_b a) 得三种情形',
+  '时间复杂度':'算法运行时间随输入规模 n 增长的渐近阶, 用大 O 等记号刻画',
+  '空间复杂度':'算法运行时占用辅助存储空间的渐近阶',
+  '补码':'带符号数的标准表示法: 正数同原码, 负数 = 反码+1, 可把减法变加法',
+  '阶码':'浮点数中表示数量级(指数)的部分, 决定表示范围',
+  '尾数':'浮点数中表示有效数字的部分, 决定精度',
+  '局部性原理':'程序倾向于重复访问刚用过的数据(时间)及其相邻数据(空间), Cache 的基础',
+  '命中率':'访问 Cache 直接命中的比例, 是 Cache 性能的核心指标',
+  '脏位':'Cache 行中的标记位, 为1表示被改写过, 换出时须写回主存',
+  '数据通路':'数据在 CPU 内流经的寄存器与运算部件构成的路径',
+  '微指令':'微程序控制器中的最小控制单位, 存于控制存储器',
+  '流水线':'让多条指令的不同阶段在时间上重叠执行的技术',
+  '中断':'CPU 暂停当前程序去处理突发事件, 处理完返回的机制',
+  'DMA':'外设与内存直接成块传送数据、不经 CPU 的方式',
+  '寻址方式':'指令中确定操作数有效地址的方法(立即/直接/间接/变址...)',
+  '操作码':'指令中标明操作类型的字段',
+  '冯·诺依曼结构':'程序与数据同存于存储器、自动逐条执行指令的计算机结构'
+};
+var glossRegex = new RegExp('(' + Object.keys(GLOSS)
+  .sort(function(a, b){ return b.length - a.length; })
+  .map(function(t){ return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); })
+  .join('|') + ')', 'g');
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+/* 超基础词不自动高亮(满屏高亮反而干扰), 每个术语每张卡只高亮第一次出现 */
+var GLOSS_BASIC = { '数组':1, '变量':1, '常量':1, '循环':1, '方法':1 };
+var usedTerms = {};
+function richText(s, freshCard){
+  if (freshCard) usedTerms = {};
+  return escHtml(s).replace(glossRegex, function(m){
+    if (GLOSS_BASIC[m] || usedTerms[m]) return m;
+    usedTerms[m] = 1;
+    return '<span class="term" data-t="' + m + '">' + m + '</span>';
+  });
+}
+function showGloss(term, x, y){
+  var g = $('glossTip');
+  g.innerHTML = '<b>' + escHtml(term) + '</b>' + escHtml(GLOSS[term] || '');
+  g.classList.add('show');
+  var w = 340, h = g.offsetHeight || 90;
+  g.style.left = Math.min(Math.max(12, x + 12), window.innerWidth - w - 12) + 'px';
+  g.style.top = (y + 18 + h > window.innerHeight ? Math.max(12, y - h - 12) : y + 18) + 'px';
+}
+function hideGloss(){ $('glossTip').classList.remove('show'); }
+document.addEventListener('click', function(ev){
+  var t = ev.target && ev.target.closest ? ev.target.closest('.term') : null;
+  if (t){ showGloss(t.getAttribute('data-t'), ev.clientX, ev.clientY); }
+  else { hideGloss(); }
+});
+
+/* ================= 工具 ================= */
+function $(id){ return document.getElementById(id); }
+/* 兼容不同 WebKit 版本的回车判定 */
+function isEnter(e){ return e.key === 'Enter' || e.keyCode === 13 || e.which === 13 || e.keyIdentifier === 'Enter'; }
+function toast(msg, ms){
+  var t = $('toast'); t.textContent = msg;
+  /* 按内容自动选配色: 斩=琥珀, 错误类=红, 赞美/解锁=绿, 其余=靛蓝 */
+  var type = /已斩/.test(msg) ? 'zhan'
+           : /答错|看答案|失败|失效|不能/.test(msg) ? 'bad'
+           : /漂亮|解锁|答对|打卡成功/.test(msg) ? 'good' : 'info';
+  t.className = type;
+  t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove('show'); }, ms || 1800);
+}
+function show(el, on){ el.classList.toggle('hidden', !on); }
+
+/* ================= 撒花 ================= */
+var cv = $('confetti'), ctx = cv.getContext('2d'), parts = [], rafOn = false;
+function fitCanvas(){ cv.width = innerWidth; cv.height = innerHeight; }
+addEventListener('resize', fitCanvas); fitCanvas();
+var COLORS = ['#4f46e5','#06b6d4','#10b981','#f59e0b','#ef4444','#8b5cf6','#f472b6'];
+function burst(x, y, n){
+  for (var i = 0; i < n; i++) parts.push({
+    x:x, y:y, vx:(Math.random()-.5)*11, vy:-Math.random()*9-3,
+    s:5+Math.random()*6, c:COLORS[i%COLORS.length], r:Math.random()*Math.PI, life:55+Math.random()*30
+  });
+  startRaf();
+}
+function rain(){
+  for (var i = 0; i < 45; i++) parts.push({
+    x:Math.random()*innerWidth, y:-20-Math.random()*innerHeight*.5,
+    vx:(Math.random()-.5)*3, vy:2+Math.random()*4,
+    s:6+Math.random()*7, c:COLORS[i%COLORS.length], r:Math.random()*Math.PI, life:160+Math.random()*60
+  });
+  startRaf();
+}
+function startRaf(){ if(!rafOn){ rafOn = true; requestAnimationFrame(tick); } }
+var frameNo = 0;
+function tick(){
+  frameNo++;
+  if (frameNo & 1){ requestAnimationFrame(tick); return; }   /* 隔帧绘制, 省一半渲染开销 */
+  ctx.clearRect(0,0,cv.width,cv.height);
+  for (var i = parts.length-1; i >= 0; i--){
+    var p = parts[i];
+    p.x += p.vx; p.y += p.vy; p.vy += .25; p.r += .12; p.life--;
+    if (p.life <= 0 || p.y > innerHeight + 30){ parts.splice(i,1); continue; }
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r);
+    ctx.fillStyle = p.c; ctx.globalAlpha = Math.min(1, p.life/30);
+    ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62); ctx.restore();
+  }
+  if (parts.length){ requestAnimationFrame(tick); } else { rafOn = false; ctx.clearRect(0,0,cv.width,cv.height); }
+}
+
+/* ================= 首页 ================= */
+function refreshHome(){
+  chaptersCache = JSON.parse(bridge.chapters(currentCourse));
+  var st = JSON.parse(bridge.stats(currentCourse));
+  $('headerStats').innerHTML =
+    '<div class="statChip">已学 <b>'+st.learned+'</b>/'+st.total+'</div>' +
+    '<div class="statChip fire">待复习 <b>'+st.dueNow+'</b></div>' +
+    '<div class="statChip">已斩 <b>'+st.zhan+'</b></div>';
+  $('allReviewBtn').disabled = st.dueNow === 0;
+  $('wrongBtn').textContent = '错题本' + (st.wrong > 0 ? ' · ' + st.wrong : '');
+  $('heroSub').textContent = st.dueNow > 0
+    ? '有 '+st.dueNow+' 张卡到了复习时间, 别放走它们。'
+    : '当前没有到期卡片, 去章节里学点新东西吧。';
+  var box = $('chapterList'); box.innerHTML = '';
+  chaptersCache.forEach(function(c, i){
+    var el = document.createElement('div');
+    el.className = 'chapterCard' + (c.unlocked ? '' : ' locked');
+    el.style.animationDelay = (i*0.06)+'s';
+    var side;
+    if (!c.unlocked){
+      side = '<div>🔒 未解锁</div><div class="go">先学完上一章 80%</div>';
+    } else {
+      var go = c.due > 0 ? '<div class="go hasDue">复习 '+c.due+' 张</div>'
+              : (c.seen >= c.total ? '<div class="go">温故知新</div>' : '<div class="go">继续学习</div>');
+      var badge = c.due > 0 ? '<span class="badge">'+c.due+' 张待复习</span>' : '';
+      side = '<div>进度 '+c.pct+'%'+badge+'</div>'+go;
+    }
+    el.innerHTML =
+      '<div class="chNum">'+(c.unlocked ? c.id : '🔒')+'</div>' +
+      '<div class="chInfo"><h3>'+c.name+'</h3><div class="desc">'+c.desc+' · 共 '+c.total+' 卡</div>' +
+      '<div class="chBar"><div class="chFill" style="width:'+c.pct+'%"></div></div></div>' +
+      '<div class="chSide">'+side+'</div>';
+    if (c.unlocked) el.onclick = function(){ startSession(c.id); };
+    else el.onclick = function(){ toast('先学完上一章的 80% 才能解锁「'+c.name+'」'); };
+    box.appendChild(el);
+  });
+  refreshCheckin();
+  checkResume();
+}
+
+/* ================= 打卡: 一天答满 10 张即成功(三门课累计) ================= */
+var checkinCache = null, ckStartChecked = false, ckYm = '';
+
+function readCheckin(){
+  try { checkinCache = JSON.parse(bridge.checkinStatus()); }
+  catch (e) { checkinCache = null; }   /* 桥接不可用就整块隐藏, 绝不影响刷题 */
+  return checkinCache;
+}
+
+/** 首页 hero 胶囊 + 顶栏芯片(顶栏 innerHTML 每次重建, 芯片随之重新插入) */
+function refreshCheckin(){
+  var c = readCheckin();
+  if (!c){
+    var old = $('ckChip');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    $('ckPill').style.display = 'none';
+    return null;
+  }
+  $('ckPill').style.display = '';
+  $('ckFill').style.width = Math.min(100, Math.round(c.today * 100 / c.goal)) + '%';
+  $('ckTxt').innerHTML = c.checkedToday
+    ? '已连续打卡 <b>' + c.streak + '</b> 天'
+    : '今日 <b>' + c.today + '</b>/' + c.goal + ' 张';
+  $('ckPill').className = 'ckPill' + (c.streak > 0 ? ' blaze' : '') + (c.checkedToday ? ' done' : '');
+  $('ckPill').title = c.checkedToday
+    ? '今日已打卡 ✔ 点击查看打卡日历'
+    : '再答 ' + c.need + ' 张卡就打卡成功(三门课累计, 看答案也算)';
+  var chip = $('ckChip');
+  if (!chip){
+    chip = document.createElement('div');
+    chip.id = 'ckChip';
+    chip.onclick = openCheckinPanel;
+    $('headerStats').insertBefore(chip, $('headerStats').firstChild);
+  }
+  chip.className = 'statChip fire btn' + (c.checkedToday ? ' lit' : (c.streak > 0 ? ' urge' : ''));
+  chip.innerHTML = '🔥 打卡 <b>' + c.streak + '</b> 天';
+  chip.title = c.checkedToday ? '今日已打卡' : '今日还差 ' + c.need + ' 张';
+  return c;
+}
+
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function openCheckinPanel(){
+  var d0 = new Date();
+  ckYm = d0.getFullYear() + '-' + pad2(d0.getMonth() + 1);
+  if (renderCheckinPanel()) $('ckOverlay').classList.add('show');
+}
+function closeCheckinPanel(){ $('ckOverlay').classList.remove('show'); }
+function shiftMonth(step){
+  var y = +ckYm.slice(0, 4), m = +ckYm.slice(5, 7) + step;
+  if (m < 1){ m = 12; y--; } else if (m > 12){ m = 1; y++; }
+  var n = new Date();
+  if (y > n.getFullYear() || (y === n.getFullYear() && m > n.getMonth() + 1)) return;  /* 未来月份不看 */
+  if (y < n.getFullYear() - 2) return;   /* 记录只保留约一年半, 再早没有意义 */
+  ckYm = y + '-' + pad2(m);
+  renderCheckinPanel();
+}
+function renderCheckinPanel(){
+  var d = null;
+  try { d = JSON.parse(bridge.checkinMonth(ckYm)); } catch (e) { }
+  if (!d || !d.days){ toast('打卡日历读取失败'); return false; }
+  var c = checkinCache || readCheckin();
+  if (!c) c = {goal:10, today:0, need:0, checkedToday:false, streak:0, best:0, total:0};
+  $('ckTitle').textContent = (+d.ym.slice(0, 4)) + ' 年 ' + (+d.ym.slice(5, 7)) + ' 月 · 打卡 ' + d.count + ' 天';
+  $('ckNext').disabled = !!d.isNow;
+  var dow = ['一', '二', '三', '四', '五', '六', '日'], html = '';
+  for (var i = 0; i < 7; i++) html += '<div class="ckDow">' + dow[i] + '</div>';
+  for (var b = 0; b < d.lead; b++) html += '<div class="ckDay blank"></div>';
+  for (var day = 1; day <= d.days; day++){
+    var on = d.checked.indexOf(day) >= 0, isNow = (d.today === day);
+    html += '<div class="ckDay' + (on ? ' on' : '') + (isNow ? ' now' : '') + (isNow && !on ? ' part' : '') + '">'
+          + (isNow && !on ? (c.today + '/' + c.goal) : day) + '</div>';
+  }
+  $('ckGrid').innerHTML = html;
+  $('ckStats').innerHTML =
+    '<div class="n"><b>' + c.streak + '</b><span>连续打卡</span></div>' +
+    '<div class="n"><b>' + c.best + '</b><span>最长连击</span></div>' +
+    '<div class="n"><b>' + c.total + '</b><span>累计天数</span></div>' +
+    '<div class="n"><b>' + d.count + '</b><span>' + (d.isNow ? '本月打卡' : '该月打卡') + '</span></div>';
+  $('ckFoot').innerHTML = c.checkedToday
+    ? '今天已打卡 ✔ 共答了 <b>' + c.today + '</b> 张。规则: 每天答满 ' + c.goal + ' 张即打卡, 三门课程累计, 答对答错、看答案都算; 断一天连续清零, 最长连击永久保留。'
+    : '今天答了 <b>' + c.today + '/' + c.goal + '</b> 张, 再答 <b>' + c.need + '</b> 张就打卡成功。规则: 三门课程累计, 答对答错、看答案都算; 断一天连续清零, 最长连击永久保留。';
+  return true;
+}
+
+/** 完成弹层里的打卡结论 + 首次达成时的庆祝 */
+function renderDoneCheckin(){
+  var c = readCheckin();
+  if (!c){ $('dnCheck').textContent = ''; return; }
+  $('dnCheck').className = c.checkedToday ? 'ok' : '';
+  $('dnCheck').innerHTML = c.checkedToday
+    ? '🔥 今日打卡成功 · 连续 ' + c.streak + ' 天'
+    : '⏳ 今日 ' + c.today + '/' + c.goal + ' · 再答 ' + c.need + ' 张就能打卡';
+  if (c.checkedToday && !ckStartChecked){
+    setTimeout(function(){
+      toast('✅ 打卡成功! 连续 ' + c.streak + ' 天, 明天也别断了火 🔥');
+      bridge.sfx('win');
+    }, 1500);
+  }
+}
+
+/* ================= 会话续做: 中途退出后可恢复队列与位置 ================= */
+function persistSession(){
+  if (qidx < 0 || qidx >= queue.length) return;
+  try {
+    bridge.saveSession(currentCourse, JSON.stringify({
+      ch: currentChapter, ids: queue.map(function(c){ return c.id; }),
+      idx: qidx, answered: answered, correct: correct, best: bestStreak
+    }));
+  } catch (e) { }
+}
+function clearSession(){ try { bridge.saveSession(currentCourse, ''); } catch (e) { } }
+function checkResume(){
+  var s = null;
+  try { s = JSON.parse(bridge.loadSession(currentCourse) || 'null'); } catch (e) { }
+  var bar = $('resumeBar');
+  if (s && s.ids && s.idx < s.ids.length && s.idx >= 0){
+    bar.style.display = 'flex';
+    $('resumeText').innerHTML = '有一场没刷完的战斗: <b>' + chapterName(s.ch) +
+      '</b> 第 ' + (s.idx + 1) + ' / ' + s.ids.length + ' 张';
+    bar._data = s;
+  } else {
+    bar.style.display = 'none';
+    bar._data = null;
+  }
+}
+function resumeFromBar(){
+  var s = $('resumeBar')._data;
+  if (!s) return;
+  try {
+    queue = JSON.parse(bridge.cardsByIds(currentCourse, s.ids.join(',')));
+  } catch (err) {
+    toast('恢复进度失败: ' + (err && err.message ? err.message : err)); return;
+  }
+  if (!queue || !queue.cards || !queue.cards.length){ toast('恢复数据已失效'); clearSession(); $('resumeBar').style.display='none'; return; }
+  queue = queue.cards;
+  currentChapter = s.ch;
+  answered = s.answered || 0; correct = s.correct || 0; bestStreak = s.best || 0; streak = 0;
+  ckStartChecked = !!(readCheckin() && checkinCache.checkedToday);
+  qidx = s.idx - 1;
+  $('streakN').textContent = '0';
+  unlockedBefore = chaptersCache.filter(function(c){ return c.unlocked; }).map(function(c){ return c.id; });
+  show($('home'), false); show($('study'), true);
+  hideSheet();
+  nextCard();
+}
+
+/* ================= 学习流程 ================= */
+function startSession(ch){
+  currentChapter = ch;
+  var data;
+  try {
+    data = JSON.parse(bridge.session(currentCourse, ch));
+  } catch (err) {
+    toast('拉取学习队列失败: ' + (err && err.message ? err.message : err)); return;
+  }
+  /* 章节没有到期卡和新卡时, 自动转为温故模式(全部已学卡乱序重刷) */
+  if (!data.count && ch > 0){
+    try {
+      var warmRaw = bridge.sessionWarm(currentCourse, ch);
+      var warm = JSON.parse(warmRaw);
+      if (warm && warm.count){ data = warm; toast('温故知新: 本章已学卡片随机重刷'); }
+    } catch (err) {
+      toast('温故模式调用失败: ' + (err && err.message ? err.message : err)); return;
+    }
+  }
+  queue = data.cards; qidx = -1;
+  if (!queue.length){ toast(ch === 0 ? '当前没有到期的复习卡' : '这一章还没有学过的卡'); return; }
+  unlockedBefore = chaptersCache.filter(function(c){ return c.unlocked; }).map(function(c){ return c.id; });
+  answered = 0; correct = 0; streak = 0; bestStreak = 0;
+  ckStartChecked = !!(readCheckin() && checkinCache.checkedToday);
+  $('streakN').textContent = '0';
+  show($('home'), false); show($('study'), true);
+  hideSheet(); nextCard();
+}
+function nextCard(){
+  qidx++;
+  hideGloss();   /* 换卡时收起概念解释 */
+  while (qidx < queue.length && queue[qidx].dead) qidx++;   /* 被斩的卡跳过 */
+  if (qidx >= queue.length){ finishSession(); return; }
+  var c = queue[qidx];
+  waiting = false;
+  $('pfill').style.width = (qidx / queue.length * 100) + '%';
+
+  var card = $('qcard');
+  card.classList.remove('out','zhaned');
+  void card.offsetWidth;               /* 重置动画 */
+  card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
+
+  $('chips').innerHTML =
+    '<span class="chip">'+chapterName(c.ch)+'</span>' +
+    '<span class="chip tag">'+c.tag+'</span>' +
+    (c.wrong ? '<span class="chip wrong">错题重做</span>'
+             : (c.review ? '<span class="chip review">复习</span>' : '<span class="chip">新卡</span>'));
+  $('question').innerHTML = richText(c.q, true);   /* true: 新卡重置已高亮词表 */
+
+  if (c.fill){
+    $('options').style.display = 'none';
+    $('fillRow').style.display = 'flex';
+    var inp = $('fillInput'); inp.value = ''; inp.disabled = false;
+    setTimeout(function(){ inp.focus(); }, 60);
+  } else {
+    $('options').style.display = 'grid';
+    $('fillRow').style.display = 'none';
+    var box = $('options'); box.innerHTML = '';
+    /* 每次出现都重新洗牌: dispOrder[显示位] = 原始下标, 防止正确答案总在同一位置 */
+    dispOrder = [];
+    for (var d = 0; d < c.opts.length; d++) dispOrder.push(d);
+    for (var e2 = dispOrder.length - 1; e2 > 0; e2--) {
+      var rr = Math.floor(Math.random() * (e2 + 1));
+      var tt = dispOrder[e2]; dispOrder[e2] = dispOrder[rr]; dispOrder[rr] = tt;
+    }
+    dispOrder.forEach(function(orig, p){
+      var b = document.createElement('button');
+      b.className = 'opt';
+      b.innerHTML = '<span class="letter">'+'ABCD'[p]+'</span><span>'+richText(c.opts[orig])+'</span>';
+      b.onclick = function(ev){
+        /* 点选项里的术语高亮 = 看解释, 不算作答 */
+        if (ev.target && ev.target.closest && ev.target.closest('.term')) return;
+        pick(p, b);
+      };
+      box.appendChild(b);
+    });
+    /* 焦点放进隐形按键收集器: 保证键盘事件通过文本输入通道到达 */
+    setTimeout(function(){ $('keycap').focus(); }, 60);
+  }
+  persistSession();   /* 进入新卡即存档, 中途退出可恢复到这张 */
+}
+function chapterName(id){
+  for (var i = 0; i < chaptersCache.length; i++)
+    if (chaptersCache[i].id === id) return chaptersCache[i].name;
+  return '第'+id+'章';
+}
+function pick(i, btn){
+  if (waiting) return;
+  waiting = true;
+  var c = queue[qidx];
+  var ok = (dispOrder[i] === c.ans);
+  bridge.answer(currentCourse, c.id, ok);
+  var opts = $('options').children;
+  for (var k = 0; k < opts.length; k++) opts[k].classList.add("locked");
+  if (ok){
+    btn.classList.add('correct');   /* 纯CSS动效: 见 .opt.correct 的 winPop, 无粒子零开销 */
+    hitStreak();
+  } else {
+    var ansBtn = opts[dispOrder.indexOf(c.ans)];
+    btn.classList.add('wrong');
+    ansBtn.classList.add('reveal');
+    /* 明确标注: 红色是你选的, 绿色是正确答案, 避免误读 */
+    btn.insertAdjacentHTML('beforeend', '<span class="mk mkYou">你选的</span>');
+    ansBtn.insertAdjacentHTML('beforeend', '<span class="mk mkAns">正确答案</span>');
+    streak = 0; $('streakN').textContent = '0';
+    queue.push(c); toast('答错了, 这张卡排到队尾再战一次');
+  }
+  bridge.sfx(ok ? 'ok' : 'bad');
+  showSheet(ok, c);
+}
+function fillSubmit(){
+  if (waiting) return;
+  var c = queue[qidx], inp = $('fillInput');
+  var val = (inp.value || '').trim();
+  if (!val){ toast('先填一个答案吧'); return; }
+  waiting = true;
+  var ok = val.toLowerCase() === c.ans.toLowerCase();
+  inp.disabled = true; $('fillOk').disabled = true;
+  bridge.answer(currentCourse, c.id, ok);
+  if (ok){
+    inp.classList.add('fillWin');   /* 答对的填空框绿一下, 纯CSS */
+    hitStreak();
+  } else {
+    streak = 0; $('streakN').textContent = '0';
+    queue.push(c); toast('答错了, 这张卡排到队尾再战一次');
+  }
+  bridge.sfx(ok ? 'ok' : 'bad');
+  showSheet(ok, c);
+}
+function hitStreak(){
+  streak++; bestStreak = Math.max(bestStreak, streak);
+  $('streakN').textContent = streak;
+  var box = $('streakBox');
+  box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop');
+  if (streak > 0 && streak % 5 === 0) showStreakTip(streak);
+}
+function showStreakTip(n){
+  var el = $('streakTip');
+  var words = n >= 20 ? '势不可挡' : n >= 10 ? '手感封神' : '手感火热';
+  $('streakTipText').innerHTML = '连击 <b>x' + n + '</b> · ' + words;
+  el.classList.add('show');
+  clearTimeout(el._h);
+  el._h = setTimeout(function(){ el.classList.remove('show'); }, 1800);
+}
+/* 代码演示块: § 代替双引号, ¶ 代替换行(demos.jsonl 约定) */
+function demoBlock(d){
+  if (!d) return '';
+  var code = d.replace(/§/g, '"').replace(/¶/g, '\n')
+              .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return '<pre class="code">' + code + '</pre>';
+}
+function showSheet(ok, c){
+  answered++; if (ok) correct++;
+  var v = $('verdict');
+  v.textContent = ok ? '✓ 答对了!' : '✗ 答错了';
+  v.className = 'verdict ' + (ok ? 'ok' : 'bad');
+  $('explText').innerHTML =
+    (ok ? '' : '<b>正确答案: ' + (c.fill ? c.ans : c.opts[c.ans]) + '</b><br>') +
+    '💡 ' + richText(c.e) + demoBlock(c.d);
+  $('sheet').classList.add('show');
+  $('nextBtn').focus();
+  /* 已作答: 存档指向下一张(退出后恢复时不重做这张) */
+  var keep = qidx; qidx++;
+  persistSession();
+  qidx = keep;
+}
+function hideSheet(){
+  $('sheet').classList.remove('show');
+  $('fillOk').disabled = false;
+}
+function nextFromSheet(){
+  hideSheet();
+  waiting = true;              /* 卡片切换动画期间锁键盘, nextCard 里复位 */
+  $('qcard').classList.add('out');
+  setTimeout(nextCard, 240);
+}
+function zhanCurrent(){
+  if (waiting || qidx < 0) return;
+  var c = queue[qidx];
+  bridge.zhan(currentCourse, c.id);
+  queue.splice(queue.indexOf(c), 1);   /* 从队列彻底移除(含队尾重做副本) */
+  qidx--;
+  toast('⚔ 已斩!「' + c.topic + '」永不再现');
+  hideSheet();
+  $('qcard').classList.add('zhaned');
+  setTimeout(nextCard, 420);   /* 下一张的存档由 nextCard/finishSession 处理 */
+}
+/* 看答案: 未作答直接看 = 按答错处理(错题本/清连击/排到队尾), 计入答题数 */
+function revealAnswer(){
+  if (waiting || qidx < 0 || !queue[qidx]) return;
+  var c = queue[qidx];
+  waiting = true;
+  bridge.answer(currentCourse, c.id, false);
+  streak = 0; $('streakN').textContent = '0';
+  if (!c.fill){
+    var opts = $('options').children;
+    for (var k = 0; k < opts.length; k++) opts[k].classList.add("locked");
+    var ansBtn = opts[dispOrder.indexOf(c.ans)];
+    ansBtn.classList.add('reveal');
+    ansBtn.insertAdjacentHTML('beforeend', '<span class="mk mkAns">正确答案</span>');
+  } else {
+    var inp2 = $('fillInput');
+    inp2.disabled = true; $('fillOk').disabled = true;
+  }
+  queue.push(c);
+  toast('已看答案, 按错题处理, 排到队尾');
+  bridge.sfx('bad');
+  answered++;
+  var v = $('verdict');
+  v.textContent = '👀 已看答案';
+  v.className = 'verdict peek';
+  $('explText').innerHTML =
+      '<b>正确答案: ' + richText(c.fill ? c.ans : c.opts[c.ans]) + '</b><br>💡 ' + richText(c.e) + demoBlock(c.d);
+  $('sheet').classList.add('show');
+  $('nextBtn').focus();
+  var keep = qidx; qidx++; persistSession(); qidx = keep;
+}
+function finishSession(){
+  clearSession();                       /* 全部完成, 清掉恢复点 */
+  $('pfill').style.width = '100%';
+  hideSheet();
+  $('dn1').textContent = answered;
+  $('dn2').textContent = answered ? Math.round(correct*100/answered) + '%' : '0%';
+  $('dn3').textContent = 'x' + bestStreak;
+  $('doneSub').textContent = currentChapter === -1
+    ? '清算完毕! 答对一题就移出错题本, 剩下的明天再战。'
+    : '错题不会溜走, 它们明天还会回来。';
+  $('doneOverlay').classList.add('show');
+  renderDoneCheckin();
+  bridge.sfx('win');
+  /* 彩带特效已按需求移除: 全屏粒子在这台机器的 WebView 上渲染吃力 */
+  setTimeout(function(){ goHome(true); }, 40);   /* 地图数据先刷新, 弹层浮在上面 */
+}
+function goHome(keepOverlay){
+  show($('study'), false); show($('home'), true);
+  refreshHome();
+  if (!keepOverlay) $('doneOverlay').classList.remove('show');
+  /* 新章节解锁提醒 */
+  var nowUnlocked = chaptersCache.filter(function(c){ return c.unlocked; }).map(function(c){ return c.id; });
+  for (var i = 0; i < nowUnlocked.length; i++){
+    if (unlockedBefore.indexOf(nowUnlocked[i]) === -1){
+      var ch = chaptersCache.filter(function(c){ return c.id === nowUnlocked[i]; })[0];
+      setTimeout(function(cc){ toast('🔓 解锁新章节: '+cc.name+'!'); bridge.sfx('win'); }, 900, ch);
+    }
+  }
+}
+
+/* ================= 事件 ================= */
+$('backBtn').onclick = function(){ hideSheet(); goHome(false); };
+$('nextBtn').onclick = nextFromSheet;
+$('zhanBtn').onclick = zhanCurrent;
+$('peekBtn').onclick = revealAnswer;
+$('fillOk').onclick = fillSubmit;
+$('fillInput').addEventListener('keydown', function(e){
+  if (isEnter(e)){ e.preventDefault(); fillSubmit(); }
+});
+$('doneBack').onclick = function(){ $('doneOverlay').classList.remove('show'); };
+$('resumeBtn').onclick = resumeFromBar;
+$('resumeDrop').onclick = function(){
+  clearSession();
+  $('resumeBar').style.display = 'none';
+  toast('已放弃未完成的进度');
+};
+$('allReviewBtn').onclick = function(){ startSession(0); };
+$('wrongBtn').onclick = function(){
+  var st = JSON.parse(bridge.stats(currentCourse));
+  if (!st.wrong){ toast('错题本是空的, 一次没错过, 漂亮!'); return; }
+  startSession(-1);
+};
+$('soundBtn').onclick = function(){
+  var on = !bridge.soundOn();
+  bridge.setSound(on);
+  $('soundBtn').textContent = on ? '🔊' : '🔇';
+  toast(on ? '音效已开启' : '音效已静音');
+  if (on) bridge.sfx('ok');
+};
+$('ckPill').onclick = openCheckinPanel;
+$('ckPrev').onclick = function(){ shiftMonth(-1); };
+$('ckNext').onclick = function(){ shiftMonth(1); };
+$('ckClose').onclick = closeCheckinPanel;
+$('ckOverlay').onclick = function(e){ if (e.target === this) closeCheckinPanel(); };
+$('tabJava').onclick = function(){ switchCourse('java'); };
+$('tabAlgo').onclick = function(){ switchCourse('algo'); };
+$('tabCo').onclick = function(){ switchCourse('co'); };
+function switchCourse(c){
+  if (currentCourse === c) return;
+  currentCourse = c;
+  $('tabJava').classList.toggle('on', c === 'java');
+  $('tabAlgo').classList.toggle('on', c === 'algo');
+  $('tabCo').classList.toggle('on', c === 'co');
+  refreshHome();
+}
+document.addEventListener('keydown', function(e){
+  var enter = isEnter(e), space = (e.key === ' ' || e.keyCode === 32);
+  /* 打卡日历打开时: 回车/空格/Esc = 关闭面板, 不做答题判定 */
+  if ($('ckOverlay').classList.contains('show') && (enter || space || e.keyCode === 27)){
+    e.preventDefault(); closeCheckinPanel(); return;
+  }
+  /* JavaFX 空按键(U+0000): 可能是回车 —— 80ms 内无字符跟随则按回车处理; 修饰键不参与 */
+  if (!e.key && !e.keyCode && !space && !e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey) armEnterKey();
+  /* 拦截"回车/空格误点持有焦点的选项按钮"(浏览器原生行为会点击它) */
+  if ((enter || space) && e.target && e.target.classList
+      && e.target.classList.contains('opt') && !waiting){
+    e.preventDefault(); return;
+  }
+  /* 解析面板弹出时: 回车或空格 = 继续 */
+  if ($('sheet').classList.contains('show') && (enter || space)){
+    e.preventDefault(); nextFromSheet(); return;
+  }
+  /* 填空题激活但焦点不在输入框时(比如点了别处), 回车同样提交 */
+  if (enter && !waiting && qidx >= 0 && queue[qidx] && queue[qidx].fill
+      && $('fillRow').style.display !== 'none'){
+    e.preventDefault(); $('fillInput').focus(); fillSubmit();
+    return;
+  }
+  /* 选择题: 按 A~D 或 1~4 直接作答(输入法需处于英文状态) */
+  if (!waiting && qidx >= 0 && queue[qidx] && !queue[qidx].fill
+      && !$('study').classList.contains('hidden')){
+    var k = (e.key || '').toLowerCase();
+    /* 注意: JavaFX WebView 里真实按键的 e.key 可能为空, indexOf('') 会返回 0 误选A, 必须排除 */
+    var idx = k ? 'abcd'.indexOf(k) : -1;
+    if (idx < 0 && e.keyCode >= 49 && e.keyCode <= 52) idx = e.keyCode - 49;
+    window.__lastKey = 'key=' + e.key + ' code=' + e.code + ' keyCode=' + e.keyCode + ' → idx=' + idx;
+    if (idx >= 0 && idx < queue[qidx].opts.length && $('options').children[idx]){
+      e.preventDefault();
+      pick(idx, $('options').children[idx]);
+    }
+  }
+});
+
+/* JavaFX WebView 的按键怪癖: 字母的 keydown 不带字符(需用 keypress 的 charCode),
+   回车/字母的 keydown 全是 U+0000 —— 用「空按键且 80ms 内无字符跟随」判定为回车。
+   注意: 必须被任何 input 事件取消, 否则中文输入法(无keypress)会误判成回车提前提交 */
+var pendingEnter = null;
+document.addEventListener('input', function(){
+  if (pendingEnter){ clearTimeout(pendingEnter); pendingEnter = null; }
+}, true);
+function armEnterKey(){
+  if (pendingEnter) clearTimeout(pendingEnter);
+  pendingEnter = setTimeout(function(){
+    pendingEnter = null;
+    if ($('ckOverlay').classList.contains('show')){ closeCheckinPanel(); return; }   /* JavaFX 真实回车走这条路径 */
+    if ($('sheet').classList.contains('show')){ nextFromSheet(); return; }
+    var inp = $('fillInput');
+    if (qidx >= 0 && queue[qidx] && queue[qidx].fill && !waiting && inp.value.trim()) fillSubmit();
+  }, 80);
+}
+document.addEventListener('keypress', function(e){
+  if (pendingEnter){ clearTimeout(pendingEnter); pendingEnter = null; }   /* 有字符跟随, 不是回车 */
+  if (waiting || qidx < 0 || !queue[qidx] || queue[qidx].fill) return;
+  if ($('sheet').classList.contains('show') || $('study').classList.contains('hidden')) return;
+  var ch = String.fromCharCode(e.charCode || e.keyCode || 0).toLowerCase();
+  if (ch === 'k' && !queue[qidx].fill){ revealAnswer(); return; }   /* 填空题打字不误触 */
+  var idx = ch ? 'abcd'.indexOf(ch) : -1;
+  if (idx < 0 && ch >= '1' && ch <= '4') idx = ch.charCodeAt(0) - 49;
+  if (idx >= 0 && idx < queue[qidx].opts.length && $('options').children[idx]){
+    e.preventDefault();
+    pick(idx, $('options').children[idx]);
+  }
+});
+
+/* 隐形输入框的按键处理: 文本输入通道最可靠(与填空题打字同路径) */
+(function(){
+  var cap = $('keycap');
+  cap.addEventListener('input', function(){
+    if (pendingEnter){ clearTimeout(pendingEnter); pendingEnter = null; }  /* 输入法组字的字母不算回车 */
+    var v = cap.value || '';
+    window.__lastCap = 'input=' + JSON.stringify(v);
+    cap.value = '';                     /* 清空同时打断输入法组字, 避免候选框堆积 */
+    if (waiting || qidx < 0 || !queue[qidx] || queue[qidx].fill) return;
+    if ($('sheet').classList.contains('show') || $('study').classList.contains('hidden')) return;
+    var ch = v.charAt(v.length - 1).toLowerCase();
+    if (ch === 'k'){ revealAnswer(); return; }
+    var idx = ch ? 'abcd'.indexOf(ch) : -1;
+    if (idx < 0 && ch >= '1' && ch <= '4') idx = ch.charCodeAt(0) - 49;
+    if (idx >= 0 && idx < queue[qidx].opts.length && $('options').children[idx]){
+      pick(idx, $('options').children[idx]);
+    }
+  });
+})();
+
+/* ================= 平滑滚动(接管滚轮: 原生步进式滚动观感像掉帧) ================= */
+Array.prototype.forEach.call(document.querySelectorAll('.screen'), function(el){
+  var target = 0, animating = false;
+  el.addEventListener('wheel', function(e){
+    if (el.classList.contains('hidden')) return;
+    e.preventDefault();
+    var max = el.scrollHeight - el.clientHeight;
+    target = Math.max(0, Math.min(max, (animating ? target : el.scrollTop) + e.deltaY));
+    if (!animating){
+      animating = true;
+      var from = el.scrollTop, t0 = performance.now(), dur = 170;
+      (function step(t){
+        var k = Math.min(1, (t - t0) / dur);
+        var eased = 1 - Math.pow(1 - k, 3);   /* 三次缓出, 顺滑收尾 */
+        el.scrollTop = from + (target - from) * eased;
+        if (k < 1) requestAnimationFrame(step); else animating = false;
+      })(t0);
+    }
+  }, { passive: false });
+});
+
+/* ================= 浏览器(手机)模式: 用 HTTP 接口替代 Java 桥接 ================= */
+function sfxWeb(type){
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    sfxWeb.ctx = sfxWeb.ctx || new AC();
+    var ctx = sfxWeb.ctx, t0 = ctx.currentTime;
+    var notes = type === 'ok'  ? [[659,0,.10],[988,.10,.15]]
+              : type === 'bad' ? [[196,0,.14],[147,.14,.20]]
+              : [[523,0,.10],[659,.10,.10],[784,.20,.10],[1047,.30,.24]];
+    notes.forEach(function(n){
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = n[0];
+      g.gain.setValueAtTime(.25, t0 + n[1]);
+      g.gain.exponentialRampToValueAtTime(.001, t0 + n[1] + n[2]);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t0 + n[1]); o.stop(t0 + n[1] + n[2] + .02);
+    });
+  } catch (e) { }
+}
+function installHttpBridge(){
+  function get(url){
+    var x = new XMLHttpRequest();
+    x.open('GET', url, false);
+    x.send(null);
+    return x.responseText;
+  }
+  window.bridge = {
+    chapters:    function(c){ return get('/api/chapters?course=' + c); },
+    session:     function(c, ch){ return get('/api/session?course=' + c + '&ch=' + ch); },
+    sessionWarm: function(c, ch){ return get('/api/warm?course=' + c + '&ch=' + ch); },
+    cardsByIds:  function(c, ids){ return get('/api/ids?course=' + c + '&ids=' + encodeURIComponent(ids)); },
+    answer:      function(c, id, ok){ get('/api/answer?course=' + c + '&id=' + id + '&ok=' + (ok ? 1 : 0)); },
+    zhan:        function(c, id){ get('/api/zhan?course=' + c + '&id=' + id); },
+    stats:       function(c){ return get('/api/stats?course=' + c); },
+    checkinStatus: function(){ return get('/api/checkin'); },
+    checkinMonth:  function(ym){ return get('/api/checkinmonth?ym=' + encodeURIComponent(ym || '')); },
+    loadSession: function(c){ return get('/api/loadsession?course=' + c); },
+    saveSession: function(c, j){
+      try {
+        var x = new XMLHttpRequest();
+        x.open('POST', '/api/savesession?course=' + c, false);
+        x.send(j || '');
+      } catch (e) { }
+    },
+    soundOn: function(){ try { return localStorage.jsound !== '0'; } catch (e) { return true; } },
+    setSound: function(on){ try { localStorage.jsound = on ? '1' : '0'; } catch (e) { } },
+    sfx: sfxWeb,
+    webUrl: function(){ return ''; }
+  };
+}
+
+/* ================= 启动 ================= */
+function boot(){
+  if (!window.bridge) installHttpBridge();   /* 浏览器(手机)模式: 走 HTTP 接口 */
+  $('soundBtn').textContent = bridge.soundOn() ? '🔊' : '🔇';
+  var isPhone = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+  $('phoneBtn').style.display = isPhone ? 'none' : '';
+  refreshHome();
+}
+$('phoneBtn').onclick = function(){
+  var u = bridge.webUrl();
+  toast(u ? '手机与电脑连同一WiFi, 手机浏览器打开: ' + u
+          : '手机服务未启动(电脑端重新打开软件试试)', 5000);
+};
+window.__onBridgeReady = boot;
+if (window.bridge) boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# 编译产物与打包输出(可用 AGENTS.md 第五节命令随时重建)
+out/
+dist/
+dist-input/
+tools/out/
+tools/check/
+*.class
+
+# JavaFX SDK(100MB+, 打包依赖但不入库, 保留在本地)
+jfx/
+jfx.zip
+
+# 编辑器与临时文件
+.vscode/
+.idea/
+*.log
+test-tmp/
