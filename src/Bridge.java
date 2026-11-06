@@ -114,14 +114,18 @@ public class Bridge {
 
 
     /* ---- 外部应用: 豆包 ---- */
-    /** 唤起豆包并与本程序并排分屏: 执行 resources 里的 layout-doubao.ps1(找句柄/启动/左右对半/置前), 兜底网页版 */
+    /** 唤起豆包并排分屏; 关闭豆包窗口后由守望脚本自动还原百词斩原位 */
     public void openDoubao() {
         try {
-            Path ps = Path.of(System.getProperty("java.io.tmpdir"), "shan-doubao.ps1");
-            try (var in = Bridge.class.getResourceAsStream("/layout-doubao.ps1")) {
-                if (in != null) Files.copy(in, ps, StandardCopyOption.REPLACE_EXISTING);
+            String tmp = System.getProperty("java.io.tmpdir");
+            for (String f : new String[]{"layout-doubao.ps1", "restore-doubao.ps1"}) {
+                Path ps = Path.of(tmp, "shan-" + f);
+                try (var in = Bridge.class.getResourceAsStream("/" + f)) {
+                    if (in != null) Files.copy(in, ps, StandardCopyOption.REPLACE_EXISTING);
+                }
             }
-            new ProcessBuilder("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps.toString()).start();
+            new ProcessBuilder("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                    "-File", Path.of(tmp, "shan-layout-doubao.ps1").toString()).start();
             return;
         } catch (Exception ignored) { }
         try { new ProcessBuilder("cmd", "/c", "start", "", "https://www.doubao.com").start(); } catch (Exception ignored) { }
