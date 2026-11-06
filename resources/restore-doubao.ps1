@@ -12,7 +12,7 @@ Add-Type -TypeDefinition 'using System;using System.Runtime.InteropServices;publ
 
 $iconicStreak = 0
 for (;;) {
-    Start-Sleep -Milliseconds 900
+    Start-Sleep -Milliseconds 250
     if (-not (Test-Path $save)) { exit 0 }   # another watcher already restored
 
     $sp = Get-Process JavaShan -ErrorAction SilentlyContinue |
@@ -27,7 +27,7 @@ for (;;) {
         $trigger = "closed"
     } elseif ([W3]::IsIconic($dp.MainWindowHandle)) {
         $iconicStreak++
-        if ($iconicStreak -ge 2) { $trigger = "minimized" }   # 两连判, 防抖
+        Start-Sleep -Milliseconds 150; $dp2 = Get-Process Doubao -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1; if ($dp2 -and [W3]::IsIconic($dp2.MainWindowHandle)) { $trigger = "minimized" }   # 快速复核防抖
     } else {
         $iconicStreak = 0
     }
