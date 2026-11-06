@@ -199,9 +199,8 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;
   align-items:center;justify-content:center;z-index:60;opacity:0;pointer-events:none;transition:.3s}
 .overlay.show{opacity:1;pointer-events:auto}
-.doneBox{background:#fff;border-radius:26px;padding:40px 48px;text-align:center;width:420px;
-  transform:scale(.85);transition:.35s cubic-bezier(.2,.9,.3,1.3)}
-.overlay.show .doneBox{transform:scale(1)}
+/* 性能纪律: 大面板禁止缩放/位移动画(无GPU合成, 每帧全量重光栅化必卡), 只靠遮罩淡入 */
+.doneBox{background:#fff;border-radius:26px;padding:40px 48px;text-align:center;width:420px}
 .doneBox .big{font-size:56px;animation:optPop .5s ease .1s both}
 .doneBox h2{font-size:24px;margin:10px 0 6px}
 .doneBox .sub2{color:var(--sub);font-size:14px;margin-bottom:20px}
@@ -256,9 +255,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .statChip.urge{background:#fff7ed;border-color:#fed7aa}
 .statChip.lit b{color:var(--ok)}
 
-.ckBox{background:#fff;border-radius:26px;padding:26px 28px;width:400px;
-  transform:scale(.85);transition:.35s cubic-bezier(.2,.9,.3,1.3)}
-.overlay.show .ckBox{transform:scale(1)}
+.ckBox{background:#fff;border-radius:26px;padding:26px 28px;width:400px}
 .ckHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
 .ckHead h3{font-size:16.5px;flex:1;text-align:center}
 .ckNav{border:1px solid var(--line);background:#fff;border-radius:10px;width:32px;height:32px;
@@ -269,7 +266,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .ckDow{font-size:11px;font-weight:700;color:var(--sub);text-align:center;padding-bottom:2px}
 .ckDay{height:33px;border-radius:10px;display:flex;align-items:center;justify-content:center;
   font-size:12.5px;color:#94a3b8;background:#f8fafc;border:1px solid var(--line)}
-.ckDay.on{background:var(--brandGrad);color:#fff;border-color:transparent;font-weight:700}
+.ckDay.on{background:#4f46e5;color:#fff;border-color:transparent;font-weight:700}
 .ckDay.part{background:#fff7ed;color:var(--warn);border-color:#fed7aa;font-size:11px;font-weight:800}
 .ckDay.now{border:2px solid var(--warn);font-weight:800;color:var(--ink)}
 .ckDay.on.now{border:2px solid #fbbf24;color:#fff}
