@@ -1,6 +1,6 @@
 # Shan x Doubao side-by-side layout + auto-restore watcher (ASCII only)
 Add-Type -AssemblyName System.Windows.Forms
-Add-Type -TypeDefinition 'using System;using System.Runtime.InteropServices;public struct RECT{public int L,T,R,B;} public class W2{[DllImport("user32.dll")]public static extern bool SetProcessDPIAware();[DllImport("user32.dll")]public static extern bool ShowWindow(IntPtr h,int n);[DllImport("user32.dll")]public static extern bool SetForegroundWindow(IntPtr h);[DllImport("user32.dll")]public static extern bool MoveWindow(IntPtr h,int x,int y,int w,int hh,bool p);[DllImport("user32.dll")]public static extern bool GetWindowRect(IntPtr h,out RECT r);}'
+Add-Type -TypeDefinition 'using System;using System.Runtime.InteropServices;public struct RECT{public int L,T,R,B;} public class W2{[DllImport("user32.dll")]public static extern bool SetProcessDPIAware();[DllImport("user32.dll")]public static extern bool ShowWindow(IntPtr h,int n);[DllImport("user32.dll")]public static extern bool SetForegroundWindow(IntPtr h);[DllImport("user32.dll")]public static extern bool MoveWindow(IntPtr h,int x,int y,int w,int hh,bool p);[DllImport("user32.dll")]public static extern bool GetWindowRect(IntPtr h,out RECT r);[DllImport("user32.dll")]public static extern bool IsIconic(IntPtr h);}'
 [W2]::SetProcessDPIAware() | Out-Null
 
 $exe = "$env:LOCALAPPDATA\Doubao\Application\Doubao.exe"
@@ -26,11 +26,18 @@ $sp = Get-Process JavaShan -ErrorAction SilentlyContinue |
       Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
 if (-not $sp) { exit 2 }
 
-# save current Shan geometry (keep the TRUE original if already tiled)
+# save current Shan geometry (keep the TRUE original if already tiled).
+# if Shan is minimized its rect is garbage(-32000): un-minimize first, then measure.
 if (-not (Test-Path $save)) {
+    if ([W2]::IsIconic($sp.MainWindowHandle)) {
+        [W2]::ShowWindow($sp.MainWindowHandle, 9) | Out-Null
+        Start-Sleep -Milliseconds 400
+    }
     $r = New-Object RECT
     [W2]::GetWindowRect($sp.MainWindowHandle, [ref]$r) | Out-Null
-    "$($r.L)|$($r.T)|$($r.R - $r.L)|$($r.B - $r.T)" | Set-Content $save -Encoding ASCII
+    if ($r.L -gt -5000 -and $r.T -gt -5000 -and ($r.R - $r.L) -gt 300) {
+        "$($r.L)|$($r.T)|$($r.R - $r.L)|$($r.B - $r.T)" | Set-Content $save -Encoding ASCII
+    }
 }
 
 # arrange: Shan left half, Doubao right half
