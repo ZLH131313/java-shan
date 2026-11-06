@@ -113,19 +113,15 @@ public class Bridge {
 
 
     /* ---- 外部应用: 豆包 ---- */
-    /** 唤起本地豆包客户端: 注册协议 doubao:// 优先, 失败退回 exe, 再退回网页版 */
+    /** 唤起豆包: 有窗口则置前台, 无窗口则启动(真路径 AppDataLocalDoubaoApplication), 兜底网页版 */
     public void openDoubao() {
-        try {
-            new ProcessBuilder("cmd", "/c", "start", "", "doubao://").start();
-            return;
-        } catch (Exception ignored) { }
-        try {
-            String exe = System.getenv("LOCALAPPDATA") + "\\Programs\\Doubao\\Doubao.exe";
-            new ProcessBuilder("cmd", "/c", "start", "", exe).start();
-            return;
-        } catch (Exception ignored) { }
-        try {
-            new ProcessBuilder("cmd", "/c", "start", "", "https://www.doubao.com").start();
-        } catch (Exception ignored) { }
+        String exe = System.getenv("LOCALAPPDATA") + "\\Doubao\\Application\\Doubao.exe";
+        String ps = "$p=Get-Process Doubao -EA SilentlyContinuous|?{$_.MainWindowHandle -ne 0}|select -First 1;"
+                + "if($p){Add-Type -Namespace W -Name U -MemberDefinition '[DllImport(\"user32.dll\")] public static extern bool ShowWindow(IntPtr h,int n);[DllImport(\"user32.dll\")] public static extern bool SetForegroundWindow(IntPtr h);';"
+                + "[W.U]::ShowWindow($p.MainWindowHandle,9)|Out-Null;[W.U]::SetForegroundWindow($p.MainWindowHandle)|Out-Null}"
+                + "else{Start-Process '" + exe + "'}";
+        try { new ProcessBuilder("powershell", "-NoProfile", "-Command", ps).start(); return; } catch (Exception ignored) { }
+        try { new ProcessBuilder("cmd", "/c", "start", "", exe).start(); return; } catch (Exception ignored) { }
+        try { new ProcessBuilder("cmd", "/c", "start", "", "https://www.doubao.com").start(); } catch (Exception ignored) { }
     }
 }

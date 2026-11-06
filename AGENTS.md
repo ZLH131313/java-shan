@@ -126,3 +126,4 @@ cp cards-java.jsonl demos-java.jsonl cards-algo.jsonl demos-algo.jsonl cards-co.
 - 2026-11-06: 修复打卡/结算弹窗卡顿 —— 大面板缩放动画在无GPU合成的WebView下每帧全量重光栅化, 移除之(仅保留遮罩淡入); 月历已打卡格渐变改纯色(执行性能纪律)
 - 2026-11-06(二): 双agent并行合龙 —— 新增操作系统课程(按黄红桃《现代操作系统教程》8章124卡+10演示, 章节表与卡片区remap对齐); Java课程新增第9章Spring(20卡+6演示, 总229); 词典补OS/Spring术语24条。注: v1.7(另一agent)已删除手机刷题功能(WebServer/HTTP桥), 本次按该基线构建
 - 2026-11-06(三): 答题页新增「🤖 豆包」按钮 —— 点击唤起本地豆包客户端(doubao://协议优先, exe路径次之, 网页版兜底)
+- 2026-11-06(四): 修复豆包按钮无反应 —— 豆包真路径是 AppData\Local\Doubao\Application\Doubao.exe(Chrome式布局); 且豆包常驻托盘窗口无标题, doubao://协议唤不出窗口。改为: 找到豆包窗口句柄直接 ShowWindow+SetForegroundWindow 置前台, 无窗口则启动exe, 网页兜底
