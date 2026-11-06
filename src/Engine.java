@@ -21,7 +21,8 @@ public class Engine {
             {"5", "面向对象基础", "类、对象、封装与构造器"},
             {"6", "面向对象进阶", "继承、多态、抽象与接口"},
             {"7", "常用类与集合", "String、包装类与容器"},
-            {"8", "异常与多线程入门", "稳健程序的第一步"}
+            {"8", "异常与多线程入门", "稳健程序的第一步"},
+            {"9", "Spring 入门", "IOC、AOP、事务与SpringBoot"}
     };
 
     /** 算法课程(王晓东《计算机算法设计与分析》第五版 第1-6章) */
@@ -42,6 +43,18 @@ public class Engine {
             {"4", "指令系统", "指令格式与寻址方式"},
             {"5", "中央处理器", "数据通路、控制器与流水线"},
             {"6", "总线与输入输出", "总线、中断与DMA"}
+    };
+
+    /** 操作系统课程(黄红桃主编《现代操作系统教程》, 清华大学出版社) */
+    static final String[][] OS_CHAPTERS = {
+            {"1", "操作系统概述", "概念、特征与发展历程"},
+            {"2", "系统运行环境", "体系结构、中断与系统调用"},
+            {"3", "进程与线程", "PCB、状态转换与上下文切换"},
+            {"4", "处理机调度", "调度算法与周转时间计算"},
+            {"5", "同步互斥与死锁", "信号量、经典问题与银行家算法"},
+            {"6", "存储管理", "分页分段与虚拟存储置换"},
+            {"7", "文件管理", "逻辑结构、目录与磁盘分配"},
+            {"8", "设备管理", "IO控制方式、SPOOLing与磁盘调度"}
     };
 
     static final int NEW_PER_SESSION = 10;   // 每次学新卡上限
@@ -286,6 +299,22 @@ public class Engine {
             for (String seg : c.chapters().split("\\},\\{")) if (seg.contains("\"name\"")) cc++;
             System.out.println("[测试] 计组课程章节数(应=6): " + cc + " | 卡片数: "
                     + c.stats().replaceAll(".*\"total\":(\\d+).*", "$1"));
+        }
+        /* 操作系统课程加载自检 */
+        if (Files.exists(Path.of("cards-os.jsonl"))) {
+            Path tmp4 = Files.createTempDirectory("shan-os");
+            Files.copy(Path.of("cards-os.jsonl"), tmp4.resolve("cards.jsonl"));
+            Files.copy(Path.of("demos-os.jsonl"), tmp4.resolve("demos.jsonl"));
+            Engine o = new Engine(tmp4.resolve("cards.jsonl"), tmp4.resolve("progress.jsonl"), OS_CHAPTERS);
+            int oc = 0;
+            for (String seg : o.chapters().split("\\},\\{")) if (seg.contains("\"name\"")) oc++;
+            System.out.println("[测试] 操作系统课程章节数(应=8): " + oc + " | 卡片数: "
+                    + o.stats().replaceAll(".*\"total\":(\\d+).*", "$1"));
+            StringBuilder osPer = new StringBuilder();
+            java.util.regex.Matcher mm = java.util.regex.Pattern
+                    .compile("\"id\":(\\d+),[^\\[]*?\"total\":(\\d+)").matcher(o.chapters());
+            while (mm.find()) osPer.append(mm.group(1)).append('=').append(mm.group(2)).append(' ');
+            System.out.println("[测试] OS各章卡数(不应有0): " + osPer);
         }
         System.out.println("=== 引擎逻辑自测完成 ===");
     }

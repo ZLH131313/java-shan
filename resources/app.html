@@ -306,6 +306,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
       <button id="tabJava" class="cTab on">☕ Java</button>
       <button id="tabAlgo" class="cTab">📐 算法</button>
       <button id="tabCo" class="cTab">🖧 计组</button>
+      <button id="tabOs" class="cTab">🖥 操作系统</button>
     </div>
     <div class="hero">
       <div class="hi">
@@ -532,7 +533,30 @@ var GLOSS = {
   'DMA':'外设与内存直接成块传送数据、不经 CPU 的方式',
   '寻址方式':'指令中确定操作数有效地址的方法(立即/直接/间接/变址...)',
   '操作码':'指令中标明操作类型的字段',
-  '冯·诺依曼结构':'程序与数据同存于存储器、自动逐条执行指令的计算机结构'
+  '冯·诺依曼结构':'程序与数据同存于存储器、自动逐条执行指令的计算机结构',
+  'PCB':'进程控制块: 记录进程状态/优先级/现场等信息, 是进程存在的唯一标志',
+  '系统调用':'用户程序请求操作系统内核服务的接口(如读文件), 引发用户态→内核态切换',
+  '特权指令':'只能在内核态执行的指令(启动IO/关中断等), 防止用户程序破坏系统',
+  '多道程序':'内存同时驻留多道程序交替执行, 宏观并行微观串行, 提高资源利用率',
+  '时间片':'分给每个进程的一段CPU时间, 用完被轮转下去; 过大退化FCFS, 过小切换开销大',
+  '死锁':'多个进程互相等待对方占有的资源, 永远无法推进的状态',
+  '临界区':'进程中访问临界资源的那段代码, 进入需互斥',
+  '临界资源':'一段时间内只允许一个进程使用的资源(如打印机)',
+  '信号量':'整型变量+P/V原语, 实现互斥与同步的经典工具',
+  'PV操作':'P(申请,不够则阻塞)与V(释放,有等待则唤醒)两个原子操作',
+  '管程':'把共享数据与操作封装、自动互斥的高级同步构造(Java的synchronized即此思想)',
+  '分页':'把内存与逻辑地址空间切成等大的页/块, 按页表离散映射, 消灭外部碎片',
+  '分段':'按逻辑意义划分可变长段, 便于共享保护, 产生外部碎片',
+  '快表':'TLB: 页表项的高速缓存, 命中则免一次访存查页表',
+  '虚拟存储器':'基于局部性, 只装入部分页面即可运行, 逻辑上扩充了内存',
+  '缺页中断':'访问的页不在内存时产生的中断, OS负责调入(可能触发置换)',
+  '页面置换':'内存满时选择淘汰哪一页的算法(OPT/FIFO/LRU/Clock)',
+  '抖动':'页框不足导致频繁缺页换页, 系统忙于对换无法干活的现象',
+  '银行家算法':'死锁避免算法: 模拟分配后判断是否存在安全序列, 不安全则拒绝分配',
+  '控制反转':'IOC: 对象创建与依赖装配的控制权从程序代码转移到容器',
+  '依赖注入':'DI: 容器把依赖对象送进目标类(构造器/Setter/字段), 是IOC的实现方式',
+  '切面':'AOP中的模块化横切逻辑(如日志切面/事务切面), 织入切点执行',
+  '动态代理':'运行时生成代理对象拦截方法调用, Spring AOP 的底层实现'
 };
 var glossRegex = new RegExp('(' + Object.keys(GLOSS)
   .sort(function(a, b){ return b.length - a.length; })
@@ -1089,12 +1113,14 @@ $('ckOverlay').onclick = function(e){ if (e.target === this) closeCheckinPanel()
 $('tabJava').onclick = function(){ switchCourse('java'); };
 $('tabAlgo').onclick = function(){ switchCourse('algo'); };
 $('tabCo').onclick = function(){ switchCourse('co'); };
+$('tabOs').onclick = function(){ switchCourse('os'); };
 function switchCourse(c){
   if (currentCourse === c) return;
   currentCourse = c;
   $('tabJava').classList.toggle('on', c === 'java');
   $('tabAlgo').classList.toggle('on', c === 'algo');
   $('tabCo').classList.toggle('on', c === 'co');
+  $('tabOs').classList.toggle('on', c === 'os');
   refreshHome();
 }
 document.addEventListener('keydown', function(e){
