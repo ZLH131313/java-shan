@@ -9,15 +9,15 @@
 - 交付方式: 桌面快捷方式(OneDrive\Desktop\Java百词斩.lnk) → F:\ZCodeProjects\java-shan\dist\JavaShan\JavaShan.exe
 - 用户全局规则(必须遵守): 项目放 F:\ZCodeProjects\; 桌面(C:\Users\33406\OneDrive\Desktop)必须有可双击入口; exe 自包含; 交付时告知完整路径
 
-## 二、当前功能清单(v1.7)
+## 二、当前功能清单(v1.8)
 
-- 三门课程: ☕ Java 基础(8章209卡) / 📐 算法设计(王晓东教材第1-6章, 120卡) / 🖧 计算机组成原理(6章108卡)
-- 每课程独立: 章节顺序解锁(学满上章80%解锁下章)、错题本(答错自动进/答对出)、温故模式(已学卡乱序重刷)、会话续做(中途退出恢复断点)
+- 五门课程: ☕ Java 基础(9章229卡, 含第9章Spring) / 📐 算法设计(王晓东教材第1-6章, 120卡) / 🖧 计算机组成原理(6章108卡) / 🖥 操作系统(黄红桃《现代操作系统教程》8章124卡) / 📖 英语四级(7章40卡, 样卡阶段)
+- 每课程独立: **全部章节随时可学(v1.8 取消顺序解锁门槛, 想学哪章点哪章)**、错题本(答错自动进/答对出)、温故模式(已学卡乱序重刷)、会话续做(中途退出恢复断点)
 - 刷题机制: 简化SM-2(连对1/2/4/7/15/30天递增, 答错清零)、当场重做(答错排队尾直到答对)、⚔斩卡(永不再现)、👀看答案(按答错处理, K键)
 - 键盘流: A-D/1-4作答(中文输入法下也可), 回车/空格继续, K看答案; 选项每次出现重新洗牌
 - 概念词典: 术语自动高亮(每卡每词只亮一次, 超基础词不亮, 最长词优先), 点击弹解释气泡; 答完题后选项内术语仍可点
 - 代码演示: 答题后在解析面板显示深色代码块(demos-*.jsonl 按id关联)
-- **每日打卡(全局, 不分课程)**: 一天答满 10 张卡(三门课累计, 答对答错/看答案都算)即自动打卡; 顶栏🔥芯片 + 首页 hero 胶囊显示今日进度与连续天数; 点击开月历面板(打卡日高亮/今天显示进度/‹›换月, 未来月禁止); 完成弹层给出打卡结论, 刚达成时绿toast庆祝+音效; 断一天连续清零, 最长连击永久保留
+- **每日打卡(全局, 不分课程)**: 一天答满 10 张卡(五门课累计, 答对答错/看答案都算)即自动打卡; 顶栏🔥芯片 + 首页 hero 胶囊显示今日进度与连续天数; 点击开月历面板(打卡日高亮/今天显示进度/‹›换月, 未来月禁止); 完成弹层给出打卡结论, 刚达成时绿toast庆祝+音效; 断一天连续清零, 最长连击永久保留
 - 反馈系统: 答对CSS弹跳/答错抖动+「你选的/正确答案」标签、连击横幅、分色toast(红=错/橙=斩/绿=喜/靛=信息, 原地淡入淡出)、程序合成音效(🔊可静音)
 - ~~手机访问~~ **v1.7 已删除**: 不再有 HTTP 服务(WebServer.java 已删)、不再有 📱 按钮、不再有手机小屏适配; 只有桌面窗口能刷题。打卡仍是全局一份文件, 多个桌面窗口共享
 
@@ -27,8 +27,8 @@
 java-shan/
 ├── src/                 Java 源码(默认包)
 │   ├── App.java         JavaFX 窗口: WebView 加载 app.html, 注入 Bridge; 支持 --auto-close/--keytest 自测参数
-│   ├── Bridge.java      JS↔Java 桥(引擎方法第一个参数是课程 'java'/'algo'/'co'; 打卡 checkinStatus/checkinMonth 是全局无课程参数); 音效设置全局
-│   ├── Engine.java      学习引擎(章节解锁/SM-2/错题本/温故/会话JSON); JAVA/ALGO/CO_CHAPTERS 三套章节表; main()=自测入口
+│   ├── Bridge.java      JS↔Java 桥(引擎方法第一个参数是课程 'java'/'algo'/'co'/'os'/'en'; 打卡 checkinStatus/checkinMonth 是全局无课程参数); 音效设置全局
+│   ├── Engine.java      学习引擎(SM-2/错题本/温故/会话JSON); JAVA/ALGO/CO/OS/EN 五套章节表, 各章不做解锁门槛; main()=自测入口
 │   ├── CheckinStore.java 每日打卡(GOAL=10张/天, 连续·最长·累计·月历; 方法全 synchronized 因桌面可多实例; main()=打卡自测)
 │   ├── CardStore.java   读卡片库 + 合并 demos-*.jsonl(按id挂演示)
 │   ├── SrsStore.java    进度存储(iv/st/due/z/w/wb字段)
@@ -37,7 +37,7 @@ java-shan/
 ├── resources/
 │   ├── app.html         全部界面(单文件 HTML+CSS+JS, 必须离线自包含, 无外部依赖)
 │   └── icon.ico/png     程序图标(MakeIcon 生成)
-├── cards-java/algo/co.jsonl + demos-java/algo/co.jsonl   各课程内容(随包部署到 exe 旁)
+├── cards-java/algo/co/os/en.jsonl + demos-同名.jsonl   各课程内容(随包部署到 exe 旁)
 ├── jfx/                 JavaFX SDK 21.0.5(打包依赖, 勿删)
 ├── tools/               MakeIcon(图标生成)等工具
 ├── dist/JavaShan/       jpackage 产物(JavaShan.exe + runtime + app/javashan.jar + 数据文件), 快捷方式指向这里
@@ -65,7 +65,7 @@ demos-*.jsonl: `{"id":卡片id,"demo":"代码"}`; 代码中 **§=双引号, ¶=�
 cd /f/ZCodeProjects/java-shan
 JDK="/c/Program Files/Java/jdk-21/bin"
 "$JDK/javac" -encoding UTF-8 --module-path jfx/lib --add-modules javafx.controls,javafx.web -d out src/*.java
-"$JDK/java" -Dfile.encoding=UTF-8 -cp out Engine          # 引擎自测(三课程加载/解锁/错题本逻辑)
+"$JDK/java" -Dfile.encoding=UTF-8 -cp out Engine          # 引擎自测(五课程加载/出题顺序/错题本逻辑)
 "$JDK/java" -Dfile.encoding=UTF-8 -cp out CheckinStore    # 打卡自测
 "$JDK/jar" --create --file dist-input/javashan.jar -C out . -C resources .
 rm -rf dist && "$JDK/jpackage" --type app-image --name JavaShan --input dist-input \
@@ -73,7 +73,7 @@ rm -rf dist && "$JDK/jpackage" --type app-image --name JavaShan --input dist-inp
   --main-jar javashan.jar --main-class App --java-options "-Dprism.order=d3d" \
   --icon resources/icon.ico --dest dist
 cp jfx/bin/*.dll dist/JavaShan/runtime/bin/        # 关键! 见坑#1
-cp cards-java.jsonl demos-java.jsonl cards-algo.jsonl demos-algo.jsonl cards-co.jsonl demos-co.jsonl dist/JavaShan/
+cp cards-java.jsonl demos-java.jsonl cards-algo.jsonl demos-algo.jsonl cards-co.jsonl demos-co.jsonl cards-os.jsonl demos-os.jsonl cards-en.jsonl demos-en.jsonl dist/JavaShan/
 ```
 只改了 cards/demos 时无需重打包, cp 数据文件到 dist/JavaShan/ 即可。
 桌面快捷方式: PowerShell WScript.Shell 创建 .lnk → target=dist\JavaShan\JavaShan.exe, WorkDir=dist\JavaShan; 脚本文件需 UTF-8 BOM 否则中文乱码。
@@ -134,3 +134,4 @@ cp cards-java.jsonl demos-java.jsonl cards-algo.jsonl demos-algo.jsonl cards-co.
 - 2026-11-06(九): 豆包"关闭回位"扩展到最小化(IsIconic检测+两连判防抖); 修复最小化时存档垃圾坐标(-32000)——布局脚本量尺寸前先解除最小化并做坐标防线; 注意: 测量/移动窗口的脚本必须SetProcessDPIAware, 否则200%%缩放屏读到虚拟化坐标(数值差一倍)
 - 2026-11-06(十): 回位延迟优化 —— 轮询900ms→250ms, 两连判防抖→150ms快速复核; 实测最小化到回位<1秒(原2~3秒)
 - 2026-11-06(十一): 新增英语四级课程(五门课) —— ch1语境选词30卡 + ch2熟词僻义/形近辨析10卡(共40, 试刷样卡); 章节规划7章(语境/辨析/搭配/语法/长难句/中式英语/写作句型); 注意: WebServer.java 已于v1.7删除, 接新课程无需改它
+- 2026-11-06(十二): **取消章节顺序解锁(v1.8)** —— 按用户要求「想学哪章就学哪章」, 五门课全部生效。Engine 删除 `UNLOCK_RATIO` 常量与 `unlocked()` 方法, `chapters()` 不再输出 `unlocked` 字段(界面契约同步改动!), `session()` 的错题本/温故/常规三条路径与 `stats()` 的 dueNow 都不再做解锁过滤; app.html 去掉 `.chapterCard.locked` 系列样式、卡片渲染的 🔒 分支与「先学完上一章80%」toast、`unlockedBefore` 变量及回首页时的「🔓 解锁新章节」提醒。章内出题次序仍由 ch/ord 决定。**验证**: 编译零错误; 引擎自测新增/改写两条断言 —— 章节 JSON 里不含 unlocked(true)、全新进度直接开第2章得到 10 张(应=10), 其余断言(第1章10张/新卡按序/斩卡不现/错题本进出)全 true, 五课程加载 Java 229、算法 120、计组 108、OS 124、四级 40; CheckinStore 自测 11 项全 true; `node --check` 校验 app.html 内联脚本语法通过; 关旧实例后重打包并 cp 78 个 dll + 10 个数据 jsonl, `JavaShan.exe --auto-close` → bridge ready、页面自检 章节卡=9、温故 OK count=15、强制重绘 60.7fps / rAF 66 / 滚动 66 / transform 65 且进程干净退出; 包内 javashan.jar grep 不到 WebServer、app.html grep 不到 unlocked/🔒/phone/http; 桌面快捷方式 target=F:\...\dist\JavaShan\JavaShan.exe 且 WorkDir 正确, 重启窗口标题为「Java 百词斩 v1.8」。注意坑: 章节卡片渲染依赖的 `c.unlocked` 字段已不存在, 旧代码若再引用会得到 undefined(视作 falsy)从而全章锁死 —— 改这块要看 Engine.chapters() 的实际字段

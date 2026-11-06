@@ -79,11 +79,8 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
   cursor:pointer;transition:transform .18s;
   animation:fadeUp .45s ease both}
 .chapterCard:hover{transform:translateY(-3px)}
-.chapterCard.locked{cursor:not-allowed;opacity:.62;filter:grayscale(.5)}
-.chapterCard.locked:hover{transform:none}
 .chNum{width:40px;height:40px;border-radius:12px;background:#4f46e5;color:#fff;
   display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex:none}
-.chapterCard.locked .chNum{background:#94a3b8}
 .chInfo{flex:1;min-width:0}
 .chInfo h3{font-size:14.5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chInfo .desc{display:none}
@@ -93,7 +90,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .chSide .go{display:inline-block;margin-top:4px;font-size:12px;font-weight:700;color:var(--brand);
   background:#eef2ff;padding:5px 11px;border-radius:99px}
 .chSide .go.hasDue{background:#fff7ed;color:var(--warn)}
-.chapterCard.locked .go{background:#f1f5f9;color:#94a3b8}
 .badge{display:inline-block;background:#fff7ed;color:var(--warn);border-radius:99px;
   padding:2px 9px;font-size:11.5px;font-weight:600;margin-left:6px}
 
@@ -419,7 +415,7 @@ var chaptersCache = [], queue = [], qidx = -1;
 var dispOrder = [];   /* 当前卡片的选项洗牌映射: dispOrder[显示位]=原始下标 */
 var currentCourse = 'java';   /* 当前课程: 'java' | 'algo' */
 var answered = 0, correct = 0, streak = 0, bestStreak = 0;
-var unlockedBefore = [], currentChapter = 0, waiting = false;
+var currentChapter = 0, waiting = false;
 
 /* ================= 概念词典: 高亮术语, 点击弹解释 ================= */
 var GLOSS = {
@@ -662,24 +658,17 @@ function refreshHome(){
   var box = $('chapterList'); box.innerHTML = '';
   chaptersCache.forEach(function(c, i){
     var el = document.createElement('div');
-    el.className = 'chapterCard' + (c.unlocked ? '' : ' locked');
+    el.className = 'chapterCard';
     el.style.animationDelay = (i*0.06)+'s';
-    var side;
-    if (!c.unlocked){
-      side = '<div>🔒 未解锁</div><div class="go">先学完上一章 80%</div>';
-    } else {
-      var go = c.due > 0 ? '<div class="go hasDue">复习 '+c.due+' 张</div>'
-              : (c.seen >= c.total ? '<div class="go">温故知新</div>' : '<div class="go">继续学习</div>');
-      var badge = c.due > 0 ? '<span class="badge">'+c.due+' 张待复习</span>' : '';
-      side = '<div>进度 '+c.pct+'%'+badge+'</div>'+go;
-    }
+    var go = c.due > 0 ? '<div class="go hasDue">复习 '+c.due+' 张</div>'
+            : (c.seen >= c.total ? '<div class="go">温故知新</div>' : '<div class="go">继续学习</div>');
+    var badge = c.due > 0 ? '<span class="badge">'+c.due+' 张待复习</span>' : '';
     el.innerHTML =
-      '<div class="chNum">'+(c.unlocked ? c.id : '🔒')+'</div>' +
+      '<div class="chNum">'+c.id+'</div>' +
       '<div class="chInfo"><h3>'+c.name+'</h3><div class="desc">'+c.desc+' · 共 '+c.total+' 卡</div>' +
       '<div class="chBar"><div class="chFill" style="width:'+c.pct+'%"></div></div></div>' +
-      '<div class="chSide">'+side+'</div>';
-    if (c.unlocked) el.onclick = function(){ startSession(c.id); };
-    else el.onclick = function(){ toast('先学完上一章的 80% 才能解锁「'+c.name+'」'); };
+      '<div class="chSide"><div>进度 '+c.pct+'%'+badge+'</div>'+go+'</div>';
+    el.onclick = function(){ startSession(c.id); };
     box.appendChild(el);
   });
   refreshCheckin();
@@ -826,7 +815,6 @@ function resumeFromBar(){
   ckStartChecked = !!(readCheckin() && checkinCache.checkedToday);
   qidx = s.idx - 1;
   $('streakN').textContent = '0';
-  unlockedBefore = chaptersCache.filter(function(c){ return c.unlocked; }).map(function(c){ return c.id; });
   show($('home'), false); show($('study'), true);
   hideSheet();
   nextCard();
@@ -853,7 +841,6 @@ function startSession(ch){
   }
   queue = data.cards; qidx = -1;
   if (!queue.length){ toast(ch === 0 ? '当前没有到期的复习卡' : '这一章还没有学过的卡'); return; }
-  unlockedBefore = chaptersCache.filter(function(c){ return c.unlocked; }).map(function(c){ return c.id; });
   answered = 0; correct = 0; streak = 0; bestStreak = 0;
   ckStartChecked = !!(readCheckin() && checkinCache.checkedToday);
   $('streakN').textContent = '0';
@@ -1069,14 +1056,6 @@ function goHome(keepOverlay){
   show($('study'), false); show($('home'), true);
   refreshHome();
   if (!keepOverlay) $('doneOverlay').classList.remove('show');
-  /* 新章节解锁提醒 */
-  var nowUnlocked = chaptersCache.filter(function(c){ return c.unlocked; }).map(function(c){ return c.id; });
-  for (var i = 0; i < nowUnlocked.length; i++){
-    if (unlockedBefore.indexOf(nowUnlocked[i]) === -1){
-      var ch = chaptersCache.filter(function(c){ return c.id === nowUnlocked[i]; })[0];
-      setTimeout(function(cc){ toast('🔓 解锁新章节: '+cc.name+'!'); bridge.sfx('win'); }, 900, ch);
-    }
-  }
 }
 
 /* ================= 事件 ================= */

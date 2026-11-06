@@ -7,8 +7,8 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * 学习引擎: 管理章节解锁、按顺序出题、间隔复习, 并把结果拼成 JSON 供界面调用。
- * 章节规则: 第 1 章默认解锁; 上一章见过(答过或斩掉)的卡片达到 80% 才解锁下一章。
+ * 学习引擎: 管理按顺序出题、间隔复习, 并把结果拼成 JSON 供界面调用。
+ * 章节规则: 全部章节随时可学(不做解锁门槛), 章内仍按 ch/ord 决定的学习次序出题。
  */
 public class Engine {
 
@@ -69,7 +69,6 @@ public class Engine {
     };
 
     static final int NEW_PER_SESSION = 10;   // 每次学新卡上限
-    static final double UNLOCK_RATIO = 0.8;  // 解锁下一章所需的学习比例
 
     private final List<Card> cards;
     private final SrsStore srs;
@@ -80,18 +79,6 @@ public class Engine {
         this.cards = CardStore.load(cardsFile);
         this.srs = SrsStore.load(progressFile);
         this.CHAPTERS = chapters;
-    }
-
-    /** 章节是否解锁: 第 1 章永远解锁, 其余看上一章学习进度 */
-    boolean unlocked(int chapter) {
-        if (chapter <= 1) return true;
-        int total = 0, seen = 0;
-        for (Card c : cards) {
-            if (c.chapter != chapter - 1) continue;
-            total++;
-            if (!srs.isNew(c.id)) seen++;
-        }
-        return total > 0 && (double) seen / total >= UNLOCK_RATIO;
     }
 
     /** 章节列表 JSON: 供首页地图渲染 */
@@ -106,7 +93,6 @@ public class Engine {
                 if (!srs.isNew(c.id)) seen++;
                 if (!srs.isNew(c.id) && srs.isDue(c.id, today)) due++;
             }
-            boolean open = unlocked(id);
             if (i > 0) sb.append(',');
             sb.append("{\"id\":").append(id)
               .append(",\"name\":\"").append(CHAPTERS[i][1]).append("\"")
@@ -114,7 +100,6 @@ public class Engine {
               .append(",\"total\":").append(total)
               .append(",\"seen\":").append(seen)
               .append(",\"due\":").append(due)
-              .append(",\"unlocked\":").append(open)
               .append(",\"pct\":").append(total == 0 ? 0 : seen * 100 / total)
               .append('}');
         }
@@ -124,7 +109,7 @@ public class Engine {
     /**
      * 开一组学习卡片。
      * chapter > 0: 该章到期复习卡(乱序) + 新卡按学习顺序补足;
-     * chapter = 0: 所有已解锁章节的到期复习卡(不含新卡);
+     * chapter = 0: 所有章节的到期复习卡(不含新卡);
      * chapter = -1: 错题本 —— 在册错题按累计错次从多到少, 最多 15 张。
      */
     public String session(int chapter) {
@@ -143,7 +128,7 @@ public class Engine {
             queue = new ArrayList<>();
             for (Card c : cards) {
                 SrsStore.CardState s = srs.state(c.id);
-                if (s != null && s.inWrong && !s.suspended && unlocked(c.chapter)) queue.add(c);
+                if (s != null && s.inWrong && !s.suspended) queue.add(c);
             }
             queue.sort((a, b) -> Integer.compare(srs.state(b.id).wrong, srs.state(a.id).wrong));
             if (queue.size() > 15) queue = queue.subList(0, 15);
@@ -151,8 +136,7 @@ public class Engine {
             queue = new ArrayList<>();
             for (Card c : cards) {
                 SrsStore.CardState st = srs.state(c.id);
-                if (st != null && !st.suspended
-                        && (chapter == 0 ? unlocked(c.chapter) : c.chapter == chapter && unlocked(chapter))) {
+                if (st != null && !st.suspended && (chapter == 0 || c.chapter == chapter)) {
                     queue.add(c);
                 }
             }
@@ -163,11 +147,10 @@ public class Engine {
             List<Card> fresh = new ArrayList<>();
             for (Card c : cards) {
                 if (!srs.isNew(c.id)) {
-                    if (srs.isDue(c.id, today)
-                            && (chapter == 0 ? unlocked(c.chapter) : c.chapter == chapter)) {
+                    if (srs.isDue(c.id, today) && (chapter == 0 || c.chapter == chapter)) {
                         review.add(c);
                     }
-                } else if (chapter > 0 && c.chapter == chapter && unlocked(chapter)) {
+                } else if (chapter > 0 && c.chapter == chapter) {
                     fresh.add(c);
                 }
             }
@@ -239,7 +222,7 @@ public class Engine {
         for (Card c : cards) {
             if (!srs.isNew(c.id)) {
                 learned++;
-                if (srs.isDue(c.id, today) && unlocked(c.chapter)) dueNow++;
+                if (srs.isDue(c.id, today)) dueNow++;
             }
         }
         return "{\"total\":" + total
@@ -257,12 +240,11 @@ public class Engine {
         Engine e = new Engine(tmp.resolve("cards.jsonl"), tmp.resolve("progress.jsonl"), JAVA_CHAPTERS);
 
         String ch = e.chapters();
-        int chapterCount = 0, unlockedCount = 0;
+        int chapterCount = 0;
         for (String seg : ch.split("\\},\\{")) {
             if (seg.contains("\"name\"")) chapterCount++;
-            if (seg.contains("\"unlocked\":true")) unlockedCount++;
         }
-        System.out.println("[测试] 章节数(应=8): " + chapterCount + " | 初始解锁(应=1): " + unlockedCount);
+        System.out.println("[测试] 章节数(应=9): " + chapterCount + " | 章节JSON里不应再有 unlocked 字段: " + !ch.contains("unlocked"));
 
         String s1 = e.session(1);
         int cnt = Integer.parseInt(s1.substring(s1.lastIndexOf("\"count\":") + 8, s1.length() - 1));
@@ -270,11 +252,15 @@ public class Engine {
         int i1 = s1.indexOf("JDK 的全称和含义是?"), i2 = s1.indexOf("JDK 与 JRE 的关系是?");
         System.out.println("[测试] 新卡按学习顺序出(应=true): " + (i1 >= 0 && i2 >= 0 && i1 < i2));
 
-        for (int id = 1; id <= 20; id++) e.answer(id, true);  // 第1章 24 张学 20 张 = 83%
-        String ch2 = e.chapters();
-        int seg2 = ch2.indexOf("\"id\":2");
-        boolean unlocked2 = seg2 >= 0 && ch2.substring(seg2, Math.min(ch2.length(), seg2 + 160)).contains("\"unlocked\":true");
-        System.out.println("[测试] 学满80%后第2章解锁(应=true): " + unlocked2);
+        for (int id = 1; id <= 20; id++) e.answer(id, true);  // 第1章刷 20 张
+
+        /* 解锁门槛已取消: 完全没学上一章也应能直接开第 2 章 */
+        Path tmpFree = Files.createTempDirectory("shan-free");
+        Files.copy(Path.of("cards-java.jsonl"), tmpFree.resolve("cards.jsonl"));
+        Engine eFree = new Engine(tmpFree.resolve("cards.jsonl"), tmpFree.resolve("progress.jsonl"), JAVA_CHAPTERS);
+        String sf = eFree.session(2);
+        int fcnt = Integer.parseInt(sf.substring(sf.lastIndexOf("\"count\":") + 8, sf.length() - 1));
+        System.out.println("[测试] 未学上一章直接开第2章(应=10): " + fcnt);
 
         e.answer(21, false);
         e.zhan(30);

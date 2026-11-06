@@ -49,7 +49,7 @@ public class App extends Application {
 
         engine.load(App.class.getResource("/app.html").toExternalForm());
 
-        stage.setTitle("Java 百词斩 v1.7");
+        stage.setTitle("Java 百词斩 v1.8");
         try {
             stage.getIcons().add(new javafx.scene.image.Image(
                     App.class.getResource("/icon.png").toExternalForm()));
