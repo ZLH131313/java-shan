@@ -57,6 +57,17 @@ public class Engine {
             {"8", "设备管理", "IO控制方式、SPOOLing与磁盘调度"}
     };
 
+    /** 英语四级课程 */
+    static final String[][] EN_CHAPTERS = {
+            {"1", "高频词·语境识记", "在句子里认识单词"},
+            {"2", "熟词僻义与形近词", "一词多义与孪生词陷阱"},
+            {"3", "搭配与短语动词", "地道表达的地基"},
+            {"4", "语法冲刺", "时态、从句与虚拟语气"},
+            {"5", "长难句与阅读思维", "先抓骨架再读血肉"},
+            {"6", "中式英语矫正", "像母语者一样表达"},
+            {"7", "写作句型库", "翻译与写作即插即用"}
+    };
+
     static final int NEW_PER_SESSION = 10;   // 每次学新卡上限
     static final double UNLOCK_RATIO = 0.8;  // 解锁下一章所需的学习比例
 
@@ -287,7 +298,7 @@ public class Engine {
             int ac = 0;
             for (String seg : ach.split("\\},\\{")) if (seg.contains("\"name\"")) ac++;
             System.out.println("[测试] 算法课程章节数(应=6): " + ac + " | 卡片数: "
-                    + a.stats().replaceAll(".*\"total\":(\\d+).*", "$1"));
+                    + a.stats());
         }
         /* 计组课程加载自检 */
         if (Files.exists(Path.of("cards-co.jsonl"))) {
@@ -298,7 +309,7 @@ public class Engine {
             int cc = 0;
             for (String seg : c.chapters().split("\\},\\{")) if (seg.contains("\"name\"")) cc++;
             System.out.println("[测试] 计组课程章节数(应=6): " + cc + " | 卡片数: "
-                    + c.stats().replaceAll(".*\"total\":(\\d+).*", "$1"));
+                    + c.stats());
         }
         /* 操作系统课程加载自检 */
         if (Files.exists(Path.of("cards-os.jsonl"))) {
@@ -309,12 +320,18 @@ public class Engine {
             int oc = 0;
             for (String seg : o.chapters().split("\\},\\{")) if (seg.contains("\"name\"")) oc++;
             System.out.println("[测试] 操作系统课程章节数(应=8): " + oc + " | 卡片数: "
-                    + o.stats().replaceAll(".*\"total\":(\\d+).*", "$1"));
+                    + o.stats());
             StringBuilder osPer = new StringBuilder();
             java.util.regex.Matcher mm = java.util.regex.Pattern
                     .compile("\"id\":(\\d+),[^\\[]*?\"total\":(\\d+)").matcher(o.chapters());
             while (mm.find()) osPer.append(mm.group(1)).append('=').append(mm.group(2)).append(' ');
             System.out.println("[测试] OS各章卡数(不应有0): " + osPer);
+        }
+                if (Files.exists(Path.of("cards-en.jsonl"))) {
+            Path tmp5 = Files.createTempDirectory("shan-en");
+            Files.copy(Path.of("cards-en.jsonl"), tmp5.resolve("cards.jsonl"));
+            Engine n = new Engine(tmp5.resolve("cards.jsonl"), tmp5.resolve("progress.jsonl"), EN_CHAPTERS);
+            System.out.println("[测试] 四级课程加载: " + n.stats());
         }
         System.out.println("=== 引擎逻辑自测完成 ===");
     }

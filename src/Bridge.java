@@ -19,6 +19,7 @@ public class Bridge {
     private final Engine java;
     private final Engine algo;
     private final Engine co;
+    private final Engine en;
     private final Engine os;
     private final CheckinStore checkin;
     private final SoundFX sfx = new SoundFX();
@@ -44,6 +45,7 @@ public class Bridge {
         java = new Engine(dataCards("cards-java"), dataHome.resolve("progress-java.jsonl"), Engine.JAVA_CHAPTERS);
         algo = new Engine(dataCards("cards-algo"), dataHome.resolve("progress-algo.jsonl"), Engine.ALGO_CHAPTERS);
         co = new Engine(dataCards("cards-co"), dataHome.resolve("progress-co.jsonl"), Engine.CO_CHAPTERS);
+        en = new Engine(dataCards("cards-en"), dataHome.resolve("progress-en.jsonl"), Engine.EN_CHAPTERS);
         os = new Engine(dataCards("cards-os"), dataHome.resolve("progress-os.jsonl"), Engine.OS_CHAPTERS);
         checkin = CheckinStore.load(dataHome.resolve("checkin.jsonl"));
     }
@@ -64,6 +66,7 @@ public class Bridge {
     private Engine of(String course) {
         if ("algo".equals(course)) return algo;
         if ("co".equals(course)) return co;
+        if ("en".equals(course)) return en;
         if ("os".equals(course)) return os;
         return java;
     }

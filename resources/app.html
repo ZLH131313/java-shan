@@ -307,7 +307,8 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
       <button id="tabJava" class="cTab on">☕ Java</button>
       <button id="tabAlgo" class="cTab">📐 算法</button>
       <button id="tabCo" class="cTab">🖧 计组</button>
-      <button id="tabOs" class="cTab">🖥 操作系统</button>
+      <button id="tabOs" class="cTab">🖥 系统</button>
+      <button id="tabEn" class="cTab">📖 四级</button>
     </div>
     <div class="hero">
       <div class="hi">
@@ -1119,12 +1120,15 @@ $('tabJava').onclick = function(){ switchCourse('java'); };
 $('tabAlgo').onclick = function(){ switchCourse('algo'); };
 $('tabCo').onclick = function(){ switchCourse('co'); };
 $('tabOs').onclick = function(){ switchCourse('os'); };
+$('tabEn').onclick = function(){ switchCourse('en'); };
 function switchCourse(c){
   if (currentCourse === c) return;
   currentCourse = c;
   $('tabJava').classList.toggle('on', c === 'java');
   $('tabAlgo').classList.toggle('on', c === 'algo');
   $('tabCo').classList.toggle('on', c === 'co');
+  $('tabOs').classList.toggle('on', c === 'os');
+  $('tabEn').classList.toggle('on', c === 'en');
   $('tabOs').classList.toggle('on', c === 'os');
   refreshHome();
 }
