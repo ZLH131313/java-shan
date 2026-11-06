@@ -111,4 +111,21 @@ public class Bridge {
         }
     }
 
+
+    /* ---- 外部应用: 豆包 ---- */
+    /** 唤起本地豆包客户端: 注册协议 doubao:// 优先, 失败退回 exe, 再退回网页版 */
+    public void openDoubao() {
+        try {
+            new ProcessBuilder("cmd", "/c", "start", "", "doubao://").start();
+            return;
+        } catch (Exception ignored) { }
+        try {
+            String exe = System.getenv("LOCALAPPDATA") + "\\Programs\\Doubao\\Doubao.exe";
+            new ProcessBuilder("cmd", "/c", "start", "", exe).start();
+            return;
+        } catch (Exception ignored) { }
+        try {
+            new ProcessBuilder("cmd", "/c", "start", "", "https://www.doubao.com").start();
+        } catch (Exception ignored) { }
+    }
 }
