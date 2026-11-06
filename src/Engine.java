@@ -313,11 +313,22 @@ public class Engine {
             while (mm.find()) osPer.append(mm.group(1)).append('=').append(mm.group(2)).append(' ');
             System.out.println("[测试] OS各章卡数(不应有0): " + osPer);
         }
-                if (Files.exists(Path.of("cards-en.jsonl"))) {
+        if (Files.exists(Path.of("cards-en.jsonl"))) {
             Path tmp5 = Files.createTempDirectory("shan-en");
             Files.copy(Path.of("cards-en.jsonl"), tmp5.resolve("cards.jsonl"));
             Engine n = new Engine(tmp5.resolve("cards.jsonl"), tmp5.resolve("progress.jsonl"), EN_CHAPTERS);
-            System.out.println("[测试] 四级课程加载: " + n.stats());
+            int ec = 0;
+            for (String seg : n.chapters().split("\\},\\{")) if (seg.contains("\"name\"")) ec++;
+            System.out.println("[测试] 四级课程章节数(应=7): " + ec + " | 卡片数: " + n.stats());
+            StringBuilder enPer = new StringBuilder();
+            java.util.regex.Matcher em = java.util.regex.Pattern
+                    .compile("\"id\":(\\d+),[^\\[]*?\"total\":(\\d+)").matcher(n.chapters());
+            boolean enHasEmpty = false;
+            while (em.find()) {
+                enPer.append(em.group(1)).append('=').append(em.group(2)).append(' ');
+                if (Integer.parseInt(em.group(2)) == 0) enHasEmpty = true;
+            }
+            System.out.println("[测试] 四级各章卡数(不应有0): " + !enHasEmpty + " | " + enPer);
         }
         System.out.println("=== 引擎逻辑自测完成 ===");
     }
