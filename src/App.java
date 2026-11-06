@@ -120,6 +120,21 @@ public class App extends Application {
                     } catch (Exception ex) {
                         System.out.println("[App] JS温故调用异常: " + ex.getMessage());
                     }
+                    /* 空章节(卡库0卡)标签自检: 四级第3-7章应显示「卡库待补」, 不能再被误标成「温故知新」 */
+                    try {
+                        System.out.println("[App] 空章节标签: " + engine.executeScript(
+                                "(function(){try{switchCourse('en');" +
+                                "var box=document.getElementById('chapterList'),empty=0,warm=0,cont=0;" +
+                                "for(var i=0;i<box.children.length;i++){var g=box.children[i].querySelector('.go');" +
+                                "if(!g)continue;var t=g.textContent;" +
+                                "if(t.indexOf('卡库待补')>=0)empty++;" +
+                                "else if(t.indexOf('温故知新')>=0)warm++;" +
+                                "else if(t.indexOf('继续学习')>=0)cont++;}" +
+                                "var r='四级章='+box.children.length+' 待补='+empty+' 温故='+warm+' 继续='+cont;" +
+                                "switchCourse('java');return r}catch(e){return '失败:'+e}})()"));
+                    } catch (Exception ex) {
+                        System.out.println("[App] 空章节标签自检异常: " + ex.getMessage());
+                    }
                     System.out.println("[App] 屏幕: " + javafx.stage.Screen.getPrimary()
                             + " 缩放=" + javafx.stage.Screen.getPrimary().getOutputScaleX());
 

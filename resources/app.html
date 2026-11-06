@@ -90,6 +90,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .chSide .go{display:inline-block;margin-top:4px;font-size:12px;font-weight:700;color:var(--brand);
   background:#eef2ff;padding:5px 11px;border-radius:99px}
 .chSide .go.hasDue{background:#fff7ed;color:var(--warn)}
+.chSide .go.empty{background:#f1f5f9;color:#94a3b8}
 .badge{display:inline-block;background:#fff7ed;color:var(--warn);border-radius:99px;
   padding:2px 9px;font-size:11.5px;font-weight:600;margin-left:6px}
 
@@ -660,7 +661,8 @@ function refreshHome(){
     var el = document.createElement('div');
     el.className = 'chapterCard';
     el.style.animationDelay = (i*0.06)+'s';
-    var go = c.due > 0 ? '<div class="go hasDue">复习 '+c.due+' 张</div>'
+    var go = !c.total ? '<div class="go empty">卡库待补</div>'
+            : c.due > 0 ? '<div class="go hasDue">复习 '+c.due+' 张</div>'
             : (c.seen >= c.total ? '<div class="go">温故知新</div>' : '<div class="go">继续学习</div>');
     var badge = c.due > 0 ? '<span class="badge">'+c.due+' 张待复习</span>' : '';
     el.innerHTML =
@@ -668,7 +670,10 @@ function refreshHome(){
       '<div class="chInfo"><h3>'+c.name+'</h3><div class="desc">'+c.desc+' · 共 '+c.total+' 卡</div>' +
       '<div class="chBar"><div class="chFill" style="width:'+c.pct+'%"></div></div></div>' +
       '<div class="chSide"><div>进度 '+c.pct+'%'+badge+'</div>'+go+'</div>';
-    el.onclick = function(){ startSession(c.id); };
+    el.onclick = function(){
+      if (!c.total){ toast('「'+c.name+'」还没有录入卡片, 暂时刷不了'); return; }
+      startSession(c.id);
+    };
     box.appendChild(el);
   });
   refreshCheckin();
