@@ -18,8 +18,17 @@ public class App extends Application {
     /** 必须用字段持有强引用: setMember 只存弱引用, 若被 GC 回收, JS 侧所有按钮都会静默失效 */
     private Bridge bridge;
 
+    /** 单实例锁: 端口被占说明已有实例, 直接退出(双开会搞乱守望恢复与进度写入) */
+    private static java.net.ServerSocket instanceLock;
+
     @Override
     public void start(Stage stage) {
+        try {
+            instanceLock = new java.net.ServerSocket(48765);
+        } catch (Exception e) {
+            javafx.application.Platform.exit();
+            return;
+        }
         WebView view = new WebView();
         WebEngine engine = view.getEngine();
         engine.setJavaScriptEnabled(true);

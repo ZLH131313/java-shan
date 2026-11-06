@@ -130,3 +130,4 @@ cp cards-java.jsonl demos-java.jsonl cards-algo.jsonl demos-algo.jsonl cards-co.
 - 2026-11-06(五): 豆包按钮升级为并排分屏 —— resources/layout-doubao.ps1(启动豆包/等窗口/百词斩左半+豆包右半/置前, SetProcessDPIAware处理200%%缩放); Bridge 从 jar 释放脚本到临时目录执行。注意: Bridge 里字段名 java 遮蔽 java.* 包名, 全限定名不可用, 必须用 import 短名(第六节坑的再现)
 - 2026-11-06(六): 修复豆包并排在"进程在但托盘无窗口"场景失效 —— 脚本改为: 无窗口(含进程已在)都再次启动exe敲窗(单实例弹窗), 等待窗扩到12秒
 - 2026-11-06(七): 豆包并排新增自动回位 —— 布局前存档百词斩几何(%TEMP%\shan-layout.txt), 守望脚本(restore-doubao.ps1)盯豆包窗口消失即恢复原位并置前; 已在布局状态重复点击不覆盖原始存档; 修复最小化窗口恢复(先SW_RESTORE再MoveWindow); 百词斩关闭时守望自动退出并清理
+- 2026-11-06(八): 修复图标变白纸(打包时旧实例锁文件致图标写入失败, 已干净重打包并验证角点像素#0F172A); 修复关豆包不回位(根因: 双开实例致守望恢复到错误窗口 → App加48765端口单实例锁); 守望脚本加 shan-watch.log 追踪日志
