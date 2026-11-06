@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -113,15 +114,16 @@ public class Bridge {
 
 
     /* ---- 外部应用: 豆包 ---- */
-    /** 唤起豆包: 有窗口则置前台, 无窗口则启动(真路径 AppDataLocalDoubaoApplication), 兜底网页版 */
+    /** 唤起豆包并与本程序并排分屏: 执行 resources 里的 layout-doubao.ps1(找句柄/启动/左右对半/置前), 兜底网页版 */
     public void openDoubao() {
-        String exe = System.getenv("LOCALAPPDATA") + "\\Doubao\\Application\\Doubao.exe";
-        String ps = "$p=Get-Process Doubao -EA SilentlyContinuous|?{$_.MainWindowHandle -ne 0}|select -First 1;"
-                + "if($p){Add-Type -Namespace W -Name U -MemberDefinition '[DllImport(\"user32.dll\")] public static extern bool ShowWindow(IntPtr h,int n);[DllImport(\"user32.dll\")] public static extern bool SetForegroundWindow(IntPtr h);';"
-                + "[W.U]::ShowWindow($p.MainWindowHandle,9)|Out-Null;[W.U]::SetForegroundWindow($p.MainWindowHandle)|Out-Null}"
-                + "else{Start-Process '" + exe + "'}";
-        try { new ProcessBuilder("powershell", "-NoProfile", "-Command", ps).start(); return; } catch (Exception ignored) { }
-        try { new ProcessBuilder("cmd", "/c", "start", "", exe).start(); return; } catch (Exception ignored) { }
+        try {
+            Path ps = Path.of(System.getProperty("java.io.tmpdir"), "shan-doubao.ps1");
+            try (var in = Bridge.class.getResourceAsStream("/layout-doubao.ps1")) {
+                if (in != null) Files.copy(in, ps, StandardCopyOption.REPLACE_EXISTING);
+            }
+            new ProcessBuilder("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps.toString()).start();
+            return;
+        } catch (Exception ignored) { }
         try { new ProcessBuilder("cmd", "/c", "start", "", "https://www.doubao.com").start(); } catch (Exception ignored) { }
     }
 }
