@@ -147,15 +147,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .mkYou{background:#fee2e2;color:#b91c1c}
 .mkAns{background:#d1fae5;color:#047857}
 
-/* ============ 概念词典: 点击高亮术语看解释 ============ */
-.term{border-bottom:1px dashed #818cf8;color:#4f46e5;cursor:pointer}
-.term:hover{background:#eef2ff}
-#glossTip{position:fixed;z-index:99;max-width:330px;padding:13px 16px;border-radius:14px;
-  background:linear-gradient(135deg,#111827 0%,#1e1b4b 100%);color:#e2e8f0;
-  border:1px solid rgba(129,140,248,.5);font-size:13.5px;line-height:1.65;
-  opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;transform:translateY(6px)}
-#glossTip.show{opacity:1;pointer-events:auto;transform:none}
-#glossTip b{display:block;color:#a5b4fc;font-size:15px;margin-bottom:4px}
 .opt:hover{border-color:#a5b4fc;transform:translateY(-2px);background:#f5f7ff}
 .opt.correct{border-color:var(--ok);background:var(--okBg);animation:winPop .45s ease}
 @keyframes winPop{0%{transform:scale(1)}30%{transform:scale(1.1)}55%{transform:scale(.98)}75%{transform:scale(1.04)}100%{transform:scale(1)}}
@@ -164,10 +155,9 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .opt.wrong .letter{background:var(--bad);color:#fff}
 .opt.reveal{border-color:var(--ok)}
 .opt.reveal .letter{background:var(--ok);color:#fff}
-/* 已作答的选项: 用锁定类代替 disabled(disabled 会吞掉子元素术语的点击) */
+/* 已作答的选项: 用锁定类代替 disabled 
 .opt.locked{cursor:default;pointer-events:none}
 .opt.locked:hover{transform:none;background:#fff}
-.opt.locked .term{pointer-events:auto}   /* 术语高亮仍可点击查看解释 */
 @keyframes optPop{0%{transform:scale(1)}40%{transform:scale(1.05)}100%{transform:scale(1)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 
@@ -539,7 +529,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 <canvas id="confetti"></canvas>
 <div id="toast"></div>
 <div id="streakTip"><span class="stFire">🔥</span><span id="streakTipText"></span><span class="stFire">🔥</span></div>
-<div id="glossTip"></div>
 
 <script>
 'use strict';
@@ -551,178 +540,11 @@ var currentCourse = 'java';   /* 当前课程: 'java' | 'algo' */
 var answered = 0, correct = 0, streak = 0, bestStreak = 0;
 var currentChapter = 0, waiting = false;
 
-/* ================= 概念词典: 高亮术语, 点击弹解释 ================= */
-var GLOSS = {
-  'JVM':'Java 虚拟机, 负责执行字节码的翻译官, Java 跨平台的核心',
-  'JDK':'Java 开发工具包 = JRE + 编译器等开发工具, 写代码必装',
-  'JRE':'Java 运行环境, 只想运行程序装它就够',
-  '字节码':'.class 文件里的指令, 由 JVM 解释执行, 与操作系统无关',
-  '字节':'计算机存储单位, 1 字节 = 8 个二进制位; int 占 4 字节',
-  '编译':'把人能读的源代码翻译成机器可执行指令的过程',
-  '标识符':'自己起的名字(类名/变量名/方法名), 不能用关键字, 不能数字开头',
-  '关键字':'语言保留的单词(public/class/int 等), 有固定含义, 不能当名字',
-  '字面量':'代码里直接写出的值, 如 100、3.14、true',
-  '基本类型':'8 种: byte/short/int/long/float/double/char/boolean, 存值本身',
-  '引用类型':'除 8 种基本类型外都是, 变量里存的是对象的地址',
-  '包装类':'基本类型的对象版, 如 int→Integer, double→Double',
-  '自动装箱':'int 自动变 Integer 的过程, 编译器偷偷调用 valueOf',
-  '自动拆箱':'Integer 自动变回 int 的过程',
-  '强制转换':'手写括号类型的转换, 如 (int) 3.7, 可能丢失精度',
-  '类型转换':'把一种类型的值变成另一种类型(自动或强制)',
-  '取余':'% 运算, 求除法的余数, 10 % 3 = 1',
-  '短路':'&& 和 || 左边已能定结果时, 右边不再计算的行为',
-  '三元运算符':'条件 ? 值1 : 值2, 一行完成二选一',
-  '位运算':'直接对二进制位操作的运算, 如 << 左移、& 按位与',
-  '分支':'if/switch 这类按条件选择执行路径的结构',
-  '死循环':'永不结束的循环, 如 while(true), 靠 break 退出',
-  '二维数组':'数组的数组, 像表格的行列 grid[i][j]',
-  '下标':'元素在数组里的编号, 从 0 数起, 长度 n 最大下标 n-1',
-  '越界':'访问了不存在的下标, 运行时抛异常',
-  '默认值':'未赋值时系统给的初始值(int 为 0, 引用为 null, boolean 为 false)',
-  '遍历':'从头到尾把每个元素过一遍',
-  '增强 for':'for(元素 : 容器) 的简洁遍历写法, 拿不到下标',
-  '数组':'一组同类型数据的连续容器, 下标从 0 开始',
-  '形参':'方法定义里的占位参数',
-  '实参':'调用时真正传进去的值',
-  '返回值':'方法执行完交回的结果, void 表示没有',
-  '方法重载':'同一个类里方法名相同但参数不同, 调用时按参数自动匹配',
-  '重载':'同一个类里方法名相同但参数不同',
-  '值传递':'Java 唯一的传参方式, 传的是值的副本',
-  '递归':'方法自己调自己, 必须有出口否则栈溢出',
-  '对象':'按类造出来的实体, new 出来的东西',
-  '实例':'对象的同义词, 「创建实例」就是 new 对象',
-  '成员变量':'类里方法外定义的变量, 属于对象, 有默认值',
-  '局部变量':'方法内定义的变量, 必须先赋值才能使用',
-  '构造方法':'与类同名无返回类型的特殊方法, new 时自动执行, 用于初始化',
-  '构造器':'与类同名无返回类型的特殊方法, new 时自动执行',
-  '封装':'把数据藏起来(private), 只留公开方法窗口访问',
-  '继承':'子类自动获得父类的属性和方法, 用 extends',
-  '父类':'被继承的一方, 子类通过 super 访问它',
-  '子类':'继承别人的一方, 能用父类非私有成员',
-  '多态':'父类引用指向子类对象, 调方法时执行子类版本',
-  '抽象类':'含抽象方法的半成品类, 不能 new, 专供继承',
-  '抽象方法':'只有声明没有方法体的方法, 以分号结尾',
-  '接口':'一组行为规范, 类用 implements 实现, 一个类可实现多个',
-  '实例化':'new 一个对象的过程',
-  '静态':'static 修饰, 属于类不属于某个对象, 类名直接调用',
-  '泛型':'集合尖括号里的类型约束, 如 List<String>, 存错类型编译期报错',
-  '集合':'存多个对象的容器体系(List/Set/Map)',
-  '动态数组':'会自动扩容的数组(ArrayList 的底层)',
-  '链表':'元素靠指针串联的结构, 插删快但随机访问慢',
-  '哈希表':'按哈希值定位存储的结构, 查找极快',
-  '键值对':'一个键配一个值的成对数据(如 学号→学生)',
-  '去重':'保证容器里没有重复元素',
-  '迭代器':'专门安全遍历并可删除集合元素的工具',
-  '异常':'程序运行时的错误信号, 用 try-catch 处理',
-  '捕获':'用 catch 接住异常并处理',
-  '检查异常':'编译器强制要求处理的异常(如 IOException)',
-  '运行时异常':'运行时才暴露的异常(如空指针), 编译器不强制处理',
-  '空指针':'对 null 调用方法, 最常见的异常',
-  '堆':'内存中存 new 出来的对象的区域',
-  '栈':'内存中存局部变量和方法调用的区域',
-  '线程':'进程内的并发执行单元',
-  '进程':'一个运行中的程序实例',
-  '线程安全':'多线程同时操作也不出错的性质',
-  '字节流':'以字节为单位读写数据的流, 任何文件都能处理',
-  '字符流':'以字符为单位读写文本的流, 自动处理编码',
-  '渐近上界':'大 O 记号刻画的增长率不超过的界',
-  '渐近下界':'Ω 记号刻画的增长率不低于的界',
-  '主定理':'解分治型方程 T(n)=aT(n/b)+f(n) 的通用工具, 比较三种情形',
-  '最优子结构':'问题的最优解由子问题的最优解组成, 是 DP 与贪心的前提',
-  '重叠子问题':'递归展开后同一子问题反复出现, DP 存表避免重复计算',
-  '贪心选择性质':'局部最优选择能导致全局最优解的性质, 贪心算法成立的条件',
-  '解空间树':'把所有可能解按逐步赋值组织成的树(子集树/排列树)',
-  '子集树':'每个元素取/不取两种分支的解空间树, 共 2ⁿ 个叶结点',
-  '排列树':'按全排列组织的解空间树, 共 n! 个叶结点',
-  '剪枝':'在搜索中提前放弃不可能产生解/更优解的分支',
-  '限界函数':'估计子树最好能达到的界, 不优于当前最优即剪枝',
-  '松弛':'最短路算法中尝试经 u 中转更新 d[v] 的基本操作',
-  '并查集':'支持合并集合与查询所属集合的结构, 判连通利器',
-  '前缀码':'任何码字都不是其他码字前缀的编码, 解码无歧义',
-  'WPL':'带权路径长度 = Σ(权值×深度), 哈夫曼树使其最小',
-  '活结点':'已生成但儿子尚未全部生成的结点',
-  '扩展结点':'正在生成其全部儿子的活结点',
-  '死结点':'不再扩展的结点',
-  '备忘录':'自顶向下递归时缓存已算结果的技术',
-  'for-each':'增强 for 循环的俗称: for(类型 变量 : 容器) 的简洁遍历写法, 不是关键字',
-  'forEach':'JDK8 给集合提供的方法, 如 list.forEach(x -> ...), 与增强 for 是两回事',
-  '循环变量':'循环中承接每次迭代的变量, 如增强 for 里的 x、普通 for 里的 i',
-  '递归方程':'刻画算法运行时间的递推关系式, 形如 T(n)=aT(n/b)+f(n), 用主定理或迭代展开求解',
-  '状态转移方程':'动态规划中描述子问题最优值之间递推关系的公式, 是 DP 的核心',
-  '转移方程':'DP 中描述状态间递推关系的公式',
-  '主定理':'解 T(n)=aT(n/b)+f(n) 型递归方程的标准工具: 比较 f(n) 与 n^(log_b a) 得三种情形',
-  '时间复杂度':'算法运行时间随输入规模 n 增长的渐近阶, 用大 O 等记号刻画',
-  '空间复杂度':'算法运行时占用辅助存储空间的渐近阶',
-  '补码':'带符号数的标准表示法: 正数同原码, 负数 = 反码+1, 可把减法变加法',
-  '阶码':'浮点数中表示数量级(指数)的部分, 决定表示范围',
-  '尾数':'浮点数中表示有效数字的部分, 决定精度',
-  '局部性原理':'程序倾向于重复访问刚用过的数据(时间)及其相邻数据(空间), Cache 的基础',
-  '命中率':'访问 Cache 直接命中的比例, 是 Cache 性能的核心指标',
-  '脏位':'Cache 行中的标记位, 为1表示被改写过, 换出时须写回主存',
-  '数据通路':'数据在 CPU 内流经的寄存器与运算部件构成的路径',
-  '微指令':'微程序控制器中的最小控制单位, 存于控制存储器',
-  '流水线':'让多条指令的不同阶段在时间上重叠执行的技术',
-  '中断':'CPU 暂停当前程序去处理突发事件, 处理完返回的机制',
-  'DMA':'外设与内存直接成块传送数据、不经 CPU 的方式',
-  '寻址方式':'指令中确定操作数有效地址的方法(立即/直接/间接/变址...)',
-  '操作码':'指令中标明操作类型的字段',
-  '冯·诺依曼结构':'程序与数据同存于存储器、自动逐条执行指令的计算机结构',
-  'PCB':'进程控制块: 记录进程状态/优先级/现场等信息, 是进程存在的唯一标志',
-  '系统调用':'用户程序请求操作系统内核服务的接口(如读文件), 引发用户态→内核态切换',
-  '特权指令':'只能在内核态执行的指令(启动IO/关中断等), 防止用户程序破坏系统',
-  '多道程序':'内存同时驻留多道程序交替执行, 宏观并行微观串行, 提高资源利用率',
-  '时间片':'分给每个进程的一段CPU时间, 用完被轮转下去; 过大退化FCFS, 过小切换开销大',
-  '死锁':'多个进程互相等待对方占有的资源, 永远无法推进的状态',
-  '临界区':'进程中访问临界资源的那段代码, 进入需互斥',
-  '临界资源':'一段时间内只允许一个进程使用的资源(如打印机)',
-  '信号量':'整型变量+P/V原语, 实现互斥与同步的经典工具',
-  'PV操作':'P(申请,不够则阻塞)与V(释放,有等待则唤醒)两个原子操作',
-  '管程':'把共享数据与操作封装、自动互斥的高级同步构造(Java的synchronized即此思想)',
-  '分页':'把内存与逻辑地址空间切成等大的页/块, 按页表离散映射, 消灭外部碎片',
-  '分段':'按逻辑意义划分可变长段, 便于共享保护, 产生外部碎片',
-  '快表':'TLB: 页表项的高速缓存, 命中则免一次访存查页表',
-  '虚拟存储器':'基于局部性, 只装入部分页面即可运行, 逻辑上扩充了内存',
-  '缺页中断':'访问的页不在内存时产生的中断, OS负责调入(可能触发置换)',
-  '页面置换':'内存满时选择淘汰哪一页的算法(OPT/FIFO/LRU/Clock)',
-  '抖动':'页框不足导致频繁缺页换页, 系统忙于对换无法干活的现象',
-  '银行家算法':'死锁避免算法: 模拟分配后判断是否存在安全序列, 不安全则拒绝分配',
-  '控制反转':'IOC: 对象创建与依赖装配的控制权从程序代码转移到容器',
-  '依赖注入':'DI: 容器把依赖对象送进目标类(构造器/Setter/字段), 是IOC的实现方式',
-  '切面':'AOP中的模块化横切逻辑(如日志切面/事务切面), 织入切点执行',
-  '动态代理':'运行时生成代理对象拦截方法调用, Spring AOP 的底层实现'
-};
-var glossRegex = new RegExp('(' + Object.keys(GLOSS)
-  .sort(function(a, b){ return b.length - a.length; })
-  .map(function(t){ return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); })
-  .join('|') + ')', 'g');
+
 
 function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-/* 超基础词不自动高亮(满屏高亮反而干扰), 每个术语每张卡只高亮第一次出现 */
-var GLOSS_BASIC = { '数组':1, '变量':1, '常量':1, '循环':1, '方法':1 };
-var usedTerms = {};
-function richText(s, freshCard){
-  if (freshCard) usedTerms = {};
-  return escHtml(s).replace(glossRegex, function(m){
-    if (GLOSS_BASIC[m] || usedTerms[m]) return m;
-    usedTerms[m] = 1;
-    return '<span class="term" data-t="' + m + '">' + m + '</span>';
-  });
-}
-function showGloss(term, x, y){
-  var g = $('glossTip');
-  g.innerHTML = '<b>' + escHtml(term) + '</b>' + escHtml(GLOSS[term] || '');
-  g.classList.add('show');
-  var w = 340, h = g.offsetHeight || 90;
-  g.style.left = Math.min(Math.max(12, x + 12), window.innerWidth - w - 12) + 'px';
-  g.style.top = (y + 18 + h > window.innerHeight ? Math.max(12, y - h - 12) : y + 18) + 'px';
-}
-function hideGloss(){ $('glossTip').classList.remove('show'); }
-document.addEventListener('click', function(ev){
-  var t = ev.target && ev.target.closest ? ev.target.closest('.term') : null;
-  if (t){ showGloss(t.getAttribute('data-t'), ev.clientX, ev.clientY); }
-  else { hideGloss(); }
-});
-
+/* 富文本渲染: 词典高亮已移除, 仅做HTML转义(调用方签名不变) */
+function richText(s){ return escHtml(String(s || '')); }
 /* ================= 工具 ================= */
 function $(id){ return document.getElementById(id); }
 /* 兼容不同 WebKit 版本的回车判定 */
@@ -967,21 +789,6 @@ function demoLines(d){
   if (lines.length > 14){ lines = lines.slice(0, 14); lines.push('…'); }
   return lines;
 }
-/* 从主题/题干/解析里挑出词典真收录的术语(长词优先, 去重, 超基础词不讲) */
-function termsIn(texts, cap){
-  var seen = {}, out = [];
-  for (var t = 0; t < texts.length; t++){
-    var hits = String(texts[t] || '').replace(/§/g, '"').match(glossRegex);
-    if (!hits) continue;
-    for (var i = 0; i < hits.length; i++){
-      var m = hits[i];
-      if (seen[m] || GLOSS_BASIC[m] || !GLOSS[m]) continue;
-      seen[m] = 1; out.push(m);
-      if (out.length >= cap) return out;
-    }
-  }
-  return out;
-}
 /* 这一行代码在干什么: 只认常见形态, 认不出就老实说「执行这一行」 */
 function lineSay(line){
   var s = String(line).trim();
@@ -1187,7 +994,6 @@ function startSession(ch){
 }
 function nextCard(){
   qidx++;
-  hideGloss();   /* 换卡时收起概念解释 */
   while (qidx < queue.length && queue[qidx].dead) qidx++;   /* 被斩的卡跳过 */
   if (qidx >= queue.length){ finishSession(); return; }
   var c = queue[qidx];
@@ -1227,8 +1033,6 @@ function nextCard(){
       b.className = 'opt';
       b.innerHTML = '<span class="letter">'+'ABCD'[p]+'</span><span>'+richText(c.opts[orig])+'</span>';
       b.onclick = function(ev){
-        /* 点选项里的术语高亮 = 看解释, 不算作答 */
-        if (ev.target && ev.target.closest && ev.target.closest('.term')) return;
         pick(p, b);
       };
       box.appendChild(b);
