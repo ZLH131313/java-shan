@@ -125,23 +125,24 @@ public class AiDemoStore {
                     + "- NEVER use 'because...so' together\n"
                     + "- Check each sentence is grammatically correct before output";
         } else if (courseName != null && courseName.contains("算法")) {
-            prompt = "Topic: " + topic + ". Question: " + question
+            prompt = "ALL COMMENTS MUST BE IN CHINESE (中文注释).\n"
+                    + "Topic: " + topic + ". Question: " + question
                     + " Answer: " + answer + " Explanation: " + explain + "\n"
                     + "Write 6-10 lines of C++ code (or pseudocode if more intuitive) "
                     + "demonstrating the core algorithm steps directly related to this question. "
-                    + "Rules: Chinese comments, print each step's result with cout or print, "
+                    + "Rules: every comment in Chinese(中文), print each step's result, "
                     + "output only the code.";
         } else if (courseName != null && courseName.contains("Java")) {
-            prompt = "Topic: " + topic + ". Question: " + question
+            prompt = "ALL COMMENTS MUST BE IN CHINESE (中文注释).\n"
+                    + "Topic: " + topic + ". Question: " + question
                     + " Answer: " + answer + " Explanation: " + explain + "\n"
                     + "Write 6-10 lines of Java code demonstrating the exact behavior this question tests. "
-                    + "Rules: must directly demonstrate the question's scenario (not a generic example), "
-                    + "standard indentation, Chinese comments, use System.out.println to show results, "
+                    + "Rules: every comment in Chinese(中文), standard indentation, "
+                    + "use System.out.println to show results, "
                     + "use single quotes for strings, output only the code.";
         } else {
-            prompt = "Topic: " + topic + ". Question: " + question
-                    + " Answer: " + answer + " Explanation: " + explain + "\n"
-                    + "Demonstrate this concept in the most intuitive way (choose one):\n"
+            prompt = "ALL ANNOTATIONS MUST BE IN CHINESE (中文标注).\n"
+                    + "Topic: " + topic + ". Question: " + question
                     + "- C-style pseudocode (if there's a specific operation)\n"
                     + "- Step-by-step calculation (if there are numbers)\n"
                     + "- ASCII memory layout or flow diagram\n"
