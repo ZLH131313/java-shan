@@ -156,23 +156,21 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
   background:linear-gradient(to bottom, rgba(251,146,60,.38), rgba(251,146,60,0));
   animation:fireGlowK .85s ease-out both}
 @keyframes fireGlowK{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
-.fireTongue{position:absolute;bottom:100%;transform-origin:50% 100%;
-  background:linear-gradient(to top,#ea580c 8%,#f97316 45%,#fbbf24 82%,#fef9c3);
-  border-radius:48% 52% 26% 24% / 88% 92% 22% 18%;
-  animation:fireTongueK .65s ease-out both}
-.fireTongue.hot{background:linear-gradient(to top,#dc2626 8%,#f97316 50%,#fde047 88%)}
-@keyframes fireTongueK{
-  0%{transform:translateY(12px) scaleY(.15) scaleX(.5);opacity:0}
-  22%{opacity:1}
-  70%{opacity:1}
-  100%{transform:translateY(-18px) scaleY(1.2) scaleX(1.05);opacity:0}
-}
-.fireEmber{position:absolute;bottom:100%;width:5px;height:5px;border-radius:50%;
-  background:#fb923c;animation:fireEmberK 1s ease-out both}
-@keyframes fireEmberK{
-  0%{transform:translateY(4px);opacity:0}
-  15%{opacity:1}
-  100%{transform:translateY(-120px);opacity:0}
+.fireBig{position:absolute;bottom:100%;left:12%;right:12%;height:118px;transform-origin:50% 100%;
+  background:linear-gradient(to top,#dc2626 4%,#ea580c 26%,#f97316 52%,#fbbf24 80%,#fef9c3 96%);
+  border-radius:46% 54% 30% 28% / 98% 88% 18% 14%;
+  animation:bigFlame 1.15s ease-in-out both}
+.fireBig::after{content:'';position:absolute;left:24%;right:24%;bottom:0;height:62%;opacity:.92;
+  background:linear-gradient(to top,#fbbf24 10%,#fde047 55%,#fffbeb 95%);
+  border-radius:48% 52% 30% 30% / 96% 86% 16% 14%}   /* 焰芯: 随父元素一起摇曳 */
+@keyframes bigFlame{
+  0%{opacity:0;transform:translateY(14px) scaleY(.3) scaleX(.6)}
+  16%{opacity:1;transform:translateY(0) scaleY(1) scaleX(1)}
+  32%{transform:translateY(-2px) scaleY(1.09) scaleX(.96) skewX(2.5deg)}
+  50%{transform:translateY(-1px) scaleY(.95) scaleX(1.04) skewX(-2.5deg)}
+  68%{transform:translateY(-3px) scaleY(1.11) scaleX(.97) skewX(1.5deg)}
+  84%{transform:translateY(-2px) scaleY(.97) scaleX(1.03) skewX(-1.5deg)}
+  100%{opacity:0;transform:translateY(-30px) scaleY(1.16) scaleX(1.02)}
 }
 @keyframes cardShake{0%,100%{transform:translateX(0)}18%{transform:translateX(-12px)}36%{transform:translateX(10px)}54%{transform:translateX(-7px)}72%{transform:translateX(5px)}88%{transform:translateX(-3px)}}
 
@@ -592,25 +590,11 @@ function fireBurst(){
   var glow = document.createElement('div');   /* 卡内顶部火光晕染 */
   glow.className = 'fireGlow';
   wrap.appendChild(glow);
-  for (var i = 0; i < 8; i++){                /* 边框外顶部一排火舌, 位置/大小/节奏每次随机 */
-    var t = document.createElement('div');
-    t.className = 'fireTongue' + (i % 2 ? ' hot' : '');
-    t.style.left = (4 + i * (92 / 7) + (Math.random() * 4 - 2)) + '%';
-    t.style.width = (12 + Math.random() * 10) + 'px';
-    t.style.height = (26 + Math.random() * 22) + 'px';
-    t.style.animationDelay = (Math.random() * .35).toFixed(2) + 's';
-    t.style.animationDuration = (0.55 + Math.random() * .35).toFixed(2) + 's';
-    wrap.appendChild(t);
-  }
-  for (var e = 0; e < 4; e++){                /* 火星上飘 */
-    var s2 = document.createElement('div');
-    s2.className = 'fireEmber';
-    s2.style.left = (10 + Math.random() * 80).toFixed(1) + '%';
-    s2.style.animationDelay = (Math.random() * .5).toFixed(2) + 's';
-    wrap.appendChild(s2);
-  }
+  var big = document.createElement('div');    /* 一整条大火焰从顶缘升起 */
+  big.className = 'fireBig';
+  wrap.appendChild(big);
   card.appendChild(wrap);
-  setTimeout(function(){ wrap.remove(); }, 1500);
+  setTimeout(function(){ wrap.remove(); }, 1300);
 }
 function toast(msg, ms){
   var t = $('toast'); t.textContent = msg;
