@@ -13,7 +13,7 @@
   --card:#ffffff; --bg1:#eef2ff; --bg2:#f0fdfa;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none}
-input{-webkit-user-select:text}
+input,textarea{-webkit-user-select:text}
 html,body{height:100%}
 body{
   font-family:'Segoe UI','Microsoft YaHei',sans-serif;color:var(--ink);
@@ -117,12 +117,27 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .qcard.zhaned{animation:zhanFly .5s ease both}
 @keyframes zhanFly{30%{transform:rotate(-6deg) scale(1.04)}100%{opacity:0;transform:translateY(-70px) rotate(9deg) scale(.8)}}
 
-.zhanBtn{position:absolute;top:18px;right:18px;border:1px solid var(--line);background:#fffdf7;
-  color:var(--warn);border-radius:12px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
-.zhanBtn:hover{background:#fff7ed;transform:rotate(-6deg)}
-.peekBtn{position:absolute;top:18px;right:86px;border:1px solid var(--line);background:#f8f7ff;
-  color:#6d28d9;border-radius:12px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
-.peekBtn:hover{background:#ede9fe;transform:translateY(-2px)}
+/* 卡片右上角工具栏: 四枚按钮排成一行, 靠 flex 定位(绝对定位排不下新增的两枚) */
+.cardTools{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-bottom:14px}
+.zhanBtn{border:1px solid var(--line);background:#fffdf7;
+  color:var(--warn);border-radius:12px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;font-family:inherit}
+.zhanBtn:hover{background:#fff7ed}
+.peekBtn{border:1px solid var(--line);background:#f8f7ff;
+  color:#6d28d9;border-radius:12px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;font-family:inherit}
+.peekBtn:hover{background:#ede9fe}
+.toolBtn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:7px 13px;
+  font-size:13px;font-weight:700;color:var(--sub);cursor:pointer;transition:.15s;font-family:inherit}
+.toolBtn:hover{transform:translateY(-2px)}
+.toolBtn.anim{background:#f0fdfa;color:#0d9488;border-color:#99f6e4}
+.toolBtn.anim:hover{background:#ccfbf1;color:#0f766e}
+.toolBtn.note{background:#fffbeb;color:#92400e;border-color:#fde68a}
+.toolBtn.note:hover{background:#fef3c7}
+.toolBtn.note.has{border-color:var(--warn);background:#fef3c7}
+
+/* 卡片笔记展示条(题干下方, 只有写过笔记的卡才出现) */
+.noteView{background:#fffbeb;border:1px solid #fde68a;border-left:3px solid var(--warn);
+  border-radius:10px;padding:9px 12px;font-size:13px;line-height:1.6;color:#92400e;
+  white-space:pre-wrap;margin:-12px 0 22px}
 
 .chips{display:flex;gap:8px;margin-bottom:16px}
 .chip{font-size:12px;font-weight:600;padding:5px 12px;border-radius:99px;background:#eef2ff;color:var(--brand)}
@@ -279,6 +294,97 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 #dnCheck{font-size:13.5px;font-weight:700;color:var(--warn);margin:-14px 0 22px;min-height:19px}
 #dnCheck.ok{color:var(--ok)}
 
+/* ============ 卡片笔记面板 ============ */
+.noteBox{background:#fff;border-radius:22px;padding:22px 24px;width:480px}
+.noteBox h3{font-size:16.5px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.noteBox .tip{font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.7}
+#noteArea{width:100%;height:150px;border:2px solid var(--line);border-radius:14px;padding:12px 14px;
+  font-size:14px;line-height:1.6;font-family:inherit;outline:none;resize:none;color:var(--ink);background:#fff}
+#noteArea:focus{border-color:var(--brand)}
+.noteActs{display:flex;gap:10px;margin-top:14px}
+.noteActs button{border:none;border-radius:12px;padding:11px 0;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:.15s}
+.noteActs .save{flex:1;background:var(--brandGrad);color:#fff}
+.noteActs .del{flex:0 0 88px;background:#fef2f2;color:var(--bad);border:1px solid #fecaca}
+.noteActs .x{flex:0 0 88px;background:#f1f5f9;color:var(--sub)}
+.noteActs button:hover{transform:translateY(-2px)}
+
+/* ============ 首页: 动画合集入口卡 ============ */
+.animEntry{display:flex;align-items:center;gap:12px;background:var(--card);
+  border:1px solid var(--line);border-radius:16px;padding:12px 16px;cursor:pointer;
+  margin-bottom:12px;transition:transform .18s;animation:fadeUp .45s ease both}
+.animEntry:hover{transform:translateY(-3px)}
+.animEntry .ico{width:40px;height:40px;border-radius:12px;background:#0d9488;color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}
+.animEntry .txt{flex:1;min-width:0;font-size:14px;font-weight:700}
+.animEntry .txt span{display:block;font-size:11.5px;font-weight:600;color:var(--sub);margin-top:3px}
+.animEntry .num{flex:none;font-size:12px;font-weight:700;color:#0d9488;background:#f0fdfa;
+  border-radius:99px;padding:5px 12px}
+
+/* ============ 合集列表面板 ============ */
+.collBox{background:#fff;border-radius:24px;padding:22px 24px;width:600px;max-height:88vh;
+  display:flex;flex-direction:column}
+.collHead{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex:none}
+.collHead h3{font-size:16.5px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.collList{overflow-y:auto}
+.collRow{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:14px;
+  padding:9px 11px;margin-bottom:9px}
+.collRow .cq{flex:1;min-width:0;font-size:13px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.collRow .cm{flex:none;font-size:11px;color:var(--sub)}
+.collRow button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px 11px;
+  font-size:12.5px;font-weight:700;cursor:pointer;flex:none;font-family:inherit;transition:.15s}
+.collRow .pl{background:#0d9488;color:#fff;border-color:#0d9488}
+.collRow .pl:hover{filter:brightness(1.08)}
+.collRow .rm{color:var(--sub);flex:0 0 34px}
+.collRow .rm:hover{background:#fef2f2;color:var(--bad);border-color:#fecaca}
+.collEmpty{text-align:center;color:var(--sub);font-size:13.5px;padding:26px 10px;line-height:1.9}
+.collFoot{font-size:12px;color:var(--sub);margin-top:12px;line-height:1.7;flex:none}
+
+/* ============ 分步讲解动画播放器 ============ */
+.animBox{background:#fff;border-radius:24px;padding:20px 24px 18px;width:620px;max-height:90vh;
+  display:flex;flex-direction:column}
+.animHead{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex:none}
+.animHead h3{font-size:15px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.animStep{flex:none;font-size:11.5px;font-weight:700;color:var(--sub)}
+.animX{border:1px solid var(--line);background:#fff;border-radius:10px;width:32px;height:32px;
+  font-size:15px;color:var(--sub);cursor:pointer;flex:none;line-height:1}
+.animX:hover{color:var(--brand);border-color:#c7d2fe}
+.anBar{height:6px;background:#e8edf5;border-radius:99px;overflow:hidden;margin-bottom:14px;flex:none}
+.anFill{height:100%;width:0;background:linear-gradient(90deg,#0d9488,#06b6d4);border-radius:99px;transition:width .3s linear}
+.anStage{flex:1;min-height:200px;max-height:48vh;overflow-y:auto;margin-bottom:14px}
+/* 只用 transform/opacity: 这台机器无 GPU 合成, 缩放大面板/阴影动画必卡 */
+.anStep{animation:anIn .32s ease both}
+@keyframes anIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.anLabel{font-size:12px;font-weight:800;color:#0d9488;letter-spacing:1px;margin-bottom:9px}
+.anCover b{display:block;font-size:20px;margin-bottom:6px}
+.anCover span{font-size:12.5px;color:var(--sub)}
+.anQ{font-size:19px;line-height:1.6;font-weight:600;white-space:pre-wrap}
+.anHint{font-size:12.5px;color:var(--sub);margin-top:12px;line-height:1.7}
+.anOpts{display:flex;flex-direction:column;gap:8px}
+.anOpt{display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:13px;
+  padding:9px 12px;font-size:14.5px;background:#fff;transition:opacity .3s,transform .3s}
+.anOpt .anL{width:26px;height:26px;flex:none;border-radius:8px;background:#f1f5f9;color:var(--sub);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.anOpt.out{opacity:.38;transform:translateX(12px)}
+.anOpt.out .txt2{text-decoration:line-through}
+.anOpt.hit{border-color:var(--ok);background:var(--okBg)}
+.anOpt.hit .anL{background:var(--ok);color:#fff}
+.anOpt.mix{animation:anMix .5s ease}
+@keyframes anMix{0%{transform:translateX(0)}40%{transform:translateX(18px)}100%{transform:translateX(0)}}
+.anBullets{display:flex;flex-direction:column;gap:9px}
+.anBullets p{font-size:14.5px;line-height:1.7;padding-left:15px;position:relative}
+.anBullets p:before{content:'·';position:absolute;left:0;color:#0d9488;font-weight:800;font-size:19px;line-height:1.25}
+.anAns{display:flex;gap:9px;align-items:center;background:var(--okBg);border:1px solid #a7f3d0;
+  border-radius:14px;padding:11px 14px;font-size:15px;color:#065f46;font-weight:700;margin-top:12px}
+.anCode{background:#0f172a;color:#e2e8f0;font-family:Consolas,'Courier New',monospace;font-size:13px;
+  line-height:1.65;padding:12px 14px;border-radius:10px;white-space:pre-wrap;word-break:break-all;margin-top:4px}
+.animFoot{display:flex;gap:8px;align-items:center;flex:none}
+.animFoot button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px 13px;
+  font-size:13px;font-weight:700;color:var(--sub);cursor:pointer;font-family:inherit;transition:.15s;flex:none}
+.animFoot button:hover{color:var(--brand);border-color:#c7d2fe}
+.animFoot .pp{background:var(--brandGrad);color:#fff;border:none;min-width:92px}
+.animFoot .coll{margin-left:auto;color:#0d9488;border-color:#99f6e4;background:#f0fdfa}
+
 </style>
 </head>
 <body>
@@ -322,6 +428,11 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
         <button class="bigBtn alt" id="wrongBtn">错题本</button>
       </div>
     </div>
+    <div class="animEntry" id="animEntry" title="点击查看生成过动画的卡片">
+      <div class="ico">🎬</div>
+      <div class="txt">动画合集<span>遇到不会的题点「🎬 生成动画」, 收在这里随时回看</span></div>
+      <div class="num"><b id="animCountN">0</b> 张</div>
+    </div>
     <div class="resumeBar" id="resumeBar" style="display:none">
       <span id="resumeText"></span>
       <button id="resumeBtn">继续上次</button>
@@ -342,10 +453,15 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
       <!-- 隐形按键收集器: JavaFX 里 keypress 不稳定, 但文本输入路径可靠 -->
       <input id="keycap" autocomplete="off" style="position:fixed;top:-60px;left:0;width:8px;height:8px;opacity:0;border:none;padding:0">
       <div class="qcard" id="qcard">
-        <button class="peekBtn" id="peekBtn" title="直接看答案(按K), 按错题处理">👀 看答案</button>
-        <button class="zhanBtn" id="zhanBtn">⚔ 斩</button>
+        <div class="cardTools">
+          <button class="toolBtn anim" id="animBtn" title="按本地规则给这张卡生成分步讲解动画, 并收进首页的动画合集">🎬 生成动画</button>
+          <button class="toolBtn note" id="noteBtn" title="给这张卡写条笔记, 下次遇到它时会显示在题干下面">📝 笔记</button>
+          <button class="peekBtn" id="peekBtn" title="直接看答案(按K), 按错题处理">👀 看答案</button>
+          <button class="zhanBtn" id="zhanBtn">⚔ 斩</button>
+        </div>
         <div class="chips" id="chips"></div>
         <div class="question" id="question"></div>
+        <div class="noteView" id="noteView" style="display:none"></div>
         <div class="options" id="options"></div>
         <div class="fillRow" id="fillRow" style="display:none">
           <input id="fillInput" placeholder="输入答案, 回车确认" autocomplete="off">
@@ -393,6 +509,54 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
     <div class="ckStats" id="ckStats"></div>
     <div class="ckFoot" id="ckFoot"></div>
     <button class="bigBtn" id="ckClose" style="width:100%;margin-top:16px">知道了</button>
+  </div>
+</div>
+
+<!-- 卡片笔记面板 -->
+<div class="overlay" id="noteOverlay">
+  <div class="noteBox">
+    <h3 id="noteTitle">📝 笔记</h3>
+    <div class="tip">只写给自己看: 记不住的原因、易错的点、想通的类比。保存后会显示在这张卡题干下面。<br>
+    这里的文字不上传网络, 存在本机的 <b>.javashan\notes-课程.jsonl</b> 里。</div>
+    <textarea id="noteArea" placeholder="例如: 老是和 XX 搞混, 记住「YY」这个关键字就对了"></textarea>
+    <div class="noteActs">
+      <button class="save" id="noteSave">保存笔记</button>
+      <button class="del" id="noteDel">删除</button>
+      <button class="x" id="noteClose">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 分步讲解动画播放器 -->
+<div class="overlay" id="animOverlay">
+  <div class="animBox">
+    <div class="animHead">
+      <h3 id="animTitle">🎬 分步讲解</h3>
+      <div class="animStep" id="animCap">1 / 1</div>
+      <button class="animX" id="animClose" title="关闭(回车暂停/继续, ← → 换步)">✕</button>
+    </div>
+    <div class="anBar"><div class="anFill" id="anFill"></div></div>
+    <div class="anStage" id="animStage"></div>
+    <div class="animFoot">
+      <button id="animPrev" title="上一步(左方向键)">⏮ 上一步</button>
+      <button class="pp" id="animPP" title="播放/暂停(回车)">⏸ 暂停</button>
+      <button id="animNext" title="下一步(右方向键)">下一步 ⏭</button>
+      <button id="animReplay" title="从头再放一遍">↻ 重播</button>
+      <button class="coll" id="animDel" title="把这张卡移出动画合集">✕ 移出合集</button>
+    </div>
+  </div>
+</div>
+
+<!-- 动画合集列表 -->
+<div class="overlay" id="collOverlay">
+  <div class="collBox">
+    <div class="collHead">
+      <h3 id="collTitle">🎬 动画合集</h3>
+      <button class="animX" id="collClose" title="关闭">✕</button>
+    </div>
+    <div class="collList" id="collList"></div>
+    <div class="collFoot">合集按课程分开保存(本机 <b>.javashan\anims-课程.jsonl</b>)。
+    动画不存脚本, 每次播放都按卡片当下的内容重新生成 —— 改了题卡, 动画自动跟着变。</div>
   </div>
 </div>
 
@@ -677,6 +841,7 @@ function refreshHome(){
     box.appendChild(el);
   });
   refreshCheckin();
+  updateAnimEntry();
   checkResume();
 }
 
@@ -780,6 +945,316 @@ function renderDoneCheckin(){
   }
 }
 
+/* ================= 卡片笔记 + 分步讲解动画 + 动画合集 ================= */
+var COURSE_NAME = { java:'☕ Java 基础', algo:'📐 算法设计', co:'🖧 计算机组成', os:'🖥 操作系统', en:'📖 英语四级' };
+
+/* 桥接调用全部包一层: 笔记/动画出任何岔子都不能打断刷题 */
+function noteOf(id){ try { return bridge.noteGet(currentCourse, id) || ''; } catch (e) { return ''; } }
+function animInColl(id){ try { return !!bridge.animHas(currentCourse, id); } catch (e) { return false; } }
+function animTotal(){ try { return bridge.animCount(currentCourse) | 0; } catch (e) { return 0; } }
+
+/* 面板开着 / 焦点在输入框里 —— 键盘答题判定必须让路 */
+function modalOpen(){
+  return $('noteOverlay').classList.contains('show') ||
+         $('animOverlay').classList.contains('show') ||
+         $('collOverlay').classList.contains('show');
+}
+function typingHere(e){
+  var t = e && e.target;
+  var tag = t && t.tagName ? t.tagName.toLowerCase() : '';
+  return tag === 'textarea' || (tag === 'input' && t.id !== 'keycap');
+}
+/* 焦点在按钮上时, 回车/空格会被原生"点击持有焦点的按钮"抢走, 面板快捷键要避开 */
+function onBtn(e){
+  var t = e && e.target;
+  return !!(t && t.tagName && t.tagName.toLowerCase() === 'button');
+}
+/* 面板关掉后把焦点交回卡片: 否则 #keycap 失焦, 快捷键答题会失灵 */
+function refocusCard(){
+  if ($('study').classList.contains('hidden') || modalOpen()) return;
+  var fill = qidx >= 0 && queue[qidx] && queue[qidx].fill && !waiting && !$('fillInput').disabled;
+  setTimeout(function(){ try { $(fill ? 'fillInput' : 'keycap').focus(); } catch (e) { } }, 40);
+}
+
+/** 每张卡渲染时同步: 按钮文案(是否已在合集) + 题干下的笔记条 */
+function syncCardTools(c){
+  var ab = $('animBtn'), nb = $('noteBtn'), box = $('noteView');
+  if (!c){ box.style.display = 'none'; return; }
+  var has = animInColl(c.id);
+  ab.textContent = has ? '🎬 重播动画' : '🎬 生成动画';
+  ab.title = has ? '这张卡已在合集里, 点开再看一遍'
+                 : '按本地规则生成分步讲解动画, 并收进首页的动画合集';
+  var t = noteOf(c.id);
+  nb.classList.toggle('has', !!t);
+  nb.title = t ? '编辑这张卡的笔记' : '给这张卡写条笔记(下次遇到时显示在题干下)';
+  if (t){ box.textContent = '📝 ' + t; box.style.display = ''; }
+  else box.style.display = 'none';
+}
+
+/* ---- 笔记面板 ---- */
+var noteFor = 0;
+function openNotePanel(){
+  if (qidx < 0 || !queue[qidx]){ toast('先回到一张卡片上再写笔记'); return; }
+  var c = queue[qidx];
+  noteFor = c.id;
+  $('noteTitle').textContent = '📝 笔记 · ' + (c.topic || chapterName(c.ch));
+  $('noteArea').value = noteOf(c.id);
+  $('noteOverlay').classList.add('show');
+  setTimeout(function(){ try { $('noteArea').focus(); $('noteArea').select(); } catch (e) { } }, 40);
+}
+function closeNotePanel(){ $('noteOverlay').classList.remove('show'); refocusCard(); }
+function saveNote(){
+  if (!noteFor){ closeNotePanel(); return; }
+  var txt = $('noteArea').value;
+  try { bridge.noteSet(currentCourse, noteFor, txt); }
+  catch (e) { toast('笔记保存失败: ' + e); return; }
+  if (qidx >= 0 && queue[qidx] && queue[qidx].id === noteFor) syncCardTools(queue[qidx]);
+  closeNotePanel();
+  toast(txt.trim() ? '📝 笔记已保存' : '笔记已清空');
+}
+function deleteNote(){
+  if (!noteFor) { closeNotePanel(); return; }
+  try { bridge.noteSet(currentCourse, noteFor, ''); }
+  catch (e) { toast('删除失败: ' + e); return; }
+  $('noteArea').value = '';
+  if (qidx >= 0 && queue[qidx] && queue[qidx].id === noteFor) syncCardTools(queue[qidx]);
+  closeNotePanel();
+  toast('笔记已删除');
+}
+
+/* ---------- 本地规则引擎: 只按卡片字段(题干/选项/答案/解析/演示)确定性生成步骤 ----------
+   好处: 不存脚本、不联网、改卡即改动画; 同一张卡每次生成的分步都一样。 */
+function splitSent(s){
+  var out = [], cur = '', str = String(s || '');
+  for (var i = 0; i < str.length; i++){
+    var ch = str.charAt(i);
+    cur += ch;
+    if ('。；;！!？?'.indexOf(ch) >= 0){ if (cur.trim()) out.push(cur.trim()); cur = ''; }
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
+function chunk(arr, n){
+  var out = [];
+  for (var i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
+  return out;
+}
+/* mode: shuffle=就位 / elim=按 cut 划掉前 cut 个错项 / reveal=亮出答案 / done=全判完 */
+function optRows(c, mode, cut){
+  var wrong = [], i;
+  for (i = 0; i < c.opts.length; i++) if (i !== c.ans) wrong.push(i);
+  var html = '<div class="anOpts">';
+  for (i = 0; i < c.opts.length; i++){
+    var cls = 'anOpt';
+    if (mode === 'shuffle') cls += ' mix';
+    else if (mode === 'reveal' && i === c.ans) cls += ' hit';
+    else if (mode === 'elim' && wrong.indexOf(i) < cut) cls += ' out';
+    else if (mode === 'done') cls += (i === c.ans ? ' hit' : ' out');
+    html += '<div class="' + cls + '"><span class="anL">' + 'ABCD'[i] + '</span>' +
+            '<span class="txt2">' + escHtml(c.opts[i]) + '</span></div>';
+  }
+  return html + '</div>';
+}
+/* 演示代码: § 是双引号, ¶ 是换行(与 demos-*.jsonl 约定一致) */
+function demoLines(d){
+  var lines = String(d).split('¶');
+  for (var i = 0; i < lines.length; i++) lines[i] = lines[i].replace(/§/g, '"');
+  if (lines.length > 14){ lines = lines.slice(0, 14); lines.push('…'); }
+  return lines;
+}
+function buildSteps(c){
+  var steps = [];
+  function add(label, html, ms){ steps.push({ label: label, html: html, ms: ms || 1800 }); }
+  var chName = chapterName(c.ch);
+  add('认清这道题',
+      '<div class="anCover"><b>' + escHtml(c.topic || chName) + '</b><span>' +
+      escHtml(chName) + ' · ' + escHtml(c.tag || '') + ' · ' + (c.fill ? '填空题' : '选择题') + '</span></div>');
+  add('把题干读完',
+      '<div class="anQ">' + escHtml(c.q) + '</div><div class="anHint">' +
+      (c.fill ? '先自己默想答案, 再往下对照。'
+              : '四个选项都要读一遍。它们每次出现都会打乱顺序, 位置本身不是线索。') +
+      '</div>', 2600);
+
+  if (!c.fill){
+    add('选项就位', optRows(c, 'shuffle'), 1700);
+    var wrong = [];
+    for (var i = 0; i < c.opts.length; i++) if (i !== c.ans) wrong.push(i);
+    var groups = chunk(wrong, 2), cut = 0;
+    for (var g = 0; g < groups.length; g++){
+      var names = [];
+      for (var n = 0; n <= g; n++) for (var m = 0; m < groups[n].length; m++) names.push('ABCD'[groups[n][m]]);
+      cut += groups[g].length;
+      add('排除干扰项 (' + cut + '/' + wrong.length + ')',
+          optRows(c, 'elim', cut) +
+          '<div class="anHint">' + names.join('、') + ' 被划掉 —— 和题干要求对不上。</div>', 1700);
+    }
+    add('锁定答案',
+        optRows(c, 'reveal') + '<div class="anAns">✔ ' + 'ABCD'[c.ans] + ' · ' + escHtml(c.opts[c.ans]) + '</div>', 2300);
+  } else {
+    add('写出答案',
+        '<div class="anQ">' + escHtml(c.q) + '</div><div class="anAns">✎ ' + escHtml(String(c.ans)) + '</div>', 2300);
+  }
+
+  var bullets = splitSent(c.e);
+  var bg = chunk(bullets, 3);
+  if (bg.length > 3){                       /* 句子太多就并成三段, 免得动画拖沓 */
+    var rest = [];
+    for (var t2 = 2; t2 < bg.length; t2++) rest = rest.concat(bg[t2]);
+    bg = [bg[0], bg[1], rest];
+  }
+  for (var b = 0; b < bg.length; b++){
+    var rows = '';
+    for (var r = 0; r < bg[b].length; r++) rows += '<p>' + escHtml(bg[b][r]) + '</p>';
+    add(bg.length > 1 ? '拆解解析 (' + (b + 1) + '/' + bg.length + ')' : '拆解解析',
+        '<div class="anBullets">' + rows + '</div>', 2500);
+  }
+
+  if (c.d){
+    var lines = demoLines(c.d);
+    var each = Math.max(5, Math.ceil(lines.length / 3));
+    for (var l = 0; l * each < lines.length; l++){
+      var upto = Math.min(lines.length, (l + 1) * each), code = '';
+      for (var k = 0; k < upto; k++) code += escHtml(lines[k]) + '\n';
+      add('代码演示 (' + upto + '/' + lines.length + ')',
+          '<div class="anHint">逐行看它到底怎么跑:</div><pre class="anCode">' + code + '</pre>', 2500);
+    }
+  }
+
+  add('收尾 · 一句话记住',
+      '<div class="anQ">' + escHtml(bullets.length ? bullets[0] : (c.topic || '')) + '</div>' +
+      '<div class="anHint">答对它, 之后按 1 / 2 / 4 / 7 / 15 / 30 天的节奏回来看, 想忘都难。</div>', 2600);
+  return steps;
+}
+
+/* ---------- 播放器 ---- */
+var anim = { steps: [], i: -1, playing: false, timer: null, cardId: 0 };
+function openAnim(card){
+  if (!card){ toast('这张卡的内容在卡库里找不到了, 无法生成动画'); return; }
+  anim.cardId = card.id;
+  anim.steps = buildSteps(card);
+  anim.i = -1;
+  $('animTitle').textContent = '🎬 ' + (card.topic || chapterName(card.ch));
+  $('animDel').style.display = animInColl(card.id) ? '' : 'none';
+  $('animOverlay').classList.add('show');
+  anim.playing = true;
+  animGoto(0);
+  setPpLabel();
+}
+function animGoto(i){
+  if (!anim.steps.length) return;
+  anim.i = Math.max(0, Math.min(anim.steps.length - 1, i));
+  var s = anim.steps[anim.i], st = $('animStage');
+  st.innerHTML = '<div class="anStep"><div class="anLabel">' + escHtml(s.label) + '</div>' + s.html + '</div>';
+  st.scrollTop = 0;
+  $('animCap').textContent = (anim.i + 1) + ' / ' + anim.steps.length;
+  $('anFill').style.width = Math.round((anim.i + 1) * 100 / anim.steps.length) + '%';
+  scheduleAnim();
+}
+function scheduleAnim(){
+  if (anim.timer){ clearTimeout(anim.timer); anim.timer = null; }
+  if (!anim.playing) return;
+  if (anim.i >= anim.steps.length - 1){ anim.playing = false; setPpLabel(); return; }
+  anim.timer = setTimeout(function(){ animGoto(anim.i + 1); }, anim.steps[anim.i].ms);
+}
+function setPpLabel(){
+  $('animPP').textContent = anim.playing ? '⏸ 暂停'
+    : (anim.i >= anim.steps.length - 1 && anim.steps.length ? '↻ 再放一遍' : '▶ 播放');
+}
+function animToggle(){
+  if (!anim.steps.length) return;
+  anim.playing = !anim.playing;
+  if (anim.playing){
+    if (anim.i < 0 || anim.i >= anim.steps.length - 1) animGoto(0);     /* 播完再按 = 从头 */
+    else scheduleAnim();
+  }
+  setPpLabel();
+}
+function animStepBy(d){
+  if (!anim.steps.length) return;
+  anim.playing = false;
+  animGoto(anim.i + d);
+  setPpLabel();
+}
+function animReplay(){
+  if (!anim.steps.length) return;
+  anim.playing = true;
+  animGoto(0);
+  setPpLabel();
+}
+function closeAnim(){
+  anim.playing = false;
+  if (anim.timer){ clearTimeout(anim.timer); anim.timer = null; }
+  anim.steps = []; anim.i = -1;
+  $('animOverlay').classList.remove('show');
+  refocusCard();
+}
+
+/* 卡片上的「🎬 生成动画」: 生成 + 收进合集 + 立刻播放 */
+function genAnim(){
+  if (qidx < 0 || !queue[qidx]){ toast('先回到一张卡片上再生成动画'); return; }
+  var c = queue[qidx];
+  var was = animInColl(c.id);
+  try { bridge.animAdd(currentCourse, c.id); } catch (e) { toast('合集记录保存失败: ' + e); }
+  syncCardTools(c);
+  updateAnimEntry();
+  openAnim(c);
+  if (!was) setTimeout(function(){ toast('🎬 已收进动画合集, 首页下方随时回看'); }, 320);
+}
+function removeFromColl(id){
+  if (!id) return;
+  try { bridge.animDel(currentCourse, id); } catch (e) { toast('移出失败: ' + e); return; }
+  anim.cardId = 0;
+  $('animDel').style.display = 'none';
+  updateAnimEntry();
+  if ($('collOverlay').classList.contains('show')) renderCollection();
+  if (qidx >= 0 && queue[qidx]) syncCardTools(queue[qidx]);
+  toast('已从合集移出(卡片本身和进度都没动)');
+}
+
+/* ---------- 合集面板 ---------- */
+function openCollection(){
+  $('collTitle').textContent = '🎬 动画合集 · ' + (COURSE_NAME[currentCourse] || currentCourse);
+  $('collOverlay').classList.add('show');
+  renderCollection();
+}
+function closeCollection(){ $('collOverlay').classList.remove('show'); refocusCard(); }
+function renderCollection(){
+  var list = [];
+  try { list = JSON.parse(bridge.animList(currentCourse) || '[]'); } catch (e) { list = []; }
+  var box = $('collList');
+  box.innerHTML = '';
+  if (!list.length){
+    box.innerHTML = '<div class="collEmpty">这一门课还没有生成过动画。<br>' +
+      '刷题时点卡片右上角的「🎬 生成动画」, 这张卡就会收进这里。</div>';
+    updateAnimEntry();
+    return;
+  }
+  /* 复用「按 id 重建卡片」的桥接方法取回卡片内容, 动画由本地引擎现算 */
+  var ids = [], i;
+  for (i = 0; i < list.length; i++) ids.push(list[i].id);
+  var cards = [];
+  try { cards = JSON.parse(bridge.cardsByIds(currentCourse, ids.join(','))).cards || []; } catch (e) { cards = []; }
+  var map = {};
+  for (i = 0; i < cards.length; i++) map[cards[i].id] = cards[i];
+  list.forEach(function (x) {
+    var c = map[x.id];
+    var row = document.createElement('div');
+    row.className = 'collRow';
+    row.innerHTML = '<div class="cq">' + escHtml(c ? c.q : '卡片 #' + x.id + ' 在卡库里已找不到') + '</div>' +
+      '<div class="cm">' + escHtml(c ? chapterName(c.ch) : '') + (x.d ? ' · ' + escHtml(x.d) : '') + '</div>';
+    var pl = document.createElement('button');
+    pl.className = 'pl'; pl.textContent = '▶ 播放';
+    pl.onclick = function(){ openAnim(c); };
+    var rm = document.createElement('button');
+    rm.className = 'rm'; rm.textContent = '✕'; rm.title = '从合集移出(不动卡片)';
+    rm.onclick = function(){ removeFromColl(x.id); };
+    row.appendChild(pl); row.appendChild(rm);
+    box.appendChild(row);
+  });
+  updateAnimEntry();
+}
+function updateAnimEntry(){ $('animCountN').textContent = animTotal(); }
+
 /* ================= 会话续做: 中途退出后可恢复队列与位置 ================= */
 function persistSession(){
   if (qidx < 0 || qidx >= queue.length) return;
@@ -872,6 +1347,7 @@ function nextCard(){
     (c.wrong ? '<span class="chip wrong">错题重做</span>'
              : (c.review ? '<span class="chip review">复习</span>' : '<span class="chip">新卡</span>'));
   $('question').innerHTML = richText(c.q, true);   /* true: 新卡重置已高亮词表 */
+  syncCardTools(c);
 
   if (c.fill){
     $('options').style.display = 'none';
@@ -1058,6 +1534,9 @@ function finishSession(){
   setTimeout(function(){ goHome(true); }, 40);   /* 地图数据先刷新, 弹层浮在上面 */
 }
 function goHome(keepOverlay){
+  if ($('animOverlay').classList.contains('show')) closeAnim();
+  if ($('noteOverlay').classList.contains('show')) closeNotePanel();
+  if ($('collOverlay').classList.contains('show')) closeCollection();
   show($('study'), false); show($('home'), true);
   refreshHome();
   if (!keepOverlay) $('doneOverlay').classList.remove('show');
@@ -1100,6 +1579,22 @@ $('ckPrev').onclick = function(){ shiftMonth(-1); };
 $('ckNext').onclick = function(){ shiftMonth(1); };
 $('ckClose').onclick = closeCheckinPanel;
 $('ckOverlay').onclick = function(e){ if (e.target === this) closeCheckinPanel(); };
+$('animBtn').onclick = genAnim;
+$('noteBtn').onclick = openNotePanel;
+$('noteSave').onclick = saveNote;
+$('noteDel').onclick = deleteNote;
+$('noteClose').onclick = closeNotePanel;
+$('noteOverlay').onclick = function(e){ if (e.target === this) closeNotePanel(); };
+$('animPrev').onclick = function(){ animStepBy(-1); };
+$('animNext').onclick = function(){ animStepBy(1); };
+$('animPP').onclick = animToggle;
+$('animReplay').onclick = animReplay;
+$('animClose').onclick = closeAnim;
+$('animDel').onclick = function(){ removeFromColl(anim.cardId); };
+$('animOverlay').onclick = function(e){ if (e.target === this) closeAnim(); };
+$('animEntry').onclick = openCollection;
+$('collClose').onclick = closeCollection;
+$('collOverlay').onclick = function(e){ if (e.target === this) closeCollection(); };
 $('tabJava').onclick = function(){ switchCourse('java'); };
 $('tabAlgo').onclick = function(){ switchCourse('algo'); };
 $('tabCo').onclick = function(){ switchCourse('co'); };
@@ -1118,6 +1613,31 @@ function switchCourse(c){
 }
 document.addEventListener('keydown', function(e){
   var enter = isEnter(e), space = (e.key === ' ' || e.keyCode === 32);
+  /* 笔记面板: 打字归输入框, 只有 Esc 关面板(回车在笔记里是换行) */
+  if ($('noteOverlay').classList.contains('show')){
+    if (e.keyCode === 27){ e.preventDefault(); closeNotePanel(); }
+    return;
+  }
+  /* 动画播放器: 回车/空格=播放暂停, ←→=上/下一步, Esc=关闭; 开着时绝不影响答题 */
+  if ($('animOverlay').classList.contains('show')){
+    if (onBtn(e)){ if (e.keyCode === 27){ e.preventDefault(); closeAnim(); } return; }
+    if (enter || space){ e.preventDefault(); animToggle(); return; }
+    if (e.keyCode === 37){ e.preventDefault(); animStepBy(-1); return; }
+    if (e.keyCode === 39){ e.preventDefault(); animStepBy(1); return; }
+    if (e.keyCode === 27){ e.preventDefault(); closeAnim(); }
+    return;
+  }
+  /* 合集列表: 回车/空格/Esc 关闭(焦点在行内按钮上时让它原生点击) */
+  if ($('collOverlay').classList.contains('show')){
+    if (onBtn(e)){ if (e.keyCode === 27){ e.preventDefault(); closeCollection(); } return; }
+    if (enter || space || e.keyCode === 27){ e.preventDefault(); closeCollection(); }
+    return;
+  }
+  /* 焦点在填空框/笔记框里打字: 按键交给输入框, 绝不误触作答(隐形收集器 #keycap 是例外) */
+  if (typingHere(e)){
+    if (e.keyCode === 27 && $('noteOverlay').classList.contains('show')) closeNotePanel();
+    return;
+  }
   /* 打卡日历打开时: 回车/空格/Esc = 关闭面板, 不做答题判定 */
   if ($('ckOverlay').classList.contains('show') && (enter || space || e.keyCode === 27)){
     e.preventDefault(); closeCheckinPanel(); return;
@@ -1165,6 +1685,9 @@ function armEnterKey(){
   if (pendingEnter) clearTimeout(pendingEnter);
   pendingEnter = setTimeout(function(){
     pendingEnter = null;
+    if ($('animOverlay').classList.contains('show')){ animToggle(); return; }
+    if ($('collOverlay').classList.contains('show')){ closeCollection(); return; }
+    if ($('noteOverlay').classList.contains('show')) return;                       /* 笔记里回车=换行 */
     if ($('ckOverlay').classList.contains('show')){ closeCheckinPanel(); return; }   /* JavaFX 真实回车走这条路径 */
     if ($('sheet').classList.contains('show')){ nextFromSheet(); return; }
     var inp = $('fillInput');
@@ -1173,6 +1696,7 @@ function armEnterKey(){
 }
 document.addEventListener('keypress', function(e){
   if (pendingEnter){ clearTimeout(pendingEnter); pendingEnter = null; }   /* 有字符跟随, 不是回车 */
+  if (typingHere(e) || modalOpen()) return;
   if (waiting || qidx < 0 || !queue[qidx] || queue[qidx].fill) return;
   if ($('sheet').classList.contains('show') || $('study').classList.contains('hidden')) return;
   var ch = String.fromCharCode(e.charCode || e.keyCode || 0).toLowerCase();
@@ -1190,6 +1714,7 @@ document.addEventListener('keypress', function(e){
   var cap = $('keycap');
   cap.addEventListener('input', function(){
     if (pendingEnter){ clearTimeout(pendingEnter); pendingEnter = null; }  /* 输入法组字的字母不算回车 */
+    if (modalOpen()) return;                                              /* 面板开着不作答 */
     var v = cap.value || '';
     window.__lastCap = 'input=' + JSON.stringify(v);
     cap.value = '';                     /* 清空同时打断输入法组字, 避免候选框堆积 */

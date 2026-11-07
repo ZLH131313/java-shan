@@ -49,7 +49,7 @@ public class App extends Application {
 
         engine.load(App.class.getResource("/app.html").toExternalForm());
 
-        stage.setTitle("Java 百词斩 v1.8");
+        stage.setTitle("Java 百词斩 v1.9");
         try {
             stage.getIcons().add(new javafx.scene.image.Image(
                     App.class.getResource("/icon.png").toExternalForm()));
@@ -102,6 +102,58 @@ public class App extends Application {
             return;
         }
 
+        /* 界面截图自检: 依次打开五个界面并截屏(界面改动只能从桌面窗口验证, 这个模式把"人工看"变成有图有据) */
+        if (getParameters().getRaw().contains("--uishow")) {
+            Thread shot = new Thread(() -> {
+                String[] names = {"home", "study", "anim", "note", "coll"};
+                String[] js = {
+                        "(function(){goHome(false);refreshHome();return '章节卡=' + document.getElementById('chapterList').children.length" +
+                        " + ' 合集入口张数=' + document.getElementById('animCountN').textContent;})()",
+                        "(function(){window.__uiBak = bridge.loadSession('java'); startSession(1);" +
+                        "return '队列=' + queue.length + ' 当前第' + (qidx+1) + '张 卡片按钮数=' + document.querySelectorAll('#qcard .cardTools button').length;})()",
+                        "(function(){closeNotePanel(); openAnim(queue[qidx]);" +
+                        "return '步骤=' + anim.steps.length + ' 自动播放=' + anim.playing + ' 标题=' + document.getElementById('animTitle').textContent" +
+                        " + ' 计数=' + document.getElementById('animCap').textContent;})()",
+                        "(function(){closeAnim(); openNotePanel(); return '面板已开=' + document.getElementById('noteOverlay').classList.contains('show')" +
+                        " + ' 标题=' + document.getElementById('noteTitle').textContent;})()",
+                        "(function(){ closeNotePanel(); window.__uiAnim = !bridge.animHas(currentCourse, queue[qidx].id);" +
+                        "if (window.__uiAnim) bridge.animAdd(currentCourse, queue[qidx].id);" +
+                        "openCollection(); return '面板已开=' + document.getElementById('collOverlay').classList.contains('show')" +
+                        " + ' 行数=' + document.getElementById('collList').children.length;})()",
+                };
+                try {
+                    /* 截 WebView 本身: 高分屏与别的窗口遮挡都不影响, 拿到的就是页面像素 */
+                    for (int i = 0; i < names.length; i++) {
+                        final String script = js[i];
+                        System.out.println("[界面] " + names[i] + ": "
+                                + fx(new java.util.concurrent.FutureTask<Object>(() -> engine.executeScript(script))));
+                        Thread.sleep(850);
+                        final javafx.scene.SnapshotParameters sp = new javafx.scene.SnapshotParameters();
+                        sp.setFill(javafx.scene.paint.Color.WHITE);
+                        javafx.scene.image.WritableImage img = fx(new java.util.concurrent.FutureTask<>(
+                                () -> view.snapshot(sp, null)));
+                        java.io.File out = new java.io.File(System.getProperty("java.io.tmpdir"), "shan-ui-" + names[i] + ".png");
+                        javax.imageio.ImageIO.write(toBuffered(img), "png", out);
+                        System.out.println("[界面] 截图 " + out.getAbsolutePath()
+                                + " " + (int) img.getWidth() + "x" + (int) img.getHeight());
+                    }
+                    /* 收尾: 关掉面板、把会话续做文件恢复原样(自检不该动用户的断点进度) */
+                    System.out.println("[界面] " + fx(new java.util.concurrent.FutureTask<Object>(() -> engine.executeScript(
+                            "(function(){closeAnim();closeNotePanel();closeCollection();" +
+                            "if (window.__uiAnim) { try { bridge.animDel(currentCourse, queue[qidx].id); } catch(e){} window.__uiAnim=false; }" +
+                            "goHome(false);" +
+                            "try{bridge.saveSession('java', window.__uiBak||'');}catch(e){}return '已复原';})()"))));
+                    Thread.sleep(400);
+                } catch (Exception ex) {
+                    System.out.println("[界面] 截图自检失败: " + ex);
+                }
+                Platform.exit();
+            }, "uishow");
+            shot.setDaemon(true);
+            shot.start();
+            return;
+        }
+
         if (getParameters().getRaw().contains("--auto-close")) {
             PauseTransition probe = new PauseTransition(Duration.seconds(2));
             probe.setOnFinished(e -> {
@@ -134,6 +186,30 @@ public class App extends Application {
                                 "switchCourse('java');return r}catch(e){return '失败:'+e}})()"));
                     } catch (Exception ex) {
                         System.out.println("[App] 空章节标签自检异常: " + ex.getMessage());
+                    }
+                    /* 笔记 + 动画合集自检: 用不存在的卡号 999999 走一遍增删读, 不碰用户真实数据 */
+                    try {
+                        System.out.println("[App] 笔记/动画自检: " + engine.executeScript(
+                                "(function(){try{var T=999999;" +
+                                "bridge.noteSet('java',T,'自检¶第二行');var n=bridge.noteGet('java',T);" +
+                                "bridge.noteSet('java',T,'');var n2=bridge.noteGet('java',T);" +
+                                "bridge.animAdd('java',T);var has=bridge.animHas('java',T);" +
+                                "bridge.animDel('java',T);var after=bridge.animHas('java',T);" +
+                                "var dom=['animBtn','noteBtn','noteView','animOverlay','collOverlay','animEntry','animStage','anFill']" +
+                                ".map(function(i){return document.getElementById(i)?1:0}).join('');" +
+                                "var ch=buildSteps({id:1,ch:1,topic:'自检',tag:'概念',q:'这是题干?',fill:false,ans:1," +
+                                "opts:['甲','乙','丙','丁'],e:'因为乙最贴。其它都对不上。',d:'int a §1¶;§'}).length;" +
+                                "var fl=buildSteps({id:2,ch:1,topic:'自检2',tag:'填空',q:'填 ___',fill:true,ans:'乙',e:'乙即可。'}).length;" +
+                                "openAnim({id:1,ch:1,topic:'自检',tag:'概念',q:'这是题干?',fill:false,ans:1," +
+                                "opts:['甲','乙','丙','丁'],e:'因为乙最贴。',d:''});" +
+                                "var cap=document.getElementById('animCap').textContent;" +
+                                "var lbl=document.getElementById('animPP').textContent;" +
+                                "closeAnim();" +
+                                "return '笔记读回'+n.length+'字/删空后'+n2.length+'字 animHas=' + has + '→删后' + after +" +
+                                " ' DOM齐全='+(/^1{8}$/.test(dom)) + ' 选择'+ch+'步 填空'+fl+'步'" +
+                                " + ' 播放器首帧='+cap+' 按钮='+lbl;}catch(e){return '失败:'+e}})()"));
+                    } catch (Exception ex) {
+                        System.out.println("[App] 笔记/动画自检异常: " + ex.getMessage());
                     }
                     System.out.println("[App] 屏幕: " + javafx.stage.Screen.getPrimary()
                             + " 缩放=" + javafx.stage.Screen.getPrimary().getOutputScaleX());
@@ -204,6 +280,34 @@ public class App extends Application {
             close.setOnFinished(e -> Platform.exit());
             close.play();
         }
+    }
+
+    /**
+     * 把一段有返回值的活儿交给 FX 线程执行并等结果(后台自检线程用)。
+     * FutureTask 同时实现 Runnable 与 Callable, 直接传会撞上 runLater 的重载歧义, 故先转成 Runnable 变量。
+     */
+    private static <T> T fx(java.util.concurrent.FutureTask<T> task) {
+        Runnable r = task;
+        Platform.runLater(r);
+        try {
+            return task.get();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /** javafx.swing 不在模块清单里, 用不上 SwingFXUtils, 手工过一遍像素 */
+    private static java.awt.image.BufferedImage toBuffered(javafx.scene.image.Image src) {
+        int w = (int) src.getWidth(), h = (int) src.getHeight();
+        java.awt.image.BufferedImage out = new java.awt.image.BufferedImage(w, h,
+                java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        javafx.scene.image.PixelReader pr = src.getPixelReader();
+        int[] row = new int[w];
+        for (int y = 0; y < h; y++) {
+            pr.getPixels(0, y, w, 1, javafx.scene.image.PixelFormat.getIntArgbInstance(), row, 0, w);
+            out.setRGB(0, y, w, 1, row, 0, w);
+        }
+        return out;
     }
 
     public static void main(String[] args) {
