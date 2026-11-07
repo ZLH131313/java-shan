@@ -115,19 +115,11 @@ public class AiDemoStore {
         // 按课程分流: 1.5b模型英文指令服从性远好于中文, 统一英文指令+代码内中文注释
         String prompt;
         if (courseName != null && courseName.contains("英语")) {
-            prompt = "You are an English teacher for CET-4 students.\n"
-                    + "Knowledge point: [" + topic + "]\n"
-                    + "Question: " + question + "\n"
-                    + "Write 4 example sentences using this knowledge point CORRECTLY.\n"
-                    + "Format rules (MUST follow ALL):\n"
-                    + "1. Each sentence on its own line\n"
-                    + "2. Chinese translation on the NEXT line after each sentence (inside parentheses)\n"
-                    + "3. First sentence simplest, then harder\n"
-                    + "4. NEVER use 'although...but' or 'because...so' together\n"
-                    + "5. Example format:\n"
-                    + "   He was tired, but he kept working.\n"
-                    + "   (他很累，但还是继续工作。)\n"
-                    + "Output only the sentences with translations, nothing else.";
+            // AI只生成例句, 知识点解释由卡片解析提供(更准确)
+            prompt = "Write 4 English sentences correctly using: [" + topic + "]\n"
+                    + "Context: " + question + " Correct: " + answer + "\n"
+                    + "Each sentence followed by Chinese translation in parentheses on the next line. "
+                    + "First sentence easiest, last hardest. Output only sentences.";
         } else if (courseName != null && courseName.contains("算法")) {
             prompt = "ALL COMMENTS MUST BE IN CHINESE (中文注释).\n"
                     + "Topic: " + topic + ". Question: " + question

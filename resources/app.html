@@ -1103,7 +1103,11 @@ function buildSteps(c){
   for (var i = 0; i < lines.length; i++) {
     if (lines[i].trim()) code += '<span class="cl now">' + escHtml(lines[i]) + '</span>';
   }
-  return [{ label: c.topic || '', html: code ? '<pre class="anCode">' + code + '</pre>' : '' }];
+  var expl = '';
+  if (currentCourse === 'en' && c.e) {
+    expl = '<div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:14px;line-height:1.7;color:#134e4a"><b style="color:#0d9488">💡 ' + escHtml(c.topic) + '</b><br>' + escHtml(c.e) + '</div>';
+  }
+  return [{ label: c.topic || '', html: expl + (code ? '<pre class="anCode">' + code + '</pre>' : '') }];
 }
 
 /* ---------- 播放器: 手动逐步(一步一停, 看明白了再按下一步) ---------- */
