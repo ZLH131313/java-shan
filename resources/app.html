@@ -464,6 +464,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
       <div class="qcard" id="qcard">
         <div class="cardTools">
           <button class="toolBtn anim" id="animBtn" title="把这张卡背后的知识点做成演示动画(本地规则生成, 手动一步步看)">🎬 生成动画</button>
+          <button class="toolBtn" id="aiDemoBtn" style="color:#7c3aed;border-color:#ddd6fe" title="AI现场为这张卡生成实战代码演示(需配置API key, 结果缓存)">✨ AI演示</button>
           <button class="toolBtn note" id="noteBtn" title="给这张卡写条笔记, 下次遇到它时会显示在题干下面">📝 笔记</button>
           <button class="peekBtn" id="peekBtn" title="直接看答案(按K), 按错题处理">👀 看答案</button>
           <button class="zhanBtn" id="zhanBtn">⚔ 斩</button>
@@ -1222,7 +1223,42 @@ function closeAnim(){
   refocusCard();
 }
 
+/* ✨ AI实时演示: 点击现生成(异步), 完成即进播放器; 同卡缓存秒出 */
+var aiBusy = false;
+function aiGenDemo(){
+  if (aiBusy) { toast('AI正在生成, 稍等…'); return; }
+  if (qidx < 0 || !queue[qidx]) { toast('先回到一张卡片上'); return; }
+  var c = queue[qidx];
+  var st = '';
+  try { st = bridge.aiDemoState(currentCourse, c.id) || ''; } catch (e) {}
+  if (st && st !== 'pending' && st.indexOf('err:') !== 0 && st.indexOf('未配置') !== 0){
+    c.d = st; openAnim(c); return;   /* 缓存命中, 秒开 */
+  }
+  if (st === 'pending'){ toast('AI正在生成, 稍等…'); return; }
+  if (st.indexOf('err:') === 0 && st.indexOf('未配置') >= 0){ toast(st, 6000); return; }
+  var ans = c.fill ? c.ans : (c.opts ? c.opts[c.ans] : '');
+  try {
+    bridge.aiDemoStart(currentCourse, c.id, COURSE_NAME[currentCourse] || currentCourse,
+        c.topic || '', c.q || '', String(ans), c.e || '');
+  } catch (e) { toast('启动生成失败: '+e); return; }
+  aiBusy = true;
+  var n = 0;
+  toast('✨ AI 正在生成实战演示…(约5-20秒)', 4000);
+  (function poll(){
+    setTimeout(function(){
+      var s = '';
+      try { s = bridge.aiDemoState(currentCourse, c.id) || ''; } catch (e) {}
+      if (s && s !== 'pending' && s !== '' && s.indexOf('err:') !== 0){
+        aiBusy = false; c.d = s; openAnim(c); return;
+      }
+      if (s.indexOf('err:') === 0){ aiBusy = false; toast('生成失败: '+s.slice(4), 5000); return; }
+      if (++n > 60){ aiBusy = false; toast('生成超时, 稍后再试'); return; }
+      poll();
+    }, 900);
+  })();
+}
 /* 卡片上的「🎬 生成动画」: 生成 + 收进合集 + 立刻播放 */
+$('aiDemoBtn').onclick = aiGenDemo;
 function genAnim(){
   if (qidx < 0 || !queue[qidx]){ toast('先回到一张卡片上再生成动画'); return; }
   var c = queue[qidx];
@@ -1613,6 +1649,7 @@ $('ckNext').onclick = function(){ shiftMonth(1); };
 $('ckClose').onclick = closeCheckinPanel;
 $('ckOverlay').onclick = function(e){ if (e.target === this) closeCheckinPanel(); };
 $('animBtn').onclick = genAnim;
+.onclick = aiGenDemo;
 $('noteBtn').onclick = openNotePanel;
 $('noteSave').onclick = saveNote;
 $('noteDel').onclick = deleteNote;

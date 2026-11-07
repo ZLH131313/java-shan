@@ -148,6 +148,21 @@ public class Bridge {
     }
 
 
+    /* ---- AI 实时演示生成: 点击现做, 结果按课程缓存到个人数据目录 ---- */
+    private final java.util.Map<String, AiDemoStore> aiStores = new java.util.HashMap<>();
+    private AiDemoStore ai(String course) {
+        return aiStores.computeIfAbsent(course, k ->
+                new AiDemoStore(dataHome.resolve("aidemos-" + k + ".jsonl")));
+    }
+    public String aiDemoState(String course, int id) {
+        String s = ai(course).state(id);
+        return "done".equals(s) ? ai(course).get(id) : s;
+    }
+    public void aiDemoStart(String course, int id, String courseName, String topic,
+                            String question, String answer, String explain) {
+        ai(course).generateAsync(dataHome, id, courseName, topic, question, answer, explain);
+    }
+
     /* ---- 外部应用: 豆包 ---- */
     /** 唤起豆包并排分屏; 关闭豆包窗口后由守望脚本自动还原百词斩原位 */
     public void openDoubao() {
