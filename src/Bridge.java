@@ -148,10 +148,11 @@ public class Bridge {
     }
 
 
-    /* ---- AI 实时演示生成(Java=代码演示, 计组/OS=生活类比): 点击现做, 结果按课缓存 ---- */
+    /* ---- AI 实时演示生成(Java=代码演示, 计组/OS/算法=生活类比): 点击现做, 结果按课缓存 ---- */
     private final java.util.Map<String, AiDemoStore> aiStores = new java.util.HashMap<>();
     private AiDemoStore ai(String course) {
-        if (!"java".equals(course) && !"co".equals(course) && !"os".equals(course)) return null;   // 算法/英语已停用
+        if (!"java".equals(course) && !"co".equals(course) && !"os".equals(course)
+                && !"algo".equals(course)) return null;   // 英语已停用
         return aiStores.computeIfAbsent(course, k ->
                 new AiDemoStore(dataHome.resolve("aidemos-" + k + ".jsonl")));
     }

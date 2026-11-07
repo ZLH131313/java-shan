@@ -113,8 +113,9 @@ public class AiDemoStore {
         if (cfg[0].isEmpty() && !cfg[2].contains("localhost") && !cfg[2].contains("127.0.0.1")) {
             throw new IllegalStateException("远程API需配置key(本地Ollama无需): 在 ~/.javashan/ai.txt 写入 key=你的key");
         }
-        // 概念课(计组/OS): AI不做解释者(解析已经讲清了), 只补"生活类比"建直觉
-        if (courseName != null && (courseName.contains("操作") || courseName.contains("组成"))) {
+        // 概念课(计组/OS/算法): AI不做解释者(解析已经讲清了), 只补"生活类比"建直觉
+        if (courseName != null && (courseName.contains("操作") || courseName.contains("组成")
+                || courseName.contains("算法"))) {
             return analogyGenerate(cfg, topic, explain);
         }
         // Java课: 生成代码演示。1.5b级小模型只跟英文指令(中文指令会复述要求), 指令用英文, 代码注释要求中文
@@ -139,7 +140,8 @@ public class AiDemoStore {
                 + "Textbook explanation (material only, do NOT copy it): "
                 + (explain == null ? "" : explain) + "\n"
                 + "Write in Chinese, 2-3 short sentences. First sentence MUST name the concept "
-                + "「" + topic + "」and its job. Then give ONE vivid everyday analogy. "
+                + "「" + topic + "」and its job. Then give ONE vivid everyday analogy that captures "
+                + "the KEY MECHANISM (how it actually works step by step), not merely the purpose. "
                 + "Last sentence maps the analogy back to the concept. "
                 + "Output ONLY those sentences.";
         String last = null;
@@ -194,9 +196,9 @@ public class AiDemoStore {
             String a = callApi(home, "🖥 操作系统", "信号量", "test", "",
                     "semaphore = value + 等待队列; P(wait)/V(signal) 是原子操作, 由内核实现。");
             System.out.println("[os类比] " + a);
-            String b = callApi(home, "🖧 计算机组成", "Cache", "test", "",
-                    "局部性使小容量 Cache 命中率可达 90% 以上, 以低成本逼近 CPU 速度。");
-            System.out.println("[co类比] " + b);
+            String b = callApi(home, "📐 算法设计", "回溯法", "test", "",
+                    "把所有可能解组织成树(子集树/排列树/一般树), 深度优先遍历并剪枝。");
+            System.out.println("[algo类比] " + b);
             return;
         }
         String demo = callApi(home, "☕ Java 基础", "String不可变",
