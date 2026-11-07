@@ -149,29 +149,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 #cardFlash.ok{background:rgba(220,252,231,.85);border:4px solid var(--ok);animation:cardShine .55s ease}
 @keyframes cardShine{0%{opacity:0}20%{opacity:.95}100%{opacity:0}}
 .qcard.shake{animation:cardShake .45s ease}
-/* 五连胜起答对冒火: 整卡燃烧 — 边框外火舌窜动 + 卡内顶部火光 + 火星上飘
-   (火舌是渐变色CSS形状非emoji; 全部transform/opacity动画, 走合成器) */
-#fireFx{position:absolute;inset:0;pointer-events:none;z-index:8}
-.fireGlow{position:absolute;left:0;right:0;top:0;height:46%;border-radius:24px 24px 0 0;
-  background:linear-gradient(to bottom, rgba(251,146,60,.38), rgba(251,146,60,0));
-  animation:fireGlowK .85s ease-out both}
-@keyframes fireGlowK{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
-.fireBig{position:absolute;bottom:100%;left:12%;right:12%;height:118px;transform-origin:50% 100%;
-  background:linear-gradient(to top,#dc2626 4%,#ea580c 26%,#f97316 52%,#fbbf24 80%,#fef9c3 96%);
-  border-radius:46% 54% 30% 28% / 98% 88% 18% 14%;
-  animation:bigFlame 1.15s ease-in-out both}
-.fireBig::after{content:'';position:absolute;left:24%;right:24%;bottom:0;height:62%;opacity:.92;
-  background:linear-gradient(to top,#fbbf24 10%,#fde047 55%,#fffbeb 95%);
-  border-radius:48% 52% 30% 30% / 96% 86% 16% 14%}   /* 焰芯: 随父元素一起摇曳 */
-@keyframes bigFlame{
-  0%{opacity:0;transform:translateY(14px) scaleY(.3) scaleX(.6)}
-  16%{opacity:1;transform:translateY(0) scaleY(1) scaleX(1)}
-  32%{transform:translateY(-2px) scaleY(1.09) scaleX(.96) skewX(2.5deg)}
-  50%{transform:translateY(-1px) scaleY(.95) scaleX(1.04) skewX(-2.5deg)}
-  68%{transform:translateY(-3px) scaleY(1.11) scaleX(.97) skewX(1.5deg)}
-  84%{transform:translateY(-2px) scaleY(.97) scaleX(1.03) skewX(-1.5deg)}
-  100%{opacity:0;transform:translateY(-30px) scaleY(1.16) scaleX(1.02)}
-}
 @keyframes cardShake{0%,100%{transform:translateX(0)}18%{transform:translateX(-12px)}36%{transform:translateX(10px)}54%{transform:translateX(-7px)}72%{transform:translateX(5px)}88%{transform:translateX(-3px)}}
 
 .opt:hover{border-color:#a5b4fc;transform:translateY(-2px);background:#f5f7ff}
@@ -241,15 +218,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 #toast.good{background:linear-gradient(135deg,#065f46 0%,#022c22 100%);border-color:rgba(110,231,183,.75)}
 #toast.zhan{background:linear-gradient(135deg,#92400e 0%,#451a03 100%);border-color:rgba(253,230,138,.75)}
 #toast.info{background:linear-gradient(135deg,#111827 0%,#1e1b4b 100%);border:1px solid rgba(129,140,248,.5)}
-/* 连击庆祝横幅: 深色玻璃质感 + 琥珀描边 + 火焰脉动 */
-#streakTip{position:fixed;top:26px;left:50%;transform:translate(-50%,0);z-index:95;
-  display:flex;align-items:center;gap:12px;padding:11px 26px;border-radius:999px;
-  background:linear-gradient(135deg,#111827 0%,#1e1b4b 100%);
-  border:1px solid rgba(251,191,36,.55);color:#fff;font-weight:800;font-size:16.5px;letter-spacing:1px;
-  opacity:0;pointer-events:none;transition:opacity .28s ease}
-#streakTip.show{opacity:1;pointer-events:auto}
-#streakTip b{color:#fbbf24;font-size:20px;margin:0 3px}
-#streakTip .stFire{font-size:21px;animation:stFlame .9s ease-in-out infinite alternate}
+/* stFlame: 首页打卡胶囊火苗在用 */
 @keyframes stFlame{from{transform:scale(.92) rotate(-6deg)}to{transform:scale(1.14) rotate(6deg)}}
 .noBridge{background:#fff7ed;color:#92400e;border-radius:14px;padding:14px 18px;font-size:14px;margin-bottom:16px}
 ::-webkit-scrollbar{width:9px}
@@ -551,7 +520,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 
 <canvas id="confetti"></canvas>
 <div id="toast"></div>
-<div id="streakTip"><span class="stFire">🔥</span><span id="streakTipText"></span><span class="stFire">🔥</span></div>
 
 <script>
 'use strict';
@@ -577,24 +545,8 @@ function flash(ok){
   card.classList.remove('shake');
   f.className = '';
   void card.offsetWidth;   /* 强制回流, 连续答题时动画能重播 */
-  if (ok){
-    f.className = 'ok';
-    if (streak >= 5) fireBurst();   /* 五连胜起, 每次答对冒火 */
-  }
+  if (ok) f.className = 'ok';
   else card.classList.add('shake');
-}
-function fireBurst(){
-  var card = $('qcard');
-  var wrap = document.createElement('div');
-  wrap.id = 'fireFx';
-  var glow = document.createElement('div');   /* 卡内顶部火光晕染 */
-  glow.className = 'fireGlow';
-  wrap.appendChild(glow);
-  var big = document.createElement('div');    /* 一整条大火焰从顶缘升起 */
-  big.className = 'fireBig';
-  wrap.appendChild(big);
-  card.appendChild(wrap);
-  setTimeout(function(){ wrap.remove(); }, 1300);
 }
 function toast(msg, ms){
   var t = $('toast'); t.textContent = msg;
@@ -1142,15 +1094,6 @@ function hitStreak(){
   $('streakN').textContent = streak;
   var box = $('streakBox');
   box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop');
-  if (streak > 0 && streak % 5 === 0) showStreakTip(streak);
-}
-function showStreakTip(n){
-  var el = $('streakTip');
-  var words = n >= 20 ? '势不可挡' : n >= 10 ? '手感封神' : '手感火热';
-  $('streakTipText').innerHTML = '连击 <b>x' + n + '</b> · ' + words;
-  el.classList.add('show');
-  clearTimeout(el._h);
-  el._h = setTimeout(function(){ el.classList.remove('show'); }, 1800);
 }
 function showSheet(ok, c){
   answered++; if (ok) correct++;
