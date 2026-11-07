@@ -157,3 +157,4 @@ cp cards-java.jsonl demos-java.jsonl cards-algo.jsonl demos-algo.jsonl cards-co.
 - 2026-11-07(二): 修合集播放bug(合集→动画视图切换: 关合集再开动画, 关动画回合集); 算法课实战演示大批扩充(+45张, 覆盖主定理/归并/快排/DP/背包/哈夫曼/Dijkstra/MST/回溯/分支限界全考点); 四门技术课仍缺~465张演示, 后续分批补
 - 2026-11-07(三): 新增✨AI实时演示(AiDemoStore+Bridge.aiDemoStart/aiDemoState, 点击现生成5-20秒, 结果按课程缓存到 ~/.javashan/aidemos-课程.jsonl 复用; 需配 ~/.javashan/ai.txt: key=xxx model=glm-4-flash base=https://open.bigmodel.cn/api/paas/v4/chat/completions); jpackage 增加 java.net.http 模块
 - 2026-11-07(四): AI演示改为本地模型直连(默认Ollama localhost:11434, model=qwen2.5-coder:7b, 免key); 清除上一轮手写的45张预存算法演示(恢复原始13条); Ollama已安装(0.40.15), 模型qwen2.5-coder:7b下载中(4.7GB受校园网影响较慢); ai.txt已写入~/.javashan/
+- 2026-11-07(五): 修复"章节全不见"bug — 我插入AI按钮时一行绑定代码缺了选择器前缀(.onclick=aiGenDemo;), 导致整个JS语法错误页面全白
