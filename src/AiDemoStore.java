@@ -123,9 +123,10 @@ public class AiDemoStore {
         } else if (courseName != null && courseName.contains("算法")) {
             prompt = "Topic: " + topic + ". Question: " + question
                     + " Answer: " + answer + " Explanation: " + explain + "\n"
-                    + "Write 6-10 lines of pseudocode or Java demonstrating the core algorithm steps "
-                    + "directly related to this question's scenario. "
-                    + "Rules: Chinese comments, print/show each step's result, output only the code.";
+                    + "Write 6-10 lines of C++ code (or pseudocode if more intuitive) "
+                    + "demonstrating the core algorithm steps directly related to this question. "
+                    + "Rules: Chinese comments, print each step's result with cout or print, "
+                    + "output only the code.";
         } else if (courseName != null && courseName.contains("Java")) {
             prompt = "Topic: " + topic + ". Question: " + question
                     + " Answer: " + answer + " Explanation: " + explain + "\n"
