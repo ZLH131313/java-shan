@@ -118,15 +118,43 @@ public class AiDemoStore {
                 || courseName.contains("算法"))) {
             return analogyGenerate(cfg, topic, explain);
         }
-        // Java课: 生成代码演示。1.5b级小模型只跟英文指令(中文指令会复述要求), 指令用英文, 代码注释要求中文
+        // Java课: 生成代码演示(带代码形态校验+重掷)
+        return javaGenerate(cfg, topic, question, answer, explain);
+    }
+
+    /**
+     * Java代码演示: 1.5b级小模型只跟英文指令(中文指令会复述要求), 指令用英文, 代码注释要求中文。
+     * 校验: 输出必须像代码且有足够长度, 拒绝"请给出详细信息"式耍赖(实测卡142踩过且被缓存),
+     * 最多重掷3次, 不达标不缓存。
+     */
+    private static String javaGenerate(String[] cfg, String topic, String question,
+                                       String answer, String explain) throws Exception {
         String prompt = "ALL COMMENTS MUST BE IN CHINESE (中文注释).\n"
                 + "Topic: " + topic + ". Question: " + question
                 + " Answer: " + answer + " Explanation: " + explain + "\n"
                 + "Write 6-10 lines of Java code demonstrating the exact behavior this question tests. "
+                + "The question above is complete, do NOT ask for more information. "
                 + "Rules: every comment in Chinese(中文), standard indentation, "
                 + "use System.out.println to show results, "
                 + "use single quotes for strings, output only the code.";
-        return postChat(cfg, cfg[1], prompt, "");
+        String last = null;
+        for (int i = 0; i < 3; i++) {
+            last = postChat(cfg, cfg[1], prompt, ",\"temperature\":0.5");
+            last = last.replaceFirst("(?i)^\\s*java\\s*¶", "").trim();   // 去掉```java围栏残留的语言标记行
+            if (javaCodeOk(last)) return last;
+        }
+        return null;
+    }
+
+    /** Java演示校验: 必须像代码(类/方法/打印/分号花括号)且够长, 拒绝索要信息的元文本 */
+    private static boolean javaCodeOk(String demo) {
+        if (demo == null || demo.length() < 40) return false;
+        if (demo.contains("请给出") || demo.contains("请提供") || demo.contains("请告诉我")) return false;
+        String low = demo.toLowerCase();
+        boolean codeish = low.contains("class ") || low.contains("void ")
+                || low.contains("system.out") || low.contains("public ")
+                || low.contains("static ");
+        return codeish && (demo.contains(";") || demo.contains("{"));
     }
 
     /**
@@ -201,9 +229,9 @@ public class AiDemoStore {
             System.out.println("[algo类比] " + b);
             return;
         }
-        String demo = callApi(home, "☕ Java 基础", "String不可变",
-                "String s = 'a'; s.concat('b'); System.out.println(s); 输出什么?", "a",
-                "concat 返回新字符串, 原串不变, 所以仍输出 a");
-        System.out.println(demo.replace("¶", "\n"));
+        String demo = callApi(home, "☕ Java 基础", "转型",
+                "向下转型前保证安全的做法是先用?", "instanceof 判断类型",
+                "if (a instanceof Dog d) { d.bark(); } 类型对得上再转, 避免 ClassCastException。");
+        System.out.println(demo == null ? "(未达标返回null)" : demo.replace("¶", "\n"));
     }
 }
