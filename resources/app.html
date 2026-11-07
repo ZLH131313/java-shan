@@ -144,6 +144,12 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .mkYou{background:#fee2e2;color:#b91c1c}
 .mkAns{background:#d1fae5;color:#047857}
 
+/* 答题视觉反馈: 全屏边缘轻闪(纯opacity动画, 走合成器, 低帧率也流畅) */
+#flash{position:fixed;inset:0;border:5px solid transparent;border-radius:18px;pointer-events:none;opacity:0;z-index:95}
+#flash.ok{border-color:var(--ok);animation:flashFade .5s ease}
+#flash.bad{border-color:var(--bad);animation:flashFade .5s ease}
+@keyframes flashFade{0%{opacity:0}18%{opacity:.75}100%{opacity:0}}
+
 .opt:hover{border-color:#a5b4fc;transform:translateY(-2px);background:#f5f7ff}
 .opt.correct{border-color:var(--ok);background:var(--okBg);animation:winPop .45s ease}
 @keyframes winPop{0%{transform:scale(1)}30%{transform:scale(1.1)}55%{transform:scale(.98)}75%{transform:scale(1.04)}100%{transform:scale(1)}}
@@ -381,7 +387,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
       Java 百词斩
     </div>
     <div id="headerStats"></div>
-    <button class="iconBtn" id="soundBtn" title="音效开关">🔊</button>
   </header>
 
   <!-- 首页: 章节地图 -->
@@ -523,6 +528,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 
 <canvas id="confetti"></canvas>
 <div id="toast"></div>
+<div id="flash"></div>
 <div id="streakTip"><span class="stFire">🔥</span><span id="streakTipText"></span><span class="stFire">🔥</span></div>
 
 <script>
@@ -544,6 +550,12 @@ function richText(s){ return escHtml(String(s || '')); }
 function $(id){ return document.getElementById(id); }
 /* 兼容不同 WebKit 版本的回车判定 */
 function isEnter(e){ return e.key === 'Enter' || e.keyCode === 13 || e.which === 13 || e.keyIdentifier === 'Enter'; }
+function flash(ok){
+  var f = $('flash');
+  f.className = '';
+  void f.offsetWidth;   /* 强制回流, 连续答题时动画能重播 */
+  f.className = ok ? 'ok' : 'bad';
+}
 function toast(msg, ms){
   var t = $('toast'); t.textContent = msg;
   /* 按内容自动选配色: 斩=琥珀, 错误类=红, 赞美/解锁=绿, 其余=靛蓝 */
@@ -726,7 +738,7 @@ function renderDoneCheckin(){
   if (c.checkedToday && !ckStartChecked){
     setTimeout(function(){
       toast('✅ 打卡成功! 连续 ' + c.streak + ' 天, 明天也别断了火 🔥');
-      bridge.sfx('win');
+      flash(true);
     }, 1500);
   }
 }
@@ -1063,7 +1075,7 @@ function pick(i, btn){
     streak = 0; $('streakN').textContent = '0';
     queue.push(c); toast('答错了, 这张卡排到队尾再战一次');
   }
-  bridge.sfx(ok ? 'ok' : 'bad');
+  flash(ok);
   showSheet(ok, c);
 }
 function fillSubmit(){
@@ -1082,7 +1094,7 @@ function fillSubmit(){
     streak = 0; $('streakN').textContent = '0';
     queue.push(c); toast('答错了, 这张卡排到队尾再战一次');
   }
-  bridge.sfx(ok ? 'ok' : 'bad');
+  flash(ok);
   showSheet(ok, c);
 }
 function hitStreak(){
@@ -1148,7 +1160,7 @@ function finishSession(){
     : '错题不会溜走, 它们明天还会回来。';
   $('doneOverlay').classList.add('show');
   renderDoneCheckin();
-  bridge.sfx('win');
+  flash(true);
   /* 彩带特效已按需求移除: 全屏粒子在这台机器的 WebView 上渲染吃力 */
   setTimeout(function(){ goHome(true); }, 40);   /* 地图数据先刷新, 弹层浮在上面 */
 }
@@ -1183,13 +1195,6 @@ $('wrongBtn').onclick = function(){
   var st = JSON.parse(bridge.stats(currentCourse));
   if (!st.wrong){ toast('错题本是空的, 一次没错过, 漂亮!'); return; }
   startSession(-1);
-};
-$('soundBtn').onclick = function(){
-  var on = !bridge.soundOn();
-  bridge.setSound(on);
-  $('soundBtn').textContent = on ? '🔊' : '🔇';
-  toast(on ? '音效已开启' : '音效已静音');
-  if (on) bridge.sfx('ok');
 };
 $('ckPill').onclick = openCheckinPanel;
 $('ckPrev').onclick = function(){ shiftMonth(-1); };
@@ -1354,7 +1359,6 @@ Array.prototype.forEach.call(document.querySelectorAll('.screen'), function(el){
 
 /* ================= 启动 ================= */
 function boot(){
-  $('soundBtn').textContent = bridge.soundOn() ? '🔊' : '🔇';
   refreshHome();
 }
 window.__onBridgeReady = boot;

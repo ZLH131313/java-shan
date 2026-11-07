@@ -25,8 +25,6 @@ public class Bridge {
     private final Engine os;
     private final CheckinStore checkin;
     private final Map<String, AnimStore> anims = new HashMap<>();
-    private final SoundFX sfx = new SoundFX();
-    private final Path settingsFile;
     private final Path dataHome;
 
     public Bridge() throws IOException {
@@ -36,14 +34,6 @@ public class Bridge {
         // 旧版单课程数据迁移到 java 课程名下
         moveIfAbsent(dataHome.resolve("progress.jsonl"), dataHome.resolve("progress-java.jsonl"));
         moveIfAbsent(dataHome.resolve("session.txt"), dataHome.resolve("session-java.txt"));
-
-        settingsFile = dataHome.resolve("settings.txt");
-        if (Files.exists(settingsFile)) {
-            try {
-                if (Files.readString(settingsFile).trim().contains("sound=0")) sfx.setEnabled(false);
-            } catch (IOException ignored) {
-            }
-        }
 
         java = new Engine(dataCards("cards-java"), dataHome.resolve("progress-java.jsonl"), Engine.JAVA_CHAPTERS);
         algo = new Engine(dataCards("cards-algo"), dataHome.resolve("progress-algo.jsonl"), Engine.ALGO_CHAPTERS);
@@ -123,16 +113,6 @@ public class Bridge {
         }
     }
 
-    /* ---- 音效(全局, 不分课程) ---- */
-    public void sfx(String type) { sfx.play(type); }
-    public boolean soundOn() { return sfx.isEnabled(); }
-    public void setSound(boolean on) {
-        sfx.setEnabled(on);
-        try {
-            Files.write(settingsFile, List.of("sound=" + (on ? 1 : 0)), StandardCharsets.UTF_8);
-        } catch (IOException ignored) {
-        }
-    }
 
 
     /* ---- 外部应用: 豆包 ---- */
