@@ -340,7 +340,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .collEmpty{text-align:center;color:var(--sub);font-size:13.5px;padding:26px 10px;line-height:1.9}
 .collFoot{font-size:12px;color:var(--sub);margin-top:12px;line-height:1.7;flex:none}
 
-/* ============ 分步讲解动画播放器 ============ */
+/* ============ 知识点演示动画播放器 ============ */
 .animBox{background:#fff;border-radius:24px;padding:20px 24px 18px;width:620px;max-height:90vh;
   display:flex;flex-direction:column}
 .animHead{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex:none}
@@ -360,17 +360,22 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .anCover span{font-size:12.5px;color:var(--sub)}
 .anQ{font-size:19px;line-height:1.6;font-weight:600;white-space:pre-wrap}
 .anHint{font-size:12.5px;color:var(--sub);margin-top:12px;line-height:1.7}
-.anOpts{display:flex;flex-direction:column;gap:8px}
-.anOpt{display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:13px;
-  padding:9px 12px;font-size:14.5px;background:#fff;transition:opacity .3s,transform .3s}
-.anOpt .anL{width:26px;height:26px;flex:none;border-radius:8px;background:#f1f5f9;color:var(--sub);
-  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
-.anOpt.out{opacity:.38;transform:translateX(12px)}
-.anOpt.out .txt2{text-decoration:line-through}
-.anOpt.hit{border-color:var(--ok);background:var(--okBg)}
-.anOpt.hit .anL{background:var(--ok);color:#fff}
-.anOpt.mix{animation:anMix .5s ease}
-@keyframes anMix{0%{transform:translateX(0)}40%{transform:translateX(18px)}100%{transform:translateX(0)}}
+.anTerms{display:flex;flex-direction:column;gap:10px}
+.anTerm{background:#f0fdfa;border:1px solid #99f6e4;border-radius:13px;padding:10px 14px}
+.anTerm b{display:block;font-size:15px;color:#0d9488;margin-bottom:3px}
+.anTerm span{font-size:13.5px;line-height:1.65;color:#134e4a}
+.anPair{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);border-radius:13px;
+  padding:11px 14px;font-size:14.5px;line-height:1.6;color:var(--ink)}
+.anPair + .anPair{margin-top:9px}
+.anPair b{flex:none;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:99px;margin-top:2px}
+.anPair.ok{background:var(--okBg);border-color:#a7f3d0}
+.anPair.ok b{background:var(--ok);color:#fff}
+.anPair.mix{background:#fff7ed;border-color:#fed7aa}
+.anPair.mix b{background:var(--warn);color:#fff}
+.anSay{font-size:13.5px;line-height:1.65;color:#0d9488;background:#f0fdfa;border-radius:11px;
+  padding:9px 13px;margin-top:10px}
+.anOut{background:#0f172a;color:#4ade80;font-family:Consolas,'Courier New',monospace;font-size:13.5px;
+  line-height:1.7;padding:12px 14px;border-radius:10px;white-space:pre-wrap;word-break:break-all;margin-top:4px}
 .anBullets{display:flex;flex-direction:column;gap:9px}
 .anBullets p{font-size:14.5px;line-height:1.7;padding-left:15px;position:relative}
 .anBullets p:before{content:'·';position:absolute;left:0;color:#0d9488;font-weight:800;font-size:19px;line-height:1.25}
@@ -378,6 +383,10 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
   border-radius:14px;padding:11px 14px;font-size:15px;color:#065f46;font-weight:700;margin-top:12px}
 .anCode{background:#0f172a;color:#e2e8f0;font-family:Consolas,'Courier New',monospace;font-size:13px;
   line-height:1.65;padding:12px 14px;border-radius:10px;white-space:pre-wrap;word-break:break-all;margin-top:4px}
+.anCode .cl{display:block;border-radius:6px;padding:1px 6px}
+.anCode .cl.done{color:#94a3b8}
+.anCode .cl.now{background:#1d4ed8;color:#fff}
+.anCode .cl.todo{color:#475569}
 .animFoot{display:flex;gap:8px;align-items:center;flex:none}
 .animFoot button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px 13px;
   font-size:13px;font-weight:700;color:var(--sub);cursor:pointer;font-family:inherit;transition:.15s;flex:none}
@@ -430,7 +439,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
     </div>
     <div class="animEntry" id="animEntry" title="点击查看生成过动画的卡片">
       <div class="ico">🎬</div>
-      <div class="txt">动画合集<span>遇到不会的题点「🎬 生成动画」, 收在这里随时回看</span></div>
+      <div class="txt">动画合集<span>看不懂的知识点就点「🎬 生成动画」, 一步步演示给你看</span></div>
       <div class="num"><b id="animCountN">0</b> 张</div>
     </div>
     <div class="resumeBar" id="resumeBar" style="display:none">
@@ -454,7 +463,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
       <input id="keycap" autocomplete="off" style="position:fixed;top:-60px;left:0;width:8px;height:8px;opacity:0;border:none;padding:0">
       <div class="qcard" id="qcard">
         <div class="cardTools">
-          <button class="toolBtn anim" id="animBtn" title="按本地规则给这张卡生成分步讲解动画, 并收进首页的动画合集">🎬 生成动画</button>
+          <button class="toolBtn anim" id="animBtn" title="把这张卡背后的知识点做成演示动画(本地规则生成, 手动一步步看)">🎬 生成动画</button>
           <button class="toolBtn note" id="noteBtn" title="给这张卡写条笔记, 下次遇到它时会显示在题干下面">📝 笔记</button>
           <button class="peekBtn" id="peekBtn" title="直接看答案(按K), 按错题处理">👀 看答案</button>
           <button class="zhanBtn" id="zhanBtn">⚔ 斩</button>
@@ -527,21 +536,20 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
   </div>
 </div>
 
-<!-- 分步讲解动画播放器 -->
+<!-- 知识点演示动画播放器 -->
 <div class="overlay" id="animOverlay">
   <div class="animBox">
     <div class="animHead">
-      <h3 id="animTitle">🎬 分步讲解</h3>
+      <h3 id="animTitle">🎬 知识点演示</h3>
       <div class="animStep" id="animCap">1 / 1</div>
-      <button class="animX" id="animClose" title="关闭(回车暂停/继续, ← → 换步)">✕</button>
+      <button class="animX" id="animClose" title="关闭(Esc)">✕</button>
     </div>
     <div class="anBar"><div class="anFill" id="anFill"></div></div>
     <div class="anStage" id="animStage"></div>
     <div class="animFoot">
       <button id="animPrev" title="上一步(左方向键)">⏮ 上一步</button>
-      <button class="pp" id="animPP" title="播放/暂停(回车)">⏸ 暂停</button>
-      <button id="animNext" title="下一步(右方向键)">下一步 ⏭</button>
-      <button id="animReplay" title="从头再放一遍">↻ 重播</button>
+      <button class="pp" id="animNext" title="下一步(回车 / 空格 / 右方向键)">下一步 ›</button>
+      <button id="animReplay" title="回到第一步">↻ 重来</button>
       <button class="coll" id="animDel" title="把这张卡移出动画合集">✕ 移出合集</button>
     </div>
   </div>
@@ -945,7 +953,7 @@ function renderDoneCheckin(){
   }
 }
 
-/* ================= 卡片笔记 + 分步讲解动画 + 动画合集 ================= */
+/* ================= 卡片笔记 + 知识点演示动画 + 动画合集 ================= */
 var COURSE_NAME = { java:'☕ Java 基础', algo:'📐 算法设计', co:'🖧 计算机组成', os:'🖥 操作系统', en:'📖 英语四级' };
 
 /* 桥接调用全部包一层: 笔记/动画出任何岔子都不能打断刷题 */
@@ -981,9 +989,9 @@ function syncCardTools(c){
   var ab = $('animBtn'), nb = $('noteBtn'), box = $('noteView');
   if (!c){ box.style.display = 'none'; return; }
   var has = animInColl(c.id);
-  ab.textContent = has ? '🎬 重播动画' : '🎬 生成动画';
-  ab.title = has ? '这张卡已在合集里, 点开再看一遍'
-                 : '按本地规则生成分步讲解动画, 并收进首页的动画合集';
+  ab.textContent = has ? '🎬 重看演示' : '🎬 生成动画';
+  ab.title = has ? '这张卡已在合集里, 点开重看知识点的演示'
+                 : '把这张卡背后的知识点做成演示(本地规则生成, 手动一步步看), 并收进首页动画合集';
   var t = noteOf(c.id);
   nb.classList.toggle('has', !!t);
   nb.title = t ? '编辑这张卡的笔记' : '给这张卡写条笔记(下次遇到时显示在题干下)';
@@ -1039,22 +1047,6 @@ function chunk(arr, n){
   for (var i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
   return out;
 }
-/* mode: shuffle=就位 / elim=按 cut 划掉前 cut 个错项 / reveal=亮出答案 / done=全判完 */
-function optRows(c, mode, cut){
-  var wrong = [], i;
-  for (i = 0; i < c.opts.length; i++) if (i !== c.ans) wrong.push(i);
-  var html = '<div class="anOpts">';
-  for (i = 0; i < c.opts.length; i++){
-    var cls = 'anOpt';
-    if (mode === 'shuffle') cls += ' mix';
-    else if (mode === 'reveal' && i === c.ans) cls += ' hit';
-    else if (mode === 'elim' && wrong.indexOf(i) < cut) cls += ' out';
-    else if (mode === 'done') cls += (i === c.ans ? ' hit' : ' out');
-    html += '<div class="' + cls + '"><span class="anL">' + 'ABCD'[i] + '</span>' +
-            '<span class="txt2">' + escHtml(c.opts[i]) + '</span></div>';
-  }
-  return html + '</div>';
-}
 /* 演示代码: § 是双引号, ¶ 是换行(与 demos-*.jsonl 约定一致) */
 function demoLines(d){
   var lines = String(d).split('¶');
@@ -1062,128 +1054,168 @@ function demoLines(d){
   if (lines.length > 14){ lines = lines.slice(0, 14); lines.push('…'); }
   return lines;
 }
-function buildSteps(c){
-  var steps = [];
-  function add(label, html, ms){ steps.push({ label: label, html: html, ms: ms || 1800 }); }
-  var chName = chapterName(c.ch);
-  add('认清这道题',
-      '<div class="anCover"><b>' + escHtml(c.topic || chName) + '</b><span>' +
-      escHtml(chName) + ' · ' + escHtml(c.tag || '') + ' · ' + (c.fill ? '填空题' : '选择题') + '</span></div>');
-  add('把题干读完',
-      '<div class="anQ">' + escHtml(c.q) + '</div><div class="anHint">' +
-      (c.fill ? '先自己默想答案, 再往下对照。'
-              : '四个选项都要读一遍。它们每次出现都会打乱顺序, 位置本身不是线索。') +
-      '</div>', 2600);
-
-  if (!c.fill){
-    add('选项就位', optRows(c, 'shuffle'), 1700);
-    var wrong = [];
-    for (var i = 0; i < c.opts.length; i++) if (i !== c.ans) wrong.push(i);
-    var groups = chunk(wrong, 2), cut = 0;
-    for (var g = 0; g < groups.length; g++){
-      var names = [];
-      for (var n = 0; n <= g; n++) for (var m = 0; m < groups[n].length; m++) names.push('ABCD'[groups[n][m]]);
-      cut += groups[g].length;
-      add('排除干扰项 (' + cut + '/' + wrong.length + ')',
-          optRows(c, 'elim', cut) +
-          '<div class="anHint">' + names.join('、') + ' 被划掉 —— 和题干要求对不上。</div>', 1700);
+/* 从主题/题干/解析里挑出词典真收录的术语(长词优先, 去重, 超基础词不讲) */
+function termsIn(texts, cap){
+  var seen = {}, out = [];
+  for (var t = 0; t < texts.length; t++){
+    var hits = String(texts[t] || '').replace(/§/g, '"').match(glossRegex);
+    if (!hits) continue;
+    for (var i = 0; i < hits.length; i++){
+      var m = hits[i];
+      if (seen[m] || GLOSS_BASIC[m] || !GLOSS[m]) continue;
+      seen[m] = 1; out.push(m);
+      if (out.length >= cap) return out;
     }
-    add('锁定答案',
-        optRows(c, 'reveal') + '<div class="anAns">✔ ' + 'ABCD'[c.ans] + ' · ' + escHtml(c.opts[c.ans]) + '</div>', 2300);
-  } else {
-    add('写出答案',
-        '<div class="anQ">' + escHtml(c.q) + '</div><div class="anAns">✎ ' + escHtml(String(c.ans)) + '</div>', 2300);
+  }
+  return out;
+}
+/* 这一行代码在干什么: 只认常见形态, 认不出就老实说「执行这一行」 */
+function lineSay(line){
+  var s = String(line).trim();
+  if (!s) return '';
+  if (/^\/\//.test(s)) return '注释, 给人看的, 不参与运行';
+  if (s === '}' || s === '};') return '这一段结束, 回到外面继续';
+  if (/\b(class|interface|enum)\s+\w+/.test(s)) return '声明一个类型, 大括号里的字段和方法都归它';
+  if (/\bmain\s*\(/.test(s)) return '程序从这里开始跑';
+  if (/System\.(out|err)\.print/.test(s)) return '往屏幕打印 ' + outLit(s);
+  if (/\bnew\s+\w+\s*\(/.test(s)) return '在堆上创建一个对象, 变量里存的只是它的地址';
+  if (/^\s*(for|while|do)\b/.test(s)) return '进入循环, 条件不满足才跳出';
+  if (/^\s*if\b/.test(s)) return '条件分支: 括号里成立才执行这一段';
+  if (/^\s*(return|throw)\b/.test(s)) return '把结果交回调用者, 这个方法到此结束';
+  if (/^(int|long|double|float|boolean|char|byte|short|String|var)\s+\w+\s*=/.test(s)) return '声明变量并赋值, 这一步之后它才有内容';
+  if (/^(int|long|double|float|boolean|char|byte|short|String|var)\s+\w+\s*;/.test(s)) return '声明了一个变量, 还没赋值';
+  if (/\+\+|--/.test(s)) return '自增/自减, 先看清是先用还是先加';
+  if (/\w+\s*=\s*\w+[.\w]*\s*\(/.test(s)) return '调用一个方法, 返回值存进左边的变量';
+  return '执行这一行';
+}
+/* 打印语句里的字面量部分; 拼出来的值只能笼统说明 */
+function outLit(s){
+  var lits = String(s).match(/"([^"]*)"/g), txt = '';
+  if (lits) for (var i = 0; i < lits.length; i++) txt += lits[i].slice(1, -1);
+  var rest = String(s).replace(/"[^"]*"/g, '').replace(/^.*print(?:ln)?\s*\(/, '');
+  var more = /\S/.test(rest.replace(/[+);]\s*$/, ''));
+  if (!txt) return '(一个算出来的值)';
+  return '「' + txt + '」' + (more ? ' 再拼上算出来的值' : '');
+}
+function buildSteps(c){
+  var steps = [], i;
+  function add(label, html){ steps.push({ label: label, html: html }); }
+  var chName = chapterName(c.ch);
+  var bullets = splitSent(c.e);
+
+  add('今天要弄明白的知识点',
+      '<div class="anCover"><b>' + escHtml(c.topic || chName) + '</b><span>' +
+      escHtml(chName) + ' · ' + escHtml(c.tag || '') + '</span></div>' +
+      '<div class="anQ">' + escHtml(c.q) + '</div>' +
+      '<div class="anHint">下面不教你怎么选, 只把这件事本身演示清楚。</div>');
+
+  var terms = termsIn([c.topic, c.q, c.e], 6);
+  var tg = chunk(terms, 2);
+  for (i = 0; i < tg.length; i++){
+    var rows = '';
+    for (var r = 0; r < tg[i].length; r++)
+      rows += '<div class="anTerm"><b>' + escHtml(tg[i][r]) + '</b><span>' +
+              escHtml(GLOSS[tg[i][r]]) + '</span></div>';
+    add(tg.length > 1 ? '关键词是什么意思 (' + (i + 1) + '/' + tg.length + ')' : '关键词是什么意思',
+        '<div class="anTerms">' + rows + '</div>');
   }
 
-  var bullets = splitSent(c.e);
-  var bg = chunk(bullets, 3);
-  if (bg.length > 3){                       /* 句子太多就并成三段, 免得动画拖沓 */
+  if (c.d){
+    var all = demoLines(c.d), keep = [];
+    for (i = 0; i < all.length; i++) if (String(all[i]).trim()) keep.push(all[i]);
+    var per = Math.max(1, Math.ceil(keep.length / 5));   /* 手动步进: 最多约五步, 别让人狂点 */
+    for (var p = 0; p * per < keep.length; p++){
+      var from = p * per, upto = Math.min(keep.length, from + per), code = '', say = '';
+      for (var k = 0; k < keep.length; k++){
+        var cls = k < from ? 'done' : (k < upto ? 'now' : 'todo');
+        code += '<span class="cl ' + cls + '">' + escHtml(keep[k]) + '</span>';
+      }
+      for (var q = from; q < upto; q++){
+        var s1 = lineSay(keep[q]);
+        if (s1) say += (say ? '  ' : '') + s1;
+      }
+      add('逐行看它怎么跑 (' + upto + '/' + keep.length + ')',
+          '<pre class="anCode">' + code + '</pre>' +
+          '<div class="anSay">▸ ' + escHtml(say || '接着往下看') + '</div>');
+    }
+    var prints = [];
+    for (i = 0; i < keep.length; i++)
+      if (/System\.(out|err)\.print/.test(keep[i])) prints.push(outLit(keep[i]));
+    if (prints.length){
+      var out = '';
+      for (i = 0; i < prints.length; i++) out += (i ? '\n' : '') + escHtml(prints[i]);
+      add('跑完屏幕上留下什么',
+          '<div class="anOut">' + out + '</div>' +
+          '<div class="anHint">知识点就落在这个结果上 —— 能说出为什么是这个结果, 才算真懂。</div>');
+    }
+  }
+
+  var bg = chunk(bullets, 2);
+  if (bg.length > 3){                        /* 句子太多就并成三段, 免得演示拖沓 */
     var rest = [];
     for (var t2 = 2; t2 < bg.length; t2++) rest = rest.concat(bg[t2]);
     bg = [bg[0], bg[1], rest];
   }
   for (var b = 0; b < bg.length; b++){
-    var rows = '';
-    for (var r = 0; r < bg[b].length; r++) rows += '<p>' + escHtml(bg[b][r]) + '</p>';
-    add(bg.length > 1 ? '拆解解析 (' + (b + 1) + '/' + bg.length + ')' : '拆解解析',
-        '<div class="anBullets">' + rows + '</div>', 2500);
+    var ps = '';
+    for (var w = 0; w < bg[b].length; w++) ps += '<p>' + escHtml(bg[b][w]) + '</p>';
+    add(bg.length > 1 ? '这个道理拆开看 (' + (b + 1) + '/' + bg.length + ')' : '这个道理拆开看',
+        '<div class="anBullets">' + ps + '</div>');
   }
 
-  if (c.d){
-    var lines = demoLines(c.d);
-    var each = Math.max(5, Math.ceil(lines.length / 3));
-    for (var l = 0; l * each < lines.length; l++){
-      var upto = Math.min(lines.length, (l + 1) * each), code = '';
-      for (var k = 0; k < upto; k++) code += escHtml(lines[k]) + '\n';
-      add('代码演示 (' + upto + '/' + lines.length + ')',
-          '<div class="anHint">逐行看它到底怎么跑:</div><pre class="anCode">' + code + '</pre>', 2500);
-    }
+  if (c.fill){
+    add('标准写法',
+        '<div class="anQ">' + escHtml(c.q) + '</div>' +
+        '<div class="anAns">✎ ' + escHtml(String(c.ans)) + '</div>' +
+        '<div class="anHint">连起来整句读一遍, 记整个说法而不是单个词。</div>');
+  } else if (c.opts && c.opts.length >= 2){
+    var mix = -1;
+    for (i = 0; i < c.opts.length; i++)
+      if (i !== c.ans && String(c.e || '').indexOf(c.opts[i]) >= 0){ mix = i; break; }
+    if (mix < 0) for (i = 0; i < c.opts.length; i++) if (i !== c.ans){ mix = i; break; }
+    add('成立的说法 vs 容易混的说法',
+        '<div class="anPair ok"><b>成立</b><div>' + escHtml(c.opts[c.ans]) + '</div></div>' +
+        '<div class="anPair mix"><b>易混</b><div>' + escHtml(c.opts[mix]) + '</div></div>' +
+        '<div class="anHint">把这两句差在哪说清楚, 这个知识点就是你的了。</div>');
   }
 
-  add('收尾 · 一句话记住',
+  add('一句话记住',
       '<div class="anQ">' + escHtml(bullets.length ? bullets[0] : (c.topic || '')) + '</div>' +
-      '<div class="anHint">答对它, 之后按 1 / 2 / 4 / 7 / 15 / 30 天的节奏回来看, 想忘都难。</div>', 2600);
+      '<div class="anHint">下次碰到「' + escHtml(c.topic || chName) + '」, 先在脑子里重放这段演示。</div>');
   return steps;
 }
 
-/* ---------- 播放器 ---- */
-var anim = { steps: [], i: -1, playing: false, timer: null, cardId: 0 };
+/* ---------- 播放器: 手动逐步(一步一停, 看明白了再按下一步) ---------- */
+var anim = { steps: [], i: -1, cardId: 0 };
 function openAnim(card){
   if (!card){ toast('这张卡的内容在卡库里找不到了, 无法生成动画'); return; }
   anim.cardId = card.id;
   anim.steps = buildSteps(card);
-  anim.i = -1;
   $('animTitle').textContent = '🎬 ' + (card.topic || chapterName(card.ch));
   $('animDel').style.display = animInColl(card.id) ? '' : 'none';
   $('animOverlay').classList.add('show');
-  anim.playing = true;
   animGoto(0);
-  setPpLabel();
 }
 function animGoto(i){
   if (!anim.steps.length) return;
   anim.i = Math.max(0, Math.min(anim.steps.length - 1, i));
+  var last = anim.i === anim.steps.length - 1;
   var s = anim.steps[anim.i], st = $('animStage');
   st.innerHTML = '<div class="anStep"><div class="anLabel">' + escHtml(s.label) + '</div>' + s.html + '</div>';
-  st.scrollTop = 0;
-  $('animCap').textContent = (anim.i + 1) + ' / ' + anim.steps.length;
+  $('animCap').textContent = (anim.i + 1) + ' / ' + anim.steps.length + (last ? ' · 完' : '');
   $('anFill').style.width = Math.round((anim.i + 1) * 100 / anim.steps.length) + '%';
-  scheduleAnim();
-}
-function scheduleAnim(){
-  if (anim.timer){ clearTimeout(anim.timer); anim.timer = null; }
-  if (!anim.playing) return;
-  if (anim.i >= anim.steps.length - 1){ anim.playing = false; setPpLabel(); return; }
-  anim.timer = setTimeout(function(){ animGoto(anim.i + 1); }, anim.steps[anim.i].ms);
-}
-function setPpLabel(){
-  $('animPP').textContent = anim.playing ? '⏸ 暂停'
-    : (anim.i >= anim.steps.length - 1 && anim.steps.length ? '↻ 再放一遍' : '▶ 播放');
-}
-function animToggle(){
-  if (!anim.steps.length) return;
-  anim.playing = !anim.playing;
-  if (anim.playing){
-    if (anim.i < 0 || anim.i >= anim.steps.length - 1) animGoto(0);     /* 播完再按 = 从头 */
-    else scheduleAnim();
-  }
-  setPpLabel();
+  $('animNext').textContent = last ? '↻ 再看一遍' : '下一步 ›';
+  /* 代码行多到撑出面板时, 把当前执行的那一行留在视野里 */
+  var now = st.querySelector('.cl.now');
+  st.scrollTop = now ? Math.max(0, now.offsetTop - 70) : 0;
 }
 function animStepBy(d){
   if (!anim.steps.length) return;
-  anim.playing = false;
+  if (d > 0 && anim.i >= anim.steps.length - 1){ animGoto(0); return; }   /* 最后一步再按 = 从头 */
   animGoto(anim.i + d);
-  setPpLabel();
 }
-function animReplay(){
-  if (!anim.steps.length) return;
-  anim.playing = true;
-  animGoto(0);
-  setPpLabel();
-}
+function animReplay(){ if (anim.steps.length) animGoto(0); }
 function closeAnim(){
-  anim.playing = false;
-  if (anim.timer){ clearTimeout(anim.timer); anim.timer = null; }
   anim.steps = []; anim.i = -1;
   $('animOverlay').classList.remove('show');
   refocusCard();
@@ -1587,7 +1619,6 @@ $('noteClose').onclick = closeNotePanel;
 $('noteOverlay').onclick = function(e){ if (e.target === this) closeNotePanel(); };
 $('animPrev').onclick = function(){ animStepBy(-1); };
 $('animNext').onclick = function(){ animStepBy(1); };
-$('animPP').onclick = animToggle;
 $('animReplay').onclick = animReplay;
 $('animClose').onclick = closeAnim;
 $('animDel').onclick = function(){ removeFromColl(anim.cardId); };
@@ -1618,10 +1649,10 @@ document.addEventListener('keydown', function(e){
     if (e.keyCode === 27){ e.preventDefault(); closeNotePanel(); }
     return;
   }
-  /* 动画播放器: 回车/空格=播放暂停, ←→=上/下一步, Esc=关闭; 开着时绝不影响答题 */
+  /* 动画播放器(手动逐步): 回车/空格/→=下一步, ←=上一步, Esc=关闭; 开着时绝不影响答题 */
   if ($('animOverlay').classList.contains('show')){
     if (onBtn(e)){ if (e.keyCode === 27){ e.preventDefault(); closeAnim(); } return; }
-    if (enter || space){ e.preventDefault(); animToggle(); return; }
+    if (enter || space){ e.preventDefault(); animStepBy(1); return; }
     if (e.keyCode === 37){ e.preventDefault(); animStepBy(-1); return; }
     if (e.keyCode === 39){ e.preventDefault(); animStepBy(1); return; }
     if (e.keyCode === 27){ e.preventDefault(); closeAnim(); }
@@ -1685,7 +1716,7 @@ function armEnterKey(){
   if (pendingEnter) clearTimeout(pendingEnter);
   pendingEnter = setTimeout(function(){
     pendingEnter = null;
-    if ($('animOverlay').classList.contains('show')){ animToggle(); return; }
+    if ($('animOverlay').classList.contains('show')){ animStepBy(1); return; }
     if ($('collOverlay').classList.contains('show')){ closeCollection(); return; }
     if ($('noteOverlay').classList.contains('show')) return;                       /* 笔记里回车=换行 */
     if ($('ckOverlay').classList.contains('show')){ closeCheckinPanel(); return; }   /* JavaFX 真实回车走这条路径 */

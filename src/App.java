@@ -111,8 +111,21 @@ public class App extends Application {
                         " + ' 合集入口张数=' + document.getElementById('animCountN').textContent;})()",
                         "(function(){window.__uiBak = bridge.loadSession('java'); startSession(1);" +
                         "return '队列=' + queue.length + ' 当前第' + (qidx+1) + '张 卡片按钮数=' + document.querySelectorAll('#qcard .cardTools button').length;})()",
-                        "(function(){closeNotePanel(); openAnim(queue[qidx]);" +
-                        "return '步骤=' + anim.steps.length + ' 自动播放=' + anim.playing + ' 标题=' + document.getElementById('animTitle').textContent" +
+                        "(function(){closeNotePanel(); var cc = null;" +
+                        "for (var k = 0; k < queue.length; k++) if (queue[k].d){ cc = queue[k]; break; }" +
+                        "if (!cc){ try{ var cs = JSON.parse(bridge.cardsByIds(currentCourse," +
+                        "  '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20')).cards || [];" +
+                        "  got = cs.length;" +
+                        "  for (var k1 = 0; k1 < cs.length; k1++) if (cs[k1].d){ cc = cs[k1]; break; } }catch(e){ got = -1; } }" +
+                        "if (!cc) cc = queue[qidx];" +
+                        "openAnim(cc);" +
+                        "var jump = 0; for (var k2 = 0; k2 < anim.steps.length; k2++)" +
+                        "  if (anim.steps[k2].label.indexOf('逐行') === 0){ jump = k2; break; }" +
+                        "animGoto(jump);" +
+                        "return '步骤=' + anim.steps.length + ' 带演示=' + (!!cc.d) + ' 查卡=' + got +" +
+                        " ' 首步=' + anim.steps[0].label + ' 停在第' + (anim.i + 1) + '步' +" +
+                        " ' 下一步钮=' + document.getElementById('animNext').textContent" +
+                        " + ' 标题=' + document.getElementById('animTitle').textContent" +
                         " + ' 计数=' + document.getElementById('animCap').textContent;})()",
                         "(function(){closeAnim(); openNotePanel(); return '面板已开=' + document.getElementById('noteOverlay').classList.contains('show')" +
                         " + ' 标题=' + document.getElementById('noteTitle').textContent;})()",
@@ -122,6 +135,14 @@ public class App extends Application {
                         " + ' 行数=' + document.getElementById('collList').children.length;})()",
                 };
                 try {
+                    /* 页面加载是异步的: 等 boot 完成(goHome 出现)再动, 否则第一条探针就会撞上 undefined */
+                    boolean ready = false;
+                    for (int w = 0; w < 40 && !ready; w++){
+                        Thread.sleep(250);
+                        ready = "function".equals(fx(new java.util.concurrent.FutureTask<Object>(
+                                () -> engine.executeScript("typeof goHome"))));
+                    }
+                    if (!ready) System.out.println("[界面] 等待页面 boot 超时, 仍继续尝试");
                     /* 截 WebView 本身: 高分屏与别的窗口遮挡都不影响, 拿到的就是页面像素 */
                     for (int i = 0; i < names.length; i++) {
                         final String script = js[i];
@@ -197,17 +218,23 @@ public class App extends Application {
                                 "bridge.animDel('java',T);var after=bridge.animHas('java',T);" +
                                 "var dom=['animBtn','noteBtn','noteView','animOverlay','collOverlay','animEntry','animStage','anFill']" +
                                 ".map(function(i){return document.getElementById(i)?1:0}).join('');" +
-                                "var ch=buildSteps({id:1,ch:1,topic:'自检',tag:'概念',q:'这是题干?',fill:false,ans:1," +
-                                "opts:['甲','乙','丙','丁'],e:'因为乙最贴。其它都对不上。',d:'int a §1¶;§'}).length;" +
-                                "var fl=buildSteps({id:2,ch:1,topic:'自检2',tag:'填空',q:'填 ___',fill:true,ans:'乙',e:'乙即可。'}).length;" +
-                                "openAnim({id:1,ch:1,topic:'自检',tag:'概念',q:'这是题干?',fill:false,ans:1," +
-                                "opts:['甲','乙','丙','丁'],e:'因为乙最贴。',d:''});" +
+                                "var ch=buildSteps({id:1,ch:1,topic:'自检',tag:'概念',q:'JVM 到底干什么?',fill:false,ans:1," +
+                                "opts:['甲','乙','丙','丁'],e:'JVM 执行字节码。因为乙最贴。其它都对不上。'," +
+                                "d:'int a = 1;¶System.out.println(§a=§ + a);¶'}).map(function(s){return s.label}).join('|');" +
+                                "var fl=buildSteps({id:2,ch:1,topic:'自检2',tag:'填空',q:'填 ___',fill:true,ans:'乙',e:'乙即可。'}).map(function(s){return s.label}).join('|');" +
+                                "openAnim({id:1,ch:1,topic:'自检',tag:'概念',q:'JVM 到底干什么?',fill:false,ans:1," +
+                                "opts:['甲','乙','丙','丁'],e:'JVM 执行字节码。',d:'int a = 1;¶System.out.println(§a=§ + a);¶'});" +
                                 "var cap=document.getElementById('animCap').textContent;" +
-                                "var lbl=document.getElementById('animPP').textContent;" +
+                                "var lbl=document.getElementById('animNext').textContent; var i0=anim.i;" +
+                                "animStepBy(1); var i1=anim.i;" +
                                 "closeAnim();" +
                                 "return '笔记读回'+n.length+'字/删空后'+n2.length+'字 animHas=' + has + '→删后' + after +" +
-                                " ' DOM齐全='+(/^1{8}$/.test(dom)) + ' 选择'+ch+'步 填空'+fl+'步'" +
-                                " + ' 播放器首帧='+cap+' 按钮='+lbl;}catch(e){return '失败:'+e}})()"));
+                                " ' DOM齐全='+(/^1{8}$/.test(dom)) +" +
+                                " ' 已无解题步骤='+(!/选项就位|排除干扰项|锁定答案|把题干读完/.test(ch)) +" +
+                                " ' 术语步='+(/关键词/.test(ch)) + ' 逐行步='+(/逐行/.test(ch)) +" +
+                                " ' 输出步='+(/屏幕上/.test(ch)) + ' 收尾='+(/一句话记住$/.test(ch)) +" +
+                                " ' 填空走标准写法='+(/标准写法/.test(fl)) + ' 填空不对照='+(!/成立的说法/.test(fl)) +" +
+                                " ' 手动:开在第'+(i0+1)+'步→按一次到第'+(i1+1)+'步 按钮='+lbl+' 计数='+cap;}catch(e){return '失败:'+e}})()"));
                     } catch (Exception ex) {
                         System.out.println("[App] 笔记/动画自检异常: " + ex.getMessage());
                     }
