@@ -162,3 +162,4 @@ cp cards-java.jsonl demos-java.jsonl cards-algo.jsonl demos-algo.jsonl cards-co.
 - 2026-11-07(七): 删除全部预存演示(demos-*.jsonl + demoBlock + mergeDemos); AI演示代码块改为纯黑底白字(去掉蓝色行高亮); 演示体验: 点AI→等几秒→看代码→关
 - 2026-11-07(九): AI生成提速 — Ollama启用Vulkan+iGPU(OLLAMA_VULKAN=1, OLLAMA_IGPU_ENABLE=1 已setx持久化), Arc核显100%%接管推理, CPU解放; max_tokens=280上限防啰嗦; 注意: 托盘自启的Ollama重启后才继承新变量
 - 2026-11-07(十): AI演示按课程分流 — 英语课生成5句渐进例句(英文指令+中文翻译, 1.5b对中文指令跟随意差), 技术课生成代码; 请求加keep_alive=30m防显存卸载导致的偶发慢
+- 2026-11-07(十一): 修AI演示与题目无关 — 根因: 提示词只传topic不传题目/答案/解析; 现在完整上下文喂给AI并要求演示题目具体场景(禁止泛泛示例); 注意旧缓存aidemos-*.jsonl是不相关的旧生成, 已一并清除

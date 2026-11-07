@@ -121,8 +121,13 @@ public class AiDemoStore {
                     + "each sentence is followed by its Chinese translation in parentheses; "
                     + "output only the sentences.";
         } else {
-            prompt = "为知识点[" + topic + "]写一段尽量短的Java代码演示(6-10行):\n"
-                    + "要求: 6-10行, 标准缩进(4空格), 关键步骤前加简短中文注释, System.out.println展示结果, 字符串用单引号, 只输出代码";
+            // 题目+答案+解析全部喂给AI, 确保演示紧扣这道题考察的具体知识点
+            prompt = "这道题考察知识点[" + topic + "]:\n题目: " + question
+                    + "\n正确答案: " + answer + "\n解析: " + explain + "\n"
+                    + "请写一段Java代码演示「这道题考察的核心行为」(6-10行):\n"
+                    + "要求: 代码必须直接演示题目中的具体场景或易错点(不要写泛泛的通用示例), "
+                    + "标准缩进(4空格), 关键步骤前加简短中文注释, System.out.println展示结果, "
+                    + "字符串用单引号, 只输出代码";
         }
         String body = "{\"model\":\"" + cfg[1] + "\",\"messages\":[{\"role\":\"user\",\"content\":\""
                 + esc(prompt) + "\"}],\"max_tokens\":280,\"keep_alive\":\"30m\"}";
