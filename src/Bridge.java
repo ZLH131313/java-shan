@@ -167,6 +167,11 @@ public class Bridge {
         if (s != null) s.generateAsync(dataHome, id, courseName, topic, question, answer, explain);
     }
 
+    /* ---- AI翻译(仅英语课): 答题后把正确答案句翻成地道中文 ---- */
+    private final AiTransStore trans = new AiTransStore();
+    public void aiTransStart(String text) { trans.start(dataHome, text); }
+    public String aiTransState() { return trans.state(); }
+
     /* ---- 外部应用: 豆包 ---- */
     /** 唤起豆包并排分屏; 关闭豆包窗口后由守望脚本自动还原百词斩原位 */
     public void openDoubao() {

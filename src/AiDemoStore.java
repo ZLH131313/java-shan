@@ -124,8 +124,8 @@ public class AiDemoStore {
         return postChat(cfg, cfg[1], prompt, "");
     }
 
-    /** 发一次 chat 请求并反转义(\n->¶换行, 双引号->单引号, 去围栏) */
-    private static String postChat(String[] cfg, String model, String prompt, String extraJson) throws Exception {
+    /** 发一次 chat 请求并反转义(\n->¶换行, 双引号->单引号, 去围栏); AiTransStore 也复用 */
+    static String postChat(String[] cfg, String model, String prompt, String extraJson) throws Exception {
         String body = "{\"model\":\"" + model + "\",\"messages\":[{\"role\":\"user\",\"content\":\""
                 + esc(prompt) + "\"}],\"max_tokens\":280,\"keep_alive\":\"30m\"" + extraJson + "}";
         HttpRequest req = HttpRequest.newBuilder()

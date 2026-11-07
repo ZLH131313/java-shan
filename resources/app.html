@@ -496,6 +496,10 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
   <div class="sheetIn">
     <div class="verdict" id="verdict">答对了!</div>
     <div class="explText" id="explText"></div>
+    <div id="aiTransRow" style="display:none;margin-bottom:12px">
+      <button class="toolBtn" id="aiTransBtn" style="color:#4338ca;border-color:#c7d2fe" title="AI把本题正确答案翻成地道中文(需Ollama)">🌐 AI翻译</button>
+      <div id="aiTransBox" style="display:none;margin-top:10px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:10px 14px;font-size:14px;line-height:1.7;color:#3730a3"></div>
+    </div>
     <button class="sheetNext" id="nextBtn">继续 →</button>
   </div>
 </div>
@@ -1187,6 +1191,38 @@ function aiGenDemo(){
 }
 /* 卡片上的「🎬 生成动画」: 生成 + 收进合集 + 立刻播放 */
 $('aiDemoBtn').onclick = aiGenDemo;
+
+/* 🌐 AI翻译(仅英语课, 答题后的解析面板里): 把本题正确答案翻成地道中文 */
+var transBusy = false;
+function enAnswerText(c){
+  if (c.fill) return String(c.q).indexOf('___') >= 0 ? String(c.q).replace('___', c.ans) : String(c.ans);
+  return c.opts ? String(c.opts[c.ans]) : String(c.ans);
+}
+$('aiTransBtn').onclick = function(){
+  if (currentCourse !== 'en') return;
+  if (transBusy) { toast('AI正在翻译, 稍等…'); return; }
+  var c = queue[qidx]; if (!c) return;
+  var text = enAnswerText(c);
+  if (!text) { toast('这张卡没有可翻译的答案'); return; }
+  transBusy = true;
+  $('aiTransBtn').textContent = '🌐 翻译中…';
+  try { bridge.aiTransStart(text); } catch (e) {
+    transBusy = false; $('aiTransBtn').textContent = '🌐 AI翻译';
+    toast('启动翻译失败: ' + e); return;
+  }
+  (function poll(){
+    setTimeout(function(){
+      var s = '';
+      try { s = bridge.aiTransState() || ''; } catch (e) {}
+      if (s === 'pending'){ poll(); return; }
+      transBusy = false; $('aiTransBtn').textContent = '🌐 AI翻译';
+      if (!s){ toast('翻译失败, 再点一次'); return; }
+      if (s.indexOf('err:') === 0){ toast('翻译失败: ' + s.slice(4), 5000); return; }
+      $('aiTransBox').textContent = '🌐 ' + s;
+      $('aiTransBox').style.display = '';
+    }, 400);
+  })();
+};
 function removeFromColl(id){
   if (!id) return;
   try { bridge.animDel(currentCourse, id); } catch (e) { toast('移出失败: ' + e); return; }
@@ -1439,6 +1475,13 @@ function showSheet(ok, c){
   $('explText').innerHTML =
     (ok ? '' : '<b>正确答案: ' + (c.fill ? c.ans : c.opts[c.ans]) + '</b><br>') +
     '💡 ' + richText(c.e);
+  /* 🌐 AI翻译: 只在英语课且答案含英文时出现(答题后才见此面板) */
+  var ansTxt = enAnswerText(c);
+  $('aiTransRow').style.display = (currentCourse === 'en' && /[A-Za-z]/.test(ansTxt)) ? '' : 'none';
+  $('aiTransBox').style.display = 'none';
+  $('aiTransBox').textContent = '';
+  $('aiTransBtn').textContent = '🌐 AI翻译';
+  transBusy = false;
   $('sheet').classList.add('show');
   $('nextBtn').focus();
   /* 已作答: 存档指向下一张(退出后恢复时不重做这张) */
