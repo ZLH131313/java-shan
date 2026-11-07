@@ -166,3 +166,4 @@ cp cards-java.jsonl demos-java.jsonl cards-algo.jsonl demos-algo.jsonl cards-co.
 - 2026-11-07(十二): AI演示按课程精准分流 — Java=Java代码, 算法=伪代码/Java, OS/计组=伪代码或计算过程或ASCII图(选最直观的), 英语=例句; 全部改英文指令(1.5b对中文技术指令服从性差), 代码内保留中文注释; 旧缓存已清
 - 2026-11-07(十三): 算法课AI演示改用C++或伪代码(替代Java)
 - 2026-11-07(十四): 英语课AI演示改用qwen2.5:1.5b通用模型(语法好于coder版), 加although/but等中式英语禁令; 技术课仍用qwen2.5-coder:1.5b
+- 2026-11-07(十五): 英语ch6中式英语矫正卡选项加✓/✗标记; AI英语提示词加翻译格式示例确保每句带翻译
