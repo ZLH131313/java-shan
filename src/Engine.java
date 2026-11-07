@@ -278,7 +278,6 @@ public class Engine {
         if (Files.exists(Path.of("cards-algo.jsonl"))) {
             Path tmp2 = Files.createTempDirectory("shan-algo");
             Files.copy(Path.of("cards-algo.jsonl"), tmp2.resolve("cards.jsonl"));
-            Files.copy(Path.of("demos-algo.jsonl"), tmp2.resolve("demos.jsonl"));
             Engine a = new Engine(tmp2.resolve("cards.jsonl"), tmp2.resolve("progress.jsonl"), ALGO_CHAPTERS);
             String ach = a.chapters();
             int ac = 0;
@@ -290,7 +289,6 @@ public class Engine {
         if (Files.exists(Path.of("cards-co.jsonl"))) {
             Path tmp3 = Files.createTempDirectory("shan-co");
             Files.copy(Path.of("cards-co.jsonl"), tmp3.resolve("cards.jsonl"));
-            Files.copy(Path.of("demos-co.jsonl"), tmp3.resolve("demos.jsonl"));
             Engine c = new Engine(tmp3.resolve("cards.jsonl"), tmp3.resolve("progress.jsonl"), CO_CHAPTERS);
             int cc = 0;
             for (String seg : c.chapters().split("\\},\\{")) if (seg.contains("\"name\"")) cc++;
@@ -301,7 +299,6 @@ public class Engine {
         if (Files.exists(Path.of("cards-os.jsonl"))) {
             Path tmp4 = Files.createTempDirectory("shan-os");
             Files.copy(Path.of("cards-os.jsonl"), tmp4.resolve("cards.jsonl"));
-            Files.copy(Path.of("demos-os.jsonl"), tmp4.resolve("demos.jsonl"));
             Engine o = new Engine(tmp4.resolve("cards.jsonl"), tmp4.resolve("progress.jsonl"), OS_CHAPTERS);
             int oc = 0;
             for (String seg : o.chapters().split("\\},\\{")) if (seg.contains("\"name\"")) oc++;
