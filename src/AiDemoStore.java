@@ -61,7 +61,7 @@ public class AiDemoStore {
 
     /* ---- 配置 ---- */
     static String[] config(Path dataHome) {
-        String key = "", model = "glm-4-flash", base = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
+        String key = "", model = "qwen2.5-coder:7b", base = "http://localhost:11434/v1/chat/completions";
         try {
             Path f = dataHome.resolve("ai.txt");
             if (Files.exists(f)) {
@@ -123,14 +123,14 @@ public class AiDemoStore {
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(cfg[2]))
                 .timeout(Duration.ofSeconds(60))
-                .header("Authorization", "Bearer " + cfg[0])
+                .header("Authorization", cfg[0].isEmpty() ? "Bearer none" : "Bearer " + cfg[0])
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
                 .build();
         HttpResponse<String> resp = HttpClient.newHttpClient()
                 .send(req, HttpResponse.BodyHandlers.ofString());
         if (resp.statusCode() != 200) {
-            throw new IllegalStateException("API HTTP " + resp.statusCode() + ": " + resp.body());
+            throw new IllegalStateException("API HTTP " + resp.statusCode() + " — 请确认Ollama已启动且模型已拉取(ollama list): " + resp.body());
         }
         String content = extractContent(resp.body());
         if (content == null) throw new IllegalStateException("响应里找不到content");
