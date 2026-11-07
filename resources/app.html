@@ -1218,6 +1218,7 @@ function animReplay(){ if (anim.steps.length) animGoto(0); }
 function closeAnim(){
   anim.steps = []; anim.i = -1;
   $('animOverlay').classList.remove('show');
+  if (anim._fromColl){ anim._fromColl = false; openCollection(); return; }  /* 从合集进来的, 关动画回合集 */
   refocusCard();
 }
 
@@ -1276,7 +1277,7 @@ function renderCollection(){
       '<div class="cm">' + escHtml(c ? chapterName(c.ch) : '') + (x.d ? ' · ' + escHtml(x.d) : '') + '</div>';
     var pl = document.createElement('button');
     pl.className = 'pl'; pl.textContent = '▶ 播放';
-    pl.onclick = function(){ openAnim(c); };
+    pl.onclick = function(){ closeCollection(); anim._fromColl = true; openAnim(c); };
     var rm = document.createElement('button');
     rm.className = 'rm'; rm.textContent = '✕'; rm.title = '从合集移出(不动卡片)';
     rm.onclick = function(){ removeFromColl(x.id); };
