@@ -85,7 +85,7 @@ public class AiDemoStore {
             try {
                 String demo = callApi(dataHome, courseName, topic, question, answer, explain);
                 if (demo == null || demo.isBlank()) {
-                    state = "err:AI返回为空, 稍后再试";
+                    state = "err:AI生成未达标, 稍后再点一次";
                 } else {
                     cache.put(id, demo);
                     save();
@@ -149,10 +149,24 @@ public class AiDemoStore {
         return postChat(cfg, model, prompt, "");
     }
 
-    /* 个别情境表达类考点(加油/welcome)没有可造句的语法锚点, AI产不出稳定例句, 直接内置 */
-    private static final java.util.Map<String, String> EN_PRESET = java.util.Map.of(
-        "加油", "You can do it!¶(你能行的!)¶Good luck!¶(祝你好运!)¶Keep it up!¶(继续保持!)¶Go for it!¶(放手一搏!)",
-        "welcome", "Welcome!¶(欢迎!)¶Welcome to our home.¶(欢迎来我们家。)¶Welcome back!¶(欢迎回来!)¶You are welcome to visit us anytime.¶(随时欢迎你来玩。)"
+    /* 内置演示(不走AI): 情境表达类没有语法锚点; 阅读技巧类没有可校验考点, AI句子必然跑题 */
+    private static final java.util.Map<String, String> EN_PRESET = java.util.Map.ofEntries(
+        java.util.Map.entry("加油", "You can do it!¶(你能行的!)¶Good luck!¶(祝你好运!)¶Keep it up!¶(继续保持!)¶Go for it!¶(放手一搏!)"),
+        java.util.Map.entry("welcome", "Welcome!¶(欢迎!)¶Welcome to our home.¶(欢迎来我们家。)¶Welcome back!¶(欢迎回来!)¶You are welcome to visit us anytime.¶(随时欢迎你来玩。)"),
+        java.util.Map.entry("抓主干", "The girl standing by the window closed the book.¶(谓语只有一个 closed; 主干: The girl closed the book)¶My brother who lives in Beijing bought a used car.¶(who 从句只是定语; 主干: My brother bought a car)"),
+        java.util.Map.entry("后置定语", "The letter written in English came from Toronto.¶(written in English 是后置定语修饰 letter; 谓语是 came)¶The man talking to the teacher is my uncle.¶(talking to... 修饰 the man; 谓语是 is)"),
+        java.util.Map.entry("从句嵌套", "The girl who met the professor who wrote this book is my sister.¶(who met... 修饰 girl, who wrote... 修饰 professor)¶(剥掉两层定语, 主干: The girl is my sister)"),
+        java.util.Map.entry("插入语", "This plan, to tell the truth, is hard to carry out.¶(to tell the truth 是插入语, 删掉不影响主干)¶The answer, in my view, is quite simple.¶(读长句时把插入语括起来先跳过)"),
+        java.util.Map.entry("形式主语长句", "It is said that many students skip breakfast.¶(It 只是形式主语; 真正主语是 that many students skip breakfast)¶It takes courage to admit a mistake.¶(真正主语是 to admit a mistake)"),
+        java.util.Map.entry("not...any more than", "He is not a poet any more than I am.¶(他不是诗人, 我也不是 — 前后一起否定)¶This room is not quiet any more than a street corner.¶(房间不安静, 正如街角也不安静)"),
+        java.util.Map.entry("部分否定", "Not all that glitters is gold.¶(并非所有发光的都是金子 — not...all = 部分否定)¶Both of the answers are not correct.¶(两个答案并非都对 — 可能只错一个; 全部否定要用 neither)"),
+        java.util.Map.entry("指代题", "Anna lent Lily her notes because she had missed the class.¶(she = Lily: 缺课的人才需要借笔记 — 代回原句检验逻辑)¶(陷阱: 只找离代词最近的名词, 不代入检验)"),
+        java.util.Map.entry("主旨题", "Electric cars are becoming popular in big cities. Charging stations are everywhere. Experts say the trend will continue.¶(首末句 + 反复出现的主题词 electric cars → 主旨: 电动车流行)¶(只讲充电站的选项过窄; 讲原文没有的环保政策过宽)"),
+        java.util.Map.entry("词义题", "The exam was formidable — even the top students failed it.¶(破折号解释: 最好的学生都挂了 → formidable = 可怕的)¶He is thrifty, but his brother wastes every penny.¶(but 转折给反义线索 → thrifty = 节俭的)"),
+        java.util.Map.entry("细节题改写", "原文: The company was founded in 1998 by two college students.¶(正确选项的样子: Two students set up the firm in 1998 — 换词不换义)¶(照抄原句的选项常偷换细节; 含 all/only/never 的多为错项)"),
+        java.util.Map.entry("破折号", "The winner — a shy girl from Class 3 — refused any interview.¶(破折号夹住同位语解释 winner; 主干: The winner refused any interview)¶(第一遍读先跳过破折号内容, 要细节再回来)"),
+        java.util.Map.entry("类比句型", "Reading is to the mind what exercise is to the body.¶(阅读之于头脑, 犹如锻炼之于身体)¶A teacher is to a school what a captain is to a ship.¶(老师之于学校, 犹如船长之于轮船)"),
+        java.util.Map.entry("切分法", "The idea | that he raised | at the meeting | that we held yesterday | sounds strange.¶(按 that 切段: that he raised 修饰 idea, that we held 修饰 meeting)¶(重组主干: The idea sounds strange)")
     );
 
     /** 英语例句: 最多3次尝试, 输出校验(4句英文+4行中文翻译)不过就换一组场景重掷 */
@@ -179,12 +193,13 @@ public class AiDemoStore {
         if (topic.matches(".*[A-Za-z]{2,}.*") && !topic.contains("不能连用")) {
             String phrase = topic.replaceAll("[^A-Za-z' ]", " ").replaceAll("\\s+", " ").trim();
             mustLine = "Every sentence MUST contain the expression '" + phrase
-                    + "' in some grammatical form.\n";
+                    + "' in some grammatical form, used naturally and correctly.\n"
+                    + "Every sentence is about a PERSON (I / she / he / we / they / my brother...), not a thing.\n";
         } else {
             mustLine = "Every sentence MUST clearly demonstrate this grammar point, like the textbook example does.\n";
         }
         String last = null;
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 4; i++) {   // 4次尝试, 提高一次点亮的成功率
             String[] sc = pickScenarios();
             String prompt = "Write 4 NEW English sentences using this grammar: [" + topic + "]\n"
                     + (target.isEmpty() ? "" : "Grammar example from textbook: " + target + "\n")
@@ -202,14 +217,32 @@ public class AiDemoStore {
             if (enOk(last) && !last.toLowerCase().contains("library clos")
                     && enTopicOk(topic, answer, last) && enTenseOk(topic, last)) return last;
         }
-        // 3次都没过格式关: 句子本身够4句时走"翻译修复"(翻译是1.5b强项), 拼回演示格式;
-        // 修复也失败则返回null→报错不缓存, 避免把没翻译的结果永久缓存
-        java.util.List<String> sents = enSents(last == null ? "" : last);
-        if (sents.size() >= 4) {
+        // 3次都没过格式关: 只把"考点在线"的句子挑出来走翻译修复(翻译是1.5b强项);
+        // 剩不到3句或修复失败都返回null→报错不缓存, 杜绝与考点无关/没翻译的演示入库
+        java.util.List<String> sents = enRelevantSents(topic, answer, enSents(last == null ? "" : last));
+        if (sents.size() >= 3) {
             String repaired = repairTranslations(cfg, sents);
             if (repaired != null) return repaired;
         }
         return null;
+    }
+
+    /** 修复路径的句子过滤: 剔除抄格式示例的句子; 有可校验考点时只留带考点的句子 */
+    private static java.util.List<String> enRelevantSents(String topic, String answer, java.util.List<String> in) {
+        java.util.List<String> kept = new java.util.ArrayList<>();
+        for (String s : in) {
+            if (s.toLowerCase().contains("library clos")) continue;   // 抄了格式示例
+            kept.add(s);
+        }
+        String marker = enStemPattern(topic, answer);
+        if (marker == null) marker = enTensePattern(topic);
+        if (marker != null) {
+            Pattern p = Pattern.compile(marker, Pattern.CASE_INSENSITIVE);
+            java.util.List<String> hit = new java.util.ArrayList<>();
+            for (String s : kept) if (p.matcher(s).find()) hit.add(s);
+            return hit;
+        }
+        return kept;
     }
 
     /** 英文句子清单: 按句号拆行+过滤非句子行(开场白/标签), 供翻译修复用 */
@@ -218,35 +251,36 @@ public class AiDemoStore {
         for (String line : splitSentences(demo).split("¶")) {
             String t = line.replaceFirst("^\\s*\\d+[.)]\\s*", "").trim();
             if (t.matches(".*[.!?]$") && t.length() >= 15) list.add(t);
-            if (list.size() == 4) break;
+            if (list.size() == 6) break;   // 多收几句, 给考点过滤留余量
         }
         return list;
     }
 
-    /** 翻译修复: 让模型只把4句英文翻成中文, Java侧拼回 英文+(中文) 演示格式; 失败返回null */
+    /** 翻译修复: 让模型只把这几句英文翻成中文, Java侧拼回 英文+(中文) 演示格式; 失败返回null */
     private static String repairTranslations(String[] cfg, java.util.List<String> sents) throws Exception {
+        int n = sents.size();
         StringBuilder list = new StringBuilder();
-        for (int i = 0; i < sents.size(); i++) list.append(i + 1).append(". ").append(sents.get(i)).append("\n");
-        String prompt = "Translate each of these 4 English sentences into Chinese.\n" + list
-                + "Output ONLY the 4 Chinese translations in parentheses, one per line, same order, no numbering.";
+        for (int i = 0; i < n; i++) list.append(i + 1).append(". ").append(sents.get(i)).append("\n");
+        String prompt = "Translate each of these " + n + " English sentences into Chinese.\n" + list
+                + "Output ONLY the " + n + " Chinese translations in parentheses, one per line, same order, no numbering.";
         String raw = postChat(cfg, "qwen2.5:1.5b", prompt, ",\"temperature\":0.2");
         java.util.List<String> zh = new java.util.ArrayList<>();
         for (String line : raw.split("¶")) {
             String t = line.replaceFirst("^\\s*\\d+[.)]\\s*", "").replaceAll("^[（(]|[)）]$", "").trim();
             if (t.codePoints().anyMatch(cp -> cp >= 0x4E00 && cp <= 0x9FFF)) zh.add(t);
-            if (zh.size() == 4) break;
+            if (zh.size() == n) break;
         }
-        if (zh.size() < 4) {   // 4条翻译挤在一行: 按。切开回收
+        if (zh.size() < n) {   // 翻译挤在一行: 按。切开回收
             zh.clear();
             for (String frag : raw.replace("¶", "。").split("。")) {
                 String t = frag.replaceFirst("^\\s*\\d+[.)]\\s*", "").replaceAll("^[（(]|[)）]", "").trim();
                 if (t.codePoints().anyMatch(cp -> cp >= 0x4E00 && cp <= 0x9FFF)) zh.add(t + "。");
-                if (zh.size() == 4) break;
+                if (zh.size() == n) break;
             }
         }
-        if (zh.size() < 4) return null;
+        if (zh.size() < n) return null;
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < sents.size(); i++) {
+        for (int i = 0; i < n; i++) {
             if (sb.length() > 0) sb.append("¶");
             sb.append(sents.get(i)).append("¶(").append(zh.get(i)).append(")");
         }
@@ -328,40 +362,52 @@ public class AiDemoStore {
         return raw == null ? "" : raw.replace(". ", ".¶");
     }
 
-    /** 考点校验: 英文短语类考点至少3句含考点词干(连词类已走中译英路线, 不进这里) */
+    /** 短语类考点的词干正则(优先topic的英文词, 没有再取answer并剔除虚词), 无则null */
+    private static String enStemPattern(String topic, String answer) {
+        String src = topic.replaceAll("[^A-Za-z\\s]", " ").trim();
+        if (src.isEmpty() || !src.matches(".*[A-Za-z]{4,}.*"))
+            src = src + " " + (answer == null ? "" : answer)
+                    .replaceAll("\\b(should|would|could|might|because|although|never|always|really|also|just|only|when|what|which|where|there|their|this|that|they|have|been|will)\\b", " ");
+        StringBuilder sb = new StringBuilder();
+        Matcher w = Pattern.compile("[A-Za-z]{4,}").matcher(src);
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        while (w.find()) {
+            String st = w.group().substring(0, Math.min(5, w.group().length())).toLowerCase();
+            if (seen.add(st)) sb.append(sb.length() > 0 ? "|" : "").append("\\b").append(Pattern.quote(st));
+        }
+        return sb.length() == 0 ? null : sb.toString();
+    }
+
+    /** 时态/虚拟类考点的特征正则, 无则null */
+    private static String enTensePattern(String topic) {
+        switch (topic) {
+            case "过去完成时":
+                return "\\bhad\\s+(been|\\w+ed|\\w+en|left|won|done|gone|seen|taken|given|made|told|gotten|begun"
+                     + "|brought|bought|thought|found|kept|known|met|paid|sent|spent|spoken|stood|taught"
+                     + "|thrown|written|driven|eaten|fallen|heard|held|lost|sold|shown|felt|grown)\\b";
+            case "将来进行时": return "\\bwill be \\w+ing\\b";
+            case "建议虚拟":  return "\\b(should|suggest|insist|recommend|demand)\\w*\\b";
+            case "wish 虚拟": return "\\bwish\\w*\\b";
+            default: return null;
+        }
+    }
+
+    /** 考点校验: 英文短语类考点4句全含考点词干(连词类已走中译英路线, 不进这里) */
     private static boolean enTopicOk(String topic, String answer, String demo) {
         java.util.List<String> sents = enSentences(demo);
         if (sents.size() < 4) return false;
-        // 考点词干优先取topic里的英文长词, topic没有再取answer的
-        String src = topic.replaceAll("[^A-Za-z\\s]", " ");
-        if (!src.replaceAll("\\s", "").isEmpty() && !src.matches(".*[A-Za-z]{5,}.*"))
-            src = src + " " + (answer == null ? "" : answer);
-        java.util.Set<String> stems = new java.util.HashSet<>();
-        Matcher w = Pattern.compile("[A-Za-z]{5,}").matcher(src);
-        while (w.find()) stems.add(w.group().substring(0, 5).toLowerCase());
-        if (stems.isEmpty()) return true;
+        String stems = enStemPattern(topic, answer);
+        if (stems == null) return true;
+        Pattern p = Pattern.compile(stems, Pattern.CASE_INSENSITIVE);
         int hit = 0;
-        for (String s : sents) {
-            String low = s.toLowerCase();
-            for (String st : stems) if (low.contains(st)) { hit++; break; }
-        }
-        return hit >= 3;
+        for (String s : sents) if (p.matcher(s).find()) hit++;
+        return hit >= 4;
     }
 
     /** 时态/虚拟类考点的轻量标记校验: 至少3句带目标时态特征 */
     private static boolean enTenseOk(String topic, String demo) {
-        String marker;
-        switch (topic) {
-            case "过去完成时":
-                marker = "\\bhad\\s+(been|\\w+ed|\\w+en|left|won|done|gone|seen|taken|given|made|told|gotten|begun"
-                       + "|brought|bought|thought|found|kept|known|met|paid|sent|spent|spoken|stood|taught"
-                       + "|thrown|written|driven|eaten|fallen|heard|held|lost|sold|shown|felt|grown)\\b";
-                break;
-            case "将来进行时": marker = "\\bwill be \\w+ing\\b"; break;
-            case "建议虚拟":  marker = "\\b(should|suggest|insist|recommend|demand)\\w*\\b"; break;
-            case "wish 虚拟": marker = "\\bwish\\w*\\b"; break;
-            default: return true;
-        }
+        String marker = enTensePattern(topic);
+        if (marker == null) return true;
         java.util.List<String> sents = enSentences(demo);
         if (sents.size() < 4) return false;
         Pattern p = Pattern.compile(marker, Pattern.CASE_INSENSITIVE);
@@ -452,6 +498,7 @@ public class AiDemoStore {
             {"过去完成时", "had left", ""},
             {"because与so不能连用", "Because it rained, I did not go out.", ""},
             {"acquire knowledge", "We should keep acquiring new knowledge.", ""},
+            {"look up", "looked up", ""},
             {"加油", "You can do it!", "朋友比赛前, 你想对他说「加油」"},
             {"指代题", "回看上一句的主语或宾语, 代入原句检验逻辑", "阅读中判断 it / this / they 指代什么, 最可靠的做法是?"}
         };
@@ -460,6 +507,7 @@ public class AiDemoStore {
         for (String[] c : cases) {
             out.println("== [" + c[0] + "] ==");
             String demo = callApi(home, "英语四级", c[0], c[2], c[1], "");
+            if (demo == null) { out.println("(生成未达标返回null — 应用内会提示再点一次)"); continue; }
             out.println(demo.replace("¶", "\n"));
             out.println("check=" + enOk(demo) + " topicOk=" + enTopicOk(c[0], c[1], demo));
         }
