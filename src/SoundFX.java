@@ -42,7 +42,8 @@ public class SoundFX {
         t.start();
     }
 
-    /** 合成音符序列: 基频+轻微2次谐波(柔和) + 慢指数衰减包络 + 12ms线性起音, 16bit 单声道 PCM */
+    /** 合成音符序列: 基频+轻微2次谐波(柔和) + 慢指数衰减包络 + 12ms起音/20ms收音渐变, 16bit 单声道 PCM
+     *  起音和收音都渐变到零: 波形不断裂, 消除音符边界的"啪"爆音(耳机上尤其明显) */
     private static byte[] tone(double[][] notes, double volume) {
         int frames = 0;
         for (double[] n : notes) frames += (int) (n[1] * RATE);
@@ -51,11 +52,14 @@ public class SoundFX {
         for (double[] n : notes) {
             int len = (int) (n[1] * RATE);
             int attack = Math.min(len, (int) (0.012 * RATE));
+            int release = Math.min(len, (int) (0.020 * RATE));
             for (int i = 0; i < len; i++) {
                 double env = Math.exp(-1.3 * i / len);          // 衰减放缓: 尾音仍在30%以上, 听感更延长
-                if (i < attack) env *= (double) i / attack;     // 起音坡: 消掉爆音
+                if (i < attack) env *= (double) i / attack;     // 起音坡: 消掉开头爆音
+                int tail = len - i;
+                if (tail < release) env *= (double) tail / release;   // 收音坡: 淡出到零, 消掉结尾爆音(关键修复)
                 double t = 2 * Math.PI * n[0] * i / RATE;
-                double wave = Math.sin(t) + 0.18 * Math.sin(2 * t);   // 只留轻柔的八度泛音, 去掉刺耳的3次谐波
+                double wave = Math.sin(t) + 0.18 * Math.sin(2 * t);   // 只留轻柔的八度泛音
                 int sample = (int) (wave * volume * env * 32767 / 1.18);
                 out[pos++] = (byte) (sample & 0xff);
                 out[pos++] = (byte) ((sample >> 8) & 0xff);
