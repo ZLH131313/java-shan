@@ -439,7 +439,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
     </div>
     <div class="animEntry" id="animEntry" title="点击查看生成过动画的卡片">
       <div class="ico">🎬</div>
-      <div class="txt">动画合集<span>看不懂的知识点就点「🎬 生成动画」, 一步步演示给你看</span></div>
+      <div class="txt">动画合集<span>看不懂的知识点就点「✨ AI演示」, AI现场生成实战代码演示</span></div>
       <div class="num"><b id="animCountN">0</b> 张</div>
     </div>
     <div class="resumeBar" id="resumeBar" style="display:none">
@@ -463,7 +463,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
       <input id="keycap" autocomplete="off" style="position:fixed;top:-60px;left:0;width:8px;height:8px;opacity:0;border:none;padding:0">
       <div class="qcard" id="qcard">
         <div class="cardTools">
-          <button class="toolBtn anim" id="animBtn" title="把这张卡背后的知识点做成演示动画(本地规则生成, 手动一步步看)">🎬 生成动画</button>
           <button class="toolBtn" id="aiDemoBtn" style="color:#7c3aed;border-color:#ddd6fe" title="AI现场为这张卡生成实战代码演示(需配置API key, 结果缓存)">✨ AI演示</button>
           <button class="toolBtn note" id="noteBtn" title="给这张卡写条笔记, 下次遇到它时会显示在题干下面">📝 笔记</button>
           <button class="peekBtn" id="peekBtn" title="直接看答案(按K), 按错题处理">👀 看答案</button>
@@ -990,9 +989,8 @@ function syncCardTools(c){
   var ab = $('animBtn'), nb = $('noteBtn'), box = $('noteView');
   if (!c){ box.style.display = 'none'; return; }
   var has = animInColl(c.id);
-  ab.textContent = has ? '🎬 重看演示' : '🎬 生成动画';
-  ab.title = has ? '这张卡已在合集里, 点开重看知识点的演示'
-                 : '把这张卡背后的知识点做成演示(本地规则生成, 手动一步步看), 并收进首页动画合集';
+  
+  
   var t = noteOf(c.id);
   nb.classList.toggle('has', !!t);
   nb.title = t ? '编辑这张卡的笔记' : '给这张卡写条笔记(下次遇到时显示在题干下)';
@@ -1249,7 +1247,10 @@ function aiGenDemo(){
       var s = '';
       try { s = bridge.aiDemoState(currentCourse, c.id) || ''; } catch (e) {}
       if (s && s !== 'pending' && s !== '' && s.indexOf('err:') !== 0){
-        aiBusy = false; c.d = s; openAnim(c); return;
+        aiBusy = false; c.d = s;
+        try { bridge.animAdd(currentCourse, c.id); } catch (e) {}
+        updateAnimEntry();
+        openAnim(c); return;
       }
       if (s.indexOf('err:') === 0){ aiBusy = false; toast('生成失败: '+s.slice(4), 5000); return; }
       if (++n > 60){ aiBusy = false; toast('生成超时, 稍后再试'); return; }
@@ -1259,16 +1260,6 @@ function aiGenDemo(){
 }
 /* 卡片上的「🎬 生成动画」: 生成 + 收进合集 + 立刻播放 */
 $('aiDemoBtn').onclick = aiGenDemo;
-function genAnim(){
-  if (qidx < 0 || !queue[qidx]){ toast('先回到一张卡片上再生成动画'); return; }
-  var c = queue[qidx];
-  var was = animInColl(c.id);
-  try { bridge.animAdd(currentCourse, c.id); } catch (e) { toast('合集记录保存失败: ' + e); }
-  syncCardTools(c);
-  updateAnimEntry();
-  openAnim(c);
-  if (!was) setTimeout(function(){ toast('🎬 已收进动画合集, 首页下方随时回看'); }, 320);
-}
 function removeFromColl(id){
   if (!id) return;
   try { bridge.animDel(currentCourse, id); } catch (e) { toast('移出失败: ' + e); return; }
@@ -1294,7 +1285,7 @@ function renderCollection(){
   box.innerHTML = '';
   if (!list.length){
     box.innerHTML = '<div class="collEmpty">这一门课还没有生成过动画。<br>' +
-      '刷题时点卡片右上角的「🎬 生成动画」, 这张卡就会收进这里。</div>';
+      '刷题时点「✨ AI演示」生成后, 这张卡就会收进这里。</div>';
     updateAnimEntry();
     return;
   }
@@ -1648,7 +1639,6 @@ $('ckPrev').onclick = function(){ shiftMonth(-1); };
 $('ckNext').onclick = function(){ shiftMonth(1); };
 $('ckClose').onclick = closeCheckinPanel;
 $('ckOverlay').onclick = function(e){ if (e.target === this) closeCheckinPanel(); };
-$('animBtn').onclick = genAnim;
 $('aiDemoBtn').onclick = aiGenDemo;
 $('noteBtn').onclick = openNotePanel;
 $('noteSave').onclick = saveNote;
