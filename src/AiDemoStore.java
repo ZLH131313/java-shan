@@ -108,8 +108,9 @@ public class AiDemoStore {
     private static String callApi(Path dataHome, String courseName, String topic,
                                   String question, String answer, String explain) throws Exception {
         String[] cfg = config(dataHome);
-        if (cfg[0].isEmpty()) {
-            throw new IllegalStateException("未配置API key: 打开 https://open.bigmodel.cn 注册, 在模型广场领取, 然后用记事本建 C:\\Users\\你的用户名\\.javashan\\ai.txt 写入一行 key=你的key");
+        // 本地模型(Ollama)免key, 远程API才需要key
+        if (cfg[0].isEmpty() && !cfg[2].contains("localhost") && !cfg[2].contains("127.0.0.1")) {
+            throw new IllegalStateException("远程API需配置key(本地Ollama无需): 在 ~/.javashan/ai.txt 写入 key=你的key");
         }
         String prompt = "你是编程教师。课程: " + courseName + ", 知识点: " + topic + "\n"
                 + "题目: " + question + "\n正确答案: " + answer + "\n解析: " + explain + "\n"
