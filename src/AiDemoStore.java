@@ -202,7 +202,55 @@ public class AiDemoStore {
             if (enOk(last) && !last.toLowerCase().contains("library clos")
                     && enTopicOk(topic, answer, last) && enTenseOk(topic, last)) return last;
         }
-        return last;   // 3次都没校验过, 尽力返回最后一次
+        // 3次都没过格式关: 句子本身够4句时走"翻译修复"(翻译是1.5b强项), 拼回演示格式;
+        // 修复也失败则返回null→报错不缓存, 避免把没翻译的结果永久缓存
+        java.util.List<String> sents = enSents(last == null ? "" : last);
+        if (sents.size() >= 4) {
+            String repaired = repairTranslations(cfg, sents);
+            if (repaired != null) return repaired;
+        }
+        return null;
+    }
+
+    /** 英文句子清单: 按句号拆行+过滤非句子行(开场白/标签), 供翻译修复用 */
+    private static java.util.List<String> enSents(String demo) {
+        java.util.List<String> list = new java.util.ArrayList<>();
+        for (String line : splitSentences(demo).split("¶")) {
+            String t = line.replaceFirst("^\\s*\\d+[.)]\\s*", "").trim();
+            if (t.matches(".*[.!?]$") && t.length() >= 15) list.add(t);
+            if (list.size() == 4) break;
+        }
+        return list;
+    }
+
+    /** 翻译修复: 让模型只把4句英文翻成中文, Java侧拼回 英文+(中文) 演示格式; 失败返回null */
+    private static String repairTranslations(String[] cfg, java.util.List<String> sents) throws Exception {
+        StringBuilder list = new StringBuilder();
+        for (int i = 0; i < sents.size(); i++) list.append(i + 1).append(". ").append(sents.get(i)).append("\n");
+        String prompt = "Translate each of these 4 English sentences into Chinese.\n" + list
+                + "Output ONLY the 4 Chinese translations in parentheses, one per line, same order, no numbering.";
+        String raw = postChat(cfg, "qwen2.5:1.5b", prompt, ",\"temperature\":0.2");
+        java.util.List<String> zh = new java.util.ArrayList<>();
+        for (String line : raw.split("¶")) {
+            String t = line.replaceFirst("^\\s*\\d+[.)]\\s*", "").replaceAll("^[（(]|[)）]$", "").trim();
+            if (t.codePoints().anyMatch(cp -> cp >= 0x4E00 && cp <= 0x9FFF)) zh.add(t);
+            if (zh.size() == 4) break;
+        }
+        if (zh.size() < 4) {   // 4条翻译挤在一行: 按。切开回收
+            zh.clear();
+            for (String frag : raw.replace("¶", "。").split("。")) {
+                String t = frag.replaceFirst("^\\s*\\d+[.)]\\s*", "").replaceAll("^[（(]|[)）]", "").trim();
+                if (t.codePoints().anyMatch(cp -> cp >= 0x4E00 && cp <= 0x9FFF)) zh.add(t + "。");
+                if (zh.size() == 4) break;
+            }
+        }
+        if (zh.size() < 4) return null;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < sents.size(); i++) {
+            if (sb.length() > 0) sb.append("¶");
+            sb.append(sents.get(i)).append("¶(").append(zh.get(i)).append(")");
+        }
+        return sb.toString();
     }
 
     /* 不能连用类连词考点(because/so, although/but)的中文源句: 四句不同故事, 每句只含一个连词语义 */
