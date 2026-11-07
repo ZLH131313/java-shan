@@ -24,7 +24,6 @@ public class Bridge {
     private final Engine en;
     private final Engine os;
     private final CheckinStore checkin;
-    private final Map<String, NotesStore> notes = new HashMap<>();
     private final Map<String, AnimStore> anims = new HashMap<>();
     private final SoundFX sfx = new SoundFX();
     private final Path settingsFile;
@@ -54,7 +53,6 @@ public class Bridge {
         checkin = CheckinStore.load(dataHome.resolve("checkin.jsonl"));
 
         for (String c : new String[]{"java", "algo", "co", "os", "en"}) {
-            notes.put(c, new NotesStore(dataHome.resolve("notes-" + c + ".jsonl")));
             anims.put(c, new AnimStore(dataHome.resolve("anims-" + c + ".jsonl")));
         }
     }
@@ -96,23 +94,12 @@ public class Bridge {
     public String checkinStatus() { return checkin.statusJson(); }
     public String checkinMonth(String ym) { return checkin.monthJson(ym); }
 
-    /* ---- 卡片备注(按课程隔离; 方法名唯一, LiveConnect 同名重载派发不稳定) ---- */
-    public String noteGet(String course, int cardId) { return notesOf(course).get(cardId); }
-    public void noteSet(String course, int cardId, String text) { notesOf(course).set(cardId, text); }
-    public String noteAll(String course) { return notesOf(course).allJson(); }
-    public int noteCount(String course) { return notesOf(course).count(); }
-
     /* ---- 动画合集(记下哪些卡生成过分步动画; 动画本身由界面本地重算) ---- */
     public void animAdd(String course, int cardId) { animsOf(course).add(cardId); }
     public void animDel(String course, int cardId) { animsOf(course).remove(cardId); }
     public boolean animHas(String course, int cardId) { return animsOf(course).has(cardId); }
     public String animList(String course) { return animsOf(course).listJson(); }
     public int animCount(String course) { return animsOf(course).count(); }
-
-    private NotesStore notesOf(String course) {
-        NotesStore n = notes.get(course);
-        return n != null ? n : notes.get("java");
-    }
 
     private AnimStore animsOf(String course) {
         AnimStore a = anims.get(course);

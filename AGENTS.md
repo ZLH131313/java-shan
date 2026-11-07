@@ -19,6 +19,7 @@
 - ⚔斩卡 / 👀看答案(K键, 按答错处理) / 选项每次洗牌
 - 键盘流: A-D/1-4作答(中文输入法可), 回车/空格继续
 - 概念词典: 术语高亮点击即查(每卡每词只亮一次, 最长词优先)
+- ~~卡片笔记📝~~ (v1.14移除, 用户要沉浸式刷题: 删按钮/面板/展示条/键盘分支/NotesStore.java/notes数据)
 - 每日打卡(全局不分课程): 答满10张打卡, 月历面板, 连续/最长统计
 - 卡片笔记📝(每张卡可写备注)
 - 豆包并排🤖: 点按钮→百词斩左半+豆包右半, 关豆包自动回原位(250ms轮询, 最小化也触发)
@@ -42,7 +43,6 @@ java-shan/
 │   ├── Bridge.java      JS↔Java 桥(方法首参=课程号; 方法名全唯一无重载; AI演示aiDemoStart/aiDemoState)
 │   ├── Engine.java      学习引擎(SM-2/错题本/温故/会话; JAVA/ALGO/CO/OS/EN五套章节表; main()=自测)
 │   ├── CheckinStore.java 每日打卡(全局, synchronized多实例安全)
-│   ├── NotesStore.java  卡片笔记
 │   ├── AnimStore.java   动画合集(只记"生成过", 不存脚本)
 │   ├── CardStore.java   读卡片库(demos合并已禁用)
 │   ├── SrsStore.java    进度存储(iv/st/due/z/w/wb字段)
@@ -63,7 +63,7 @@ java-shan/
 - progress-{course}.jsonl / session-{course}.txt: 进度与续做
 - settings.txt: 音效开关
 - checkin.jsonl: 打卡(全局一份)
-- notes-{course}.jsonl / anims-{course}.jsonl: 笔记与合集
+- anims-{course}.jsonl: 动画合集(死功能遗留数据)
 
 ## 四、内容文件格式
 
@@ -145,3 +145,4 @@ cp cards-*.jsonl dist/JavaShan/
 - 2026-11-07 v1.12.1: **算法课恢复AI入口, 同走「🌰 AI类比」** — 用户点名不让AI出完整代码(1.5b写代码错得隐蔽=毒药), 算法120卡中88张本就是概念卡, 直接复用概念课类比管线(Bridge放行algo+提示词含"算法"+按钮标签); 类比提示词加"抓住机制而非目的"要求(实测: 回溯法从含糊的食谱故事变为解谜剪枝/迷宫岔路)。四课AI现状: Java=代码演示, 计组/OS/算法=类比, 英语=答题后AI翻译
 - 2026-11-07 v1.12.2: **修复Java演示输出索要信息的废话** — 卡142(转型)AI演示返回「好的, 请给出问题的详细信息…」并被永久缓存: Java路径是唯一没有输出校验的AI功能。修复: javaGenerate加代码形态校验(含类/方法/打印/分号花括号+长度≥40+拒绝请给出/请提供/请告诉我的元文本)最多重掷3次不达标不缓存; temp降0.5; 提示词加"题目已完整, 不要索要信息"; 顺手剥离```java围栏残留的语言标记行; 已删缓存坏条目142, main自测用例换成该卡做回归
 - 2026-11-07 v1.13: **全部本地AI功能移除(仅保留豆包并排)** — 用户最终决定: 小模型生成式教学内容可信度不足以支撑学习(代码演示逻辑有错且初学者无法辨别)。移除: AI演示(Java代码/概念课类比)、AI翻译; 删AiDemoStore.java/AiTransStore.java、Bridge的aiDemo*/aiTrans*方法、app.html全部AI按钮与JS; 清~/.javashan/{aidemos-*.jsonl,ai.txt,aitrans.log}。学习主线回归纯手工内容: 题目+解析(711卡)+SM-2复习+错题本+温故+打卡+笔记+豆包并排。编译/Engine/JS/auto-close全过
+- 2026-11-07 v1.14: **移除笔记功能(沉浸式刷题)** — 删app.html的笔记按钮/面板/题干下展示条/全部JS与键盘分支/相关CSS; 删Bridge的note*方法与NotesStore.java; 清~/.javashan/notes-*.jsonl。卡片上只剩👀看答案和⚔斩。期间打包被瞬时文件锁卡住导致桌面快捷方式一度打不开(dist删一半), 锁释放后重建恢复

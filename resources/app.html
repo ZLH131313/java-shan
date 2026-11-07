@@ -130,15 +130,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .toolBtn:hover{transform:translateY(-2px)}
 .toolBtn.anim{background:#f0fdfa;color:#0d9488;border-color:#99f6e4}
 .toolBtn.anim:hover{background:#ccfbf1;color:#0f766e}
-.toolBtn.note{background:#fffbeb;color:#92400e;border-color:#fde68a}
-.toolBtn.note:hover{background:#fef3c7}
-.toolBtn.note.has{border-color:var(--warn);background:#fef3c7}
-
-/* 卡片笔记展示条(题干下方, 只有写过笔记的卡才出现) */
-.noteView{background:#fffbeb;border:1px solid #fde68a;border-left:3px solid var(--warn);
-  border-radius:10px;padding:9px 12px;font-size:13px;line-height:1.6;color:#92400e;
-  white-space:pre-wrap;margin:-12px 0 22px}
-
 .chips{display:flex;gap:8px;margin-bottom:16px}
 .chip{font-size:12px;font-weight:600;padding:5px 12px;border-radius:99px;background:#eef2ff;color:var(--brand)}
 .chip.tag{background:#f0fdfa;color:#0d9488}
@@ -293,21 +284,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .ckFoot b{color:var(--warn)}
 #dnCheck{font-size:13.5px;font-weight:700;color:var(--warn);margin:-14px 0 22px;min-height:19px}
 #dnCheck.ok{color:var(--ok)}
-
-/* ============ 卡片笔记面板 ============ */
-.noteBox{background:#fff;border-radius:22px;padding:22px 24px;width:480px}
-.noteBox h3{font-size:16.5px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.noteBox .tip{font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.7}
-#noteArea{width:100%;height:150px;border:2px solid var(--line);border-radius:14px;padding:12px 14px;
-  font-size:14px;line-height:1.6;font-family:inherit;outline:none;resize:none;color:var(--ink);background:#fff}
-#noteArea:focus{border-color:var(--brand)}
-.noteActs{display:flex;gap:10px;margin-top:14px}
-.noteActs button{border:none;border-radius:12px;padding:11px 0;font-size:14px;font-weight:700;
-  cursor:pointer;font-family:inherit;transition:.15s}
-.noteActs .save{flex:1;background:var(--brandGrad);color:#fff}
-.noteActs .del{flex:0 0 88px;background:#fef2f2;color:var(--bad);border:1px solid #fecaca}
-.noteActs .x{flex:0 0 88px;background:#f1f5f9;color:var(--sub)}
-.noteActs button:hover{transform:translateY(-2px)}
 
 /* ============ 首页: 动画合集入口卡 ============ */
 .animEntry{display:flex;align-items:center;gap:12px;background:var(--card);
@@ -473,13 +449,11 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
       <input id="keycap" autocomplete="off" style="position:fixed;top:-60px;left:0;width:8px;height:8px;opacity:0;border:none;padding:0">
       <div class="qcard" id="qcard">
         <div class="cardTools">
-          <button class="toolBtn note" id="noteBtn" title="给这张卡写条笔记, 下次遇到它时会显示在题干下面">📝 笔记</button>
           <button class="peekBtn" id="peekBtn" title="直接看答案(按K), 按错题处理">👀 看答案</button>
           <button class="zhanBtn" id="zhanBtn">⚔ 斩</button>
         </div>
         <div class="chips" id="chips"></div>
         <div class="question" id="question"></div>
-        <div class="noteView" id="noteView" style="display:none"></div>
         <div class="options" id="options"></div>
         <div class="fillRow" id="fillRow" style="display:none">
           <input id="fillInput" placeholder="输入答案, 回车确认" autocomplete="off">
@@ -527,19 +501,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
     <div class="ckStats" id="ckStats"></div>
     <div class="ckFoot" id="ckFoot"></div>
     <button class="bigBtn" id="ckClose" style="width:100%;margin-top:16px">知道了</button>
-  </div>
-</div>
-
-<!-- 卡片笔记面板 -->
-<div class="overlay" id="noteOverlay">
-  <div class="noteBox">
-    <h3 id="noteTitle">📝 笔记</h3>
-        <textarea id="noteArea" ></textarea>
-    <div class="noteActs">
-      <button class="save" id="noteSave">保存笔记</button>
-      <button class="del" id="noteDel">删除</button>
-      <button class="x" id="noteClose">关闭</button>
-    </div>
   </div>
 </div>
 
@@ -956,15 +917,13 @@ function renderDoneCheckin(){
 /* ================= 卡片笔记 + 知识点演示动画 + 动画合集 ================= */
 var COURSE_NAME = { java:'☕ Java 基础', algo:'📐 算法设计', co:'🖧 计算机组成', os:'🖥 操作系统', en:'📖 英语四级' };
 
-/* 桥接调用全部包一层: 笔记/动画出任何岔子都不能打断刷题 */
-function noteOf(id){ try { return bridge.noteGet(currentCourse, id) || ''; } catch (e) { return ''; } }
+/* 桥接调用全部包一层: 动画出任何岔子都不能打断刷题 */
 function animInColl(id){ try { return !!bridge.animHas(currentCourse, id); } catch (e) { return false; } }
 function animTotal(){ try { return bridge.animCount(currentCourse) | 0; } catch (e) { return 0; } }
 
 /* 面板开着 / 焦点在输入框里 —— 键盘答题判定必须让路 */
 function modalOpen(){
-  return $('noteOverlay').classList.contains('show') ||
-         $('animOverlay').classList.contains('show') ||
+  return $('animOverlay').classList.contains('show') ||
          $('collOverlay').classList.contains('show');
 }
 function typingHere(e){
@@ -982,51 +941,6 @@ function refocusCard(){
   if ($('study').classList.contains('hidden') || modalOpen()) return;
   var fill = qidx >= 0 && queue[qidx] && queue[qidx].fill && !waiting && !$('fillInput').disabled;
   setTimeout(function(){ try { $(fill ? 'fillInput' : 'keycap').focus(); } catch (e) { } }, 40);
-}
-
-/** 每张卡渲染时同步: 按钮文案(是否已在合集) + 题干下的笔记条 */
-function syncCardTools(c){
-  var ab = $('animBtn'), nb = $('noteBtn'), box = $('noteView');
-  if (!c){ box.style.display = 'none'; return; }
-  var has = animInColl(c.id);
-  
-  
-  var t = noteOf(c.id);
-  nb.classList.toggle('has', !!t);
-  nb.title = t ? '编辑这张卡的笔记' : '给这张卡写条笔记(下次遇到时显示在题干下)';
-  if (t){ box.textContent = '📝 ' + t; box.style.display = ''; }
-  else box.style.display = 'none';
-}
-
-/* ---- 笔记面板 ---- */
-var noteFor = 0;
-function openNotePanel(){
-  if (qidx < 0 || !queue[qidx]){ toast('先回到一张卡片上再写笔记'); return; }
-  var c = queue[qidx];
-  noteFor = c.id;
-  $('noteTitle').textContent = '📝 笔记 · ' + (c.topic || chapterName(c.ch));
-  $('noteArea').value = noteOf(c.id);
-  $('noteOverlay').classList.add('show');
-  setTimeout(function(){ try { $('noteArea').focus(); $('noteArea').select(); } catch (e) { } }, 40);
-}
-function closeNotePanel(){ $('noteOverlay').classList.remove('show'); refocusCard(); }
-function saveNote(){
-  if (!noteFor){ closeNotePanel(); return; }
-  var txt = $('noteArea').value;
-  try { bridge.noteSet(currentCourse, noteFor, txt); }
-  catch (e) { toast('笔记保存失败: ' + e); return; }
-  if (qidx >= 0 && queue[qidx] && queue[qidx].id === noteFor) syncCardTools(queue[qidx]);
-  closeNotePanel();
-  toast(txt.trim() ? '📝 笔记已保存' : '笔记已清空');
-}
-function deleteNote(){
-  if (!noteFor) { closeNotePanel(); return; }
-  try { bridge.noteSet(currentCourse, noteFor, ''); }
-  catch (e) { toast('删除失败: ' + e); return; }
-  $('noteArea').value = '';
-  if (qidx >= 0 && queue[qidx] && queue[qidx].id === noteFor) syncCardTools(queue[qidx]);
-  closeNotePanel();
-  toast('笔记已删除');
 }
 
 /* ---------- 本地规则引擎: 只按卡片字段(题干/选项/答案/解析/演示)确定性生成步骤 ----------
@@ -1153,7 +1067,6 @@ function removeFromColl(id){
   $('animDel').style.display = 'none';
   updateAnimEntry();
   if ($('collOverlay').classList.contains('show')) renderCollection();
-  if (qidx >= 0 && queue[qidx]) syncCardTools(queue[qidx]);
   toast('已从合集移出(卡片本身和进度都没动)');
 }
 
@@ -1292,7 +1205,6 @@ function nextCard(){
     (c.wrong ? '<span class="chip wrong">错题重做</span>'
              : (c.review ? '<span class="chip review">复习</span>' : '<span class="chip">新卡</span>'));
   $('question').innerHTML = richText(c.q, true);   /* true: 新卡重置已高亮词表 */
-  syncCardTools(c);
 
   if (c.fill){
     $('options').style.display = 'none';
@@ -1473,7 +1385,6 @@ function finishSession(){
 }
 function goHome(keepOverlay){
   if ($('animOverlay').classList.contains('show')) closeAnim();
-  if ($('noteOverlay').classList.contains('show')) closeNotePanel();
   if ($('collOverlay').classList.contains('show')) closeCollection();
   show($('study'), false); show($('home'), true);
   refreshHome();
@@ -1517,11 +1428,6 @@ $('ckPrev').onclick = function(){ shiftMonth(-1); };
 $('ckNext').onclick = function(){ shiftMonth(1); };
 $('ckClose').onclick = closeCheckinPanel;
 $('ckOverlay').onclick = function(e){ if (e.target === this) closeCheckinPanel(); };
-$('noteBtn').onclick = openNotePanel;
-$('noteSave').onclick = saveNote;
-$('noteDel').onclick = deleteNote;
-$('noteClose').onclick = closeNotePanel;
-$('noteOverlay').onclick = function(e){ if (e.target === this) closeNotePanel(); };
 $('animPrev').onclick = function(){ animStepBy(-1); };
 $('animNext').onclick = function(){ animStepBy(1); };
 $('animReplay').onclick = animReplay;
@@ -1549,11 +1455,6 @@ function switchCourse(c){
 }
 document.addEventListener('keydown', function(e){
   var enter = isEnter(e), space = (e.key === ' ' || e.keyCode === 32);
-  /* 笔记面板: 打字归输入框, 只有 Esc 关面板(回车在笔记里是换行) */
-  if ($('noteOverlay').classList.contains('show')){
-    if (e.keyCode === 27){ e.preventDefault(); closeNotePanel(); }
-    return;
-  }
   /* 动画播放器(手动逐步): 回车/空格/→=下一步, ←=上一步, Esc=关闭; 开着时绝不影响答题 */
   if ($('animOverlay').classList.contains('show')){
     if (onBtn(e)){ if (e.keyCode === 27){ e.preventDefault(); closeAnim(); } return; }
@@ -1569,9 +1470,8 @@ document.addEventListener('keydown', function(e){
     if (enter || space || e.keyCode === 27){ e.preventDefault(); closeCollection(); }
     return;
   }
-  /* 焦点在填空框/笔记框里打字: 按键交给输入框, 绝不误触作答(隐形收集器 #keycap 是例外) */
+  /* 焦点在填空框里打字: 按键交给输入框, 绝不误触作答(隐形收集器 #keycap 是例外) */
   if (typingHere(e)){
-    if (e.keyCode === 27 && $('noteOverlay').classList.contains('show')) closeNotePanel();
     return;
   }
   /* 打卡日历打开时: 回车/空格/Esc = 关闭面板, 不做答题判定 */
@@ -1623,7 +1523,6 @@ function armEnterKey(){
     pendingEnter = null;
     if ($('animOverlay').classList.contains('show')){ animStepBy(1); return; }
     if ($('collOverlay').classList.contains('show')){ closeCollection(); return; }
-    if ($('noteOverlay').classList.contains('show')) return;                       /* 笔记里回车=换行 */
     if ($('ckOverlay').classList.contains('show')){ closeCheckinPanel(); return; }   /* JavaFX 真实回车走这条路径 */
     if ($('sheet').classList.contains('show')){ nextFromSheet(); return; }
     var inp = $('fillInput');
