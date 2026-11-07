@@ -24,7 +24,7 @@
 - 卡片笔记📝(每张卡可写备注)
 - 豆包并排🤖: 点按钮→百词斩左半+豆包右半, 关豆包自动回原位(250ms轮询, 最小化也触发)
 - 豆包位置善后(v1.9): 并排前存豆包原始位置(%TEMP%\shan-doubao.txt, GetWindowPlacement读还原位置, 拒绝平铺位/最大化态), 会话结束守望进程等豆包下次**可见**时把它挪回原位/居中(最多10分钟) — 防止豆包记住右半屏导致独立打开默认靠右
-- 反馈系统: 纯视觉(v1.18移除音效; v1.19上收到卡片级) — **答对=卡片闪亮**(#cardFlash绿色罩opacity闪0.55s), **答错=卡片摇动**(.qcard.shake位移0.45s); 选项/填空框只留配色不再自身弹跳; 全部transform/opacity合成器动画; **五连胜起答对卡片冒火**(.cardFire五枚🔥从底部升腾0.9s, fireBurst每次随机水平偏移, 动画后自清理)
+- 反馈系统: 纯视觉(v1.18移除音效; v1.19上收到卡片级) — **答对=卡片闪亮**(#cardFlash绿色罩opacity闪0.55s), **答错=卡片摇动**(.qcard.shake位移0.45s); 选项/填空框只留配色不再自身弹跳; 全部transform/opacity合成器动画; **五连胜起答对整卡冒火v2**(#fireFx: 边框外顶部8条渐变色火舌窜动+卡内顶部火光晕染+4粒火星上飘, 位置/大小/时长每次随机, 1.5s自清理; 火舌是CSS渐变形状非emoji)
 
 ### 已删除的功能(勿恢复)
 - ~~手机访问/WebServer~~ (v1.7 删除)
@@ -153,3 +153,4 @@ cp cards-*.jsonl dist/JavaShan/
 - 2026-11-07 v1.18: **移除音效, 改纯视觉反馈** — 合成音效反复调不理想(刺耳/爆音修完仍有杂音, 疑似连答时多音频流在蓝牙耳机上互扰), 用户决定弃声从光。删SoundFX.java/Bridge的sfx·soundOn·setSound与settingsFile/settings.txt/顶栏🔊按钮; 新增#flash全屏边缘闪光(答对绿/答错红, 0.5s, 纯opacity动画不触发布局重排, 低帧率下依然流畅)+原有的选项winPop/shake弹跳、卡片进出动画保留。原则: 只用opacity/transform, 避开坑#4的box-shadow/粒子雷区
 - 2026-11-07 v1.19: **答题反馈上收到卡片级** — 用户明确要求: 答对卡片闪亮/答错卡片摇动。删全屏边缘#flash; 新增#cardFlash(卡片内绿罩opacity闪, 0.55s)与.qcard.shake(横向位移0.45s, 连击重播用void offsetWidth); 选项winPop/shake与填空框winPop动画移除(只留红绿配色), 避免与卡片级动效双重晃动; 换卡时清shake类
 - 2026-11-07 v1.20: **五连胜起答对卡片冒火** — streak>=5时flash(ok)触发fireBurst: 5枚🔥emoji从卡片底部错峰升腾(70ms间隔, 水平位置每次随机抖动, 0.9s上升130px放大1.3倍淡出), 1.4s后DOM自清理。纯CSS keyframes(transform/opacity), 不逐帧JS无粒子, 合成器动画保帧率
+- 2026-11-07 v1.20.1: **冒火效果重做(整卡燃烧)** — 用户嫌emoji火苗丑且在卡内。新版: 火舌改CSS渐变形状(橙红→黄尖端, border-radius火舌形), 出现在边框外(bottom:100%)沿顶部一排8条随机窜动; 卡内顶部46%高度火光渐晕(#fireGlow); 4粒火星上飘120px。依旧纯transform/opacity
