@@ -123,7 +123,7 @@ public class AiDemoStore {
                 + esc(prompt) + "\"}]}";
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(cfg[2]))
-                .timeout(Duration.ofSeconds(60))
+                .timeout(Duration.ofSeconds(180))
                 .header("Authorization", cfg[0].isEmpty() ? "Bearer none" : "Bearer " + cfg[0])
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))

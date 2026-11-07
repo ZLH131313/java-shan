@@ -527,7 +527,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
     <h3 id="noteTitle">📝 笔记</h3>
     <div class="tip">只写给自己看: 记不住的原因、易错的点、想通的类比。保存后会显示在这张卡题干下面。<br>
     这里的文字不上传网络, 存在本机的 <b>.javashan\notes-课程.jsonl</b> 里。</div>
-    <textarea id="noteArea" placeholder="例如: 老是和 XX 搞混, 记住「YY」这个关键字就对了"></textarea>
+    <textarea id="noteArea" placeholder="写点什么..."></textarea>
     <div class="noteActs">
       <button class="save" id="noteSave">保存笔记</button>
       <button class="del" id="noteDel">删除</button>
@@ -1241,7 +1241,7 @@ function aiGenDemo(){
   } catch (e) { toast('启动生成失败: '+e); return; }
   aiBusy = true;
   var n = 0;
-  toast('✨ AI 正在生成实战演示…(约5-20秒)', 4000);
+  toast('✨ AI 正在生成…', 4000);
   (function poll(){
     setTimeout(function(){
       var s = '';
@@ -1253,7 +1253,7 @@ function aiGenDemo(){
         openAnim(c); return;
       }
       if (s.indexOf('err:') === 0){ aiBusy = false; toast('生成失败: '+s.slice(4), 5000); return; }
-      if (++n > 60){ aiBusy = false; toast('生成超时, 稍后再试'); return; }
+      if (++n > 200){ aiBusy = false; toast('生成超时(3分钟), 请检查Ollama是否在运行'); return; }
       poll();
     }, 900);
   })();
