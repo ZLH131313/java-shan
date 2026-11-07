@@ -141,15 +141,16 @@ public class AiDemoStore {
                     + "use System.out.println to show results, "
                     + "use single quotes for strings, output only the code.";
         } else {
-            prompt = "ALL ANNOTATIONS MUST BE IN CHINESE (中文标注).\n"
-                    + "Topic: " + topic + ". Question: " + question
-                    + "- C-style pseudocode (if there's a specific operation)\n"
-                    + "- Step-by-step calculation (if there are numbers)\n"
-                    + "- ASCII memory layout or flow diagram\n"
-                    + "Rules: 6-12 lines, Chinese annotations, output only the demonstration.";
+            // OS/计组: 解释型任务, 通用模型+英文指令+中文输出
+            prompt = "You must respond ONLY in Chinese (中文). No English sentences.\n"
+                    + "Knowledge point: [" + topic + "]\n"
+                    + "Question: " + question + "\n"
+                    + "Correct answer: " + answer + "\n"
+                    + "Explain in Chinese: what this concept is, why it works, how to calculate it. "
+                    + "5-8 lines. May use pseudocode or math steps. Output only the Chinese explanation.";
         }
-        // 英语课用通用模型(语法好), 技术课用编码模型(代码好)
-        String model = (courseName != null && courseName.contains("英语"))
+        // 英语课和OS/计组用通用模型(语言/解释能力好), Java/算法用编码模型(代码好)
+        String model = (courseName != null && (courseName.contains("英语") || courseName.contains("操作") || courseName.contains("组成")))
                 ? "qwen2.5:1.5b" : cfg[1];
         String body = "{\"model\":\"" + model + "\",\"messages\":[{\"role\":\"user\",\"content\":\""
                 + esc(prompt) + "\"}],\"max_tokens\":280,\"keep_alive\":\"30m\"}";
