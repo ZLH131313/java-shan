@@ -449,7 +449,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
     </div>
     <div class="animEntry" id="animEntry" title="点击查看生成过动画的卡片">
       <div class="ico">🎬</div>
-      <div class="txt">动画合集<span>看不懂的知识点就点「✨ AI演示」, AI现场生成实战代码演示</span></div>
+      <div class="txt">动画合集<span>历史遗留入口, 已停用</span></div>
       <div class="num"><b id="animCountN">0</b> 张</div>
     </div>
     <div class="resumeBar" id="resumeBar" style="display:none">
@@ -473,7 +473,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
       <input id="keycap" autocomplete="off" style="position:fixed;top:-60px;left:0;width:8px;height:8px;opacity:0;border:none;padding:0">
       <div class="qcard" id="qcard">
         <div class="cardTools">
-          <button class="toolBtn" id="aiDemoBtn" style="color:#7c3aed;border-color:#ddd6fe" title="AI现场为这张卡生成实战代码演示(需配置API key, 结果缓存)">✨ AI演示</button>
           <button class="toolBtn note" id="noteBtn" title="给这张卡写条笔记, 下次遇到它时会显示在题干下面">📝 笔记</button>
           <button class="peekBtn" id="peekBtn" title="直接看答案(按K), 按错题处理">👀 看答案</button>
           <button class="zhanBtn" id="zhanBtn">⚔ 斩</button>
@@ -496,10 +495,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
   <div class="sheetIn">
     <div class="verdict" id="verdict">答对了!</div>
     <div class="explText" id="explText"></div>
-    <div id="aiTransRow" style="display:none;margin-bottom:12px">
-      <button class="toolBtn" id="aiTransBtn" style="color:#4338ca;border-color:#c7d2fe" title="AI把本题正确答案翻成地道中文(需Ollama)">🌐 AI翻译</button>
-      <div id="aiTransBox" style="display:none;margin-top:10px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:10px 14px;font-size:14px;line-height:1.7;color:#3730a3"></div>
-    </div>
     <button class="sheetNext" id="nextBtn">继续 →</button>
   </div>
 </div>
@@ -1151,89 +1146,6 @@ function closeAnim(){
   refocusCard();
 }
 
-/* ✨ AI实时演示(Java=代码演示, 计组/OS/算法=生活类比): 点击现生成(异步), 完成即进播放器; 同卡缓存秒出 */
-var aiBusy = false;
-function aiGenDemo(){
-  if (currentCourse !== 'java' && currentCourse !== 'co' && currentCourse !== 'os' && currentCourse !== 'algo') {
-    toast('仅☕ Java / 🖧 计组 / 🖥 OS / 📐 算法 课程提供'); return;
-  }
-  if (aiBusy) { toast('AI正在生成, 稍等…'); return; }
-  if (qidx < 0 || !queue[qidx]) { toast('先回到一张卡片上'); return; }
-  var c = queue[qidx];
-  var st = '';
-  try { st = bridge.aiDemoState(currentCourse, c.id) || ''; } catch (e) {}
-  if (st && st !== 'pending' && st.indexOf('err:') !== 0 && st.indexOf('未配置') !== 0){
-    c.d = st; openAnim(c); return;   /* 缓存命中, 秒开 */
-  }
-  if (st === 'pending'){ toast('AI正在生成, 稍等…'); return; }
-  if (st.indexOf('err:') === 0 && st.indexOf('未配置') >= 0){ toast(st, 6000); return; }
-  var ans = c.fill ? c.ans : (c.opts ? c.opts[c.ans] : '');
-  try {
-    bridge.aiDemoStart(currentCourse, c.id, COURSE_NAME[currentCourse] || currentCourse,
-        c.topic || '', c.q || '', String(ans), c.e || '');
-  } catch (e) { toast('启动生成失败: '+e); return; }
-  aiBusy = true;
-  var n = 0;
-  toast('✨ AI 正在生成…', 4000);
-  (function poll(){
-    setTimeout(function(){
-      var s = '';
-      try { s = bridge.aiDemoState(currentCourse, c.id) || ''; } catch (e) {}
-      if (s && s !== 'pending' && s !== '' && s.indexOf('err:') !== 0){
-        aiBusy = false; c.d = s;
-        try { bridge.animAdd(currentCourse, c.id); } catch (e) {}
-        updateAnimEntry();
-        openAnim(c); return;
-      }
-      if (s.indexOf('err:') === 0){ aiBusy = false; toast('生成失败: '+s.slice(4), 5000); return; }
-      if (++n > 200){ aiBusy = false; toast('生成超时(3分钟), 请检查Ollama是否在运行'); return; }
-      poll();
-    }, 900);
-  })();
-}
-/* 卡片上的「🎬 生成动画」: 生成 + 收进合集 + 立刻播放 */
-$('aiDemoBtn').onclick = aiGenDemo;
-
-/* 🌐 AI翻译(仅英语课, 答题后的解析面板里): 把本题正确答案翻成地道中文 */
-var transBusy = false;
-function enAnswerText(c){
-  /* 题干有挖空: 把正确答案(填空答案或正确选项)填进去翻整句; 没有挖空(如中式英语卡)选项本身就是整句, 直接翻 */
-  var q = String(c.q || '');
-  var ans = c.fill ? String(c.ans) : (c.opts ? String(c.opts[c.ans]) : String(c.ans));
-  return q.indexOf('___') >= 0 ? q.replace('___', ans) : ans;
-}
-$('aiTransBtn').onclick = function(){
-  if (currentCourse !== 'en') return;
-  if (transBusy) { toast('AI正在翻译, 稍等…'); return; }
-  var c = queue[qidx]; if (!c) return;
-  var text = enAnswerText(c);
-  if (!text) { toast('这张卡没有可翻译的答案'); return; }
-  transBusy = true;
-  $('aiTransBtn').textContent = '🌐 翻译中…';
-  try { bridge.aiTransStart(text); } catch (e) {
-    transBusy = false; $('aiTransBtn').textContent = '🌐 AI翻译';
-    toast('启动翻译失败: ' + e); return;
-  }
-  var n = 0;
-  (function poll(){
-    setTimeout(function(){
-      var s = '';
-      try { s = bridge.aiTransState() || ''; } catch (e) {}
-      if (s === 'pending'){
-        if (++n > 75){   /* 30秒上限: 冷加载/卡死不再无限等 */
-          transBusy = false; $('aiTransBtn').textContent = '🌐 AI翻译';
-          toast('翻译超时(模型可能在冷加载), 请再点一次', 5000); return;
-        }
-        poll(); return;
-      }
-      transBusy = false; $('aiTransBtn').textContent = '🌐 AI翻译';
-      if (!s){ toast('翻译失败, 再点一次'); return; }
-      if (s.indexOf('err:') === 0){ toast('翻译失败: ' + s.slice(4), 5000); return; }
-      $('aiTransBox').textContent = '🌐 ' + s;
-      $('aiTransBox').style.display = '';
-    }, 400);
-  })();
-};
 function removeFromColl(id){
   if (!id) return;
   try { bridge.animDel(currentCourse, id); } catch (e) { toast('移出失败: ' + e); return; }
@@ -1258,8 +1170,7 @@ function renderCollection(){
   var box = $('collList');
   box.innerHTML = '';
   if (!list.length){
-    box.innerHTML = '<div class="collEmpty">这一门课还没有生成过动画。<br>' +
-      '刷题时点「✨ AI演示」生成后, 这张卡就会收进这里。</div>';
+    box.innerHTML = '<div class="collEmpty">这一门课还没有生成过动画。</div>';
     updateAnimEntry();
     return;
   }
@@ -1486,13 +1397,6 @@ function showSheet(ok, c){
   $('explText').innerHTML =
     (ok ? '' : '<b>正确答案: ' + (c.fill ? c.ans : c.opts[c.ans]) + '</b><br>') +
     '💡 ' + richText(c.e);
-  /* 🌐 AI翻译: 只在英语课且答案含英文时出现(答题后才见此面板) */
-  var ansTxt = enAnswerText(c);
-  $('aiTransRow').style.display = (currentCourse === 'en' && /[A-Za-z]/.test(ansTxt)) ? '' : 'none';
-  $('aiTransBox').style.display = 'none';
-  $('aiTransBox').textContent = '';
-  $('aiTransBtn').textContent = '🌐 AI翻译';
-  transBusy = false;
   $('sheet').classList.add('show');
   $('nextBtn').focus();
   /* 已作答: 存档指向下一张(退出后恢复时不重做这张) */
@@ -1613,7 +1517,6 @@ $('ckPrev').onclick = function(){ shiftMonth(-1); };
 $('ckNext').onclick = function(){ shiftMonth(1); };
 $('ckClose').onclick = closeCheckinPanel;
 $('ckOverlay').onclick = function(e){ if (e.target === this) closeCheckinPanel(); };
-$('aiDemoBtn').onclick = aiGenDemo;
 $('noteBtn').onclick = openNotePanel;
 $('noteSave').onclick = saveNote;
 $('noteDel').onclick = deleteNote;
@@ -1636,9 +1539,6 @@ $('tabEn').onclick = function(){ switchCourse('en'); };
 function switchCourse(c){
   if (currentCourse === c) return;
   currentCourse = c;
-  $('aiDemoBtn').style.display = (c === 'java' || c === 'co' || c === 'os' || c === 'algo') ? '' : 'none';   /* AI演示: Java代码/其余课类比 */
-  $('aiDemoBtn').textContent = c === 'java' ? '✨ AI演示' : '🌰 AI类比';
-  if (c === 'en'){ try { bridge.aiTransWarm(); } catch (e) {} }  /* 预热翻译模型, 首次点击不用等冷加载 */
   $('tabJava').classList.toggle('on', c === 'java');
   $('tabAlgo').classList.toggle('on', c === 'algo');
   $('tabCo').classList.toggle('on', c === 'co');

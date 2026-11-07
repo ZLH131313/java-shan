@@ -25,23 +25,11 @@
 - 豆包位置善后(v1.9): 并排前存豆包原始位置(%TEMP%\shan-doubao.txt, GetWindowPlacement读还原位置, 拒绝平铺位/最大化态), 会话结束守望进程等豆包下次**可见**时把它挪回原位/居中(最多10分钟) — 防止豆包记住右半屏导致独立打开默认靠右
 - 反馈系统: CSS动效+分色toast+合成音效
 
-### ✨ AI 实时演示(☕ Java = 代码演示, 🖧计组 / 🖥OS / 📐算法 = 🌰生活类比)
-- Java课: 每张卡可点「✨ AI演示」现场生成实战代码演示(5-15秒), 模型用 ai.txt 的 model=(当前 qwen2.5-coder:1.5b); **代码形态校验**(像代码+够长+拒绝「请给出详细信息」式耍赖)最多重掷3次不达标不缓存, temp 0.5(v1.12.2, 实测卡142曾输出索要信息的废话且被缓存)
-- 计组/OS/算法课: 按钮变「🌰 AI类比」— AI不做解释者(解析已讲清"是什么/为什么"), 只补**生活类比**建直觉: 2-3句中文(点名概念→一个日常类比→映射回概念), 类比要求抓住**机制**而非目的; 喂卡片解析当原料(模型只做转写不做回忆=小模型可靠区); 校验"含概念名+长度15-200"最多重掷3次不达标不缓存; 模型 qwen2.5:1.5b, temperature 0.7
-- 缓存: `~/.javashan/aidemos-{java,co,os,algo}.jsonl`; 英语课按钮隐藏(v1.10停用)
-- **1.5b 模型只跟英文指令**(中文指令会复述要求或输出无关内容), 指令用英文, 输出要求中文
-
-### 🌐 AI翻译(仅📖 英语四级)
-- **答题后**的解析面板出现「🌐 AI翻译」按钮: 把本题正确答案句翻成地道中文, 点按钮→翻译(约3-8秒)→结果展示在按钮下方
-- 只在英语课且答案含英文时出现; **翻"挖空处填上正确答案后的完整句"**(选择卡把正确选项填进题干挖空=97张/填空卡填答案/无挖空的ch6式卡选项本身就是整句直接翻=33张)
-- 单槽异步不缓存(AiTransStore, 每次现翻); 模型固定 qwen2.5:1.5b(翻译是小模型强项), Bridge方法 aiTransStart/aiTransState/aiTransWarm
-- **进英语课自动预热**(v1.11.1): switchCourse('en')后台发迷你请求把模型拉进显存(keep_alive 30m), 否则隔半小时首次点击要等冷加载, 用户等不及按回车走了, 结果出来时面板已关=「点了不出结果」; 轮询30秒上限+日志 ~/.javashan/aitrans.log
-
 ### 已删除的功能(勿恢复)
 - ~~手机访问/WebServer~~ (v1.7 删除)
 - ~~规则引擎动画 🎬~~ (已被 AI 演示替代)
 - ~~预存演示 demos-*.jsonl~~ (已被 AI 实时生成替代, demos 文件已删除)
-- ~~英语课的 AI 演示~~ (v1.10 停用四课, v1.12 恢复计组/OS、v1.12.1 恢复算法, 均改为生活类比 — 1.5b 在非代码任务上质量不稳: 英语例句抄题面/丢翻译/跑题, 通用模型自由解释概念平庸。**勿恢复"重新解释概念"式演示**, 概念课只走类比路线)
+- ~~全部本地AI功能(AI演示/AI类比/AI翻译)~~ (v1.13 全部移除, 仅保留豆包并排。历程: v1.7上线→v1.8-1.12反复救火(英语例句抄题面/丢翻译/跑题、无翻译缓存、概念解释平庸、代码演示输出索要信息的废话被缓存)→用户决定移除。教训: **1.5b小模型做生成式教学内容不可靠**——翻译/类比等"照材料转写"尚可, 自由发挥(写代码/造例句/解释概念)错误隐蔽且初学者无法辨别; 若未来恢复, 至少7b起步且必须有输出校验+不达标不缓存。已删: AiDemoStore.java/AiTransStore.java、Bridge的aiDemo*/aiTrans*方法、app.html全部AI按钮与JS、~/.javashan/{aidemos-*.jsonl,ai.txt,aitrans.log}; Ollama不再被本项目使用(机器上保留与否随用户)。演示播放器/合集成为无入口死代码)
 
 ## 三、架构
 
@@ -53,8 +41,6 @@ java-shan/
 │   │                    单实例锁: ServerSocket(48765), 双开自动退出
 │   ├── Bridge.java      JS↔Java 桥(方法首参=课程号; 方法名全唯一无重载; AI演示aiDemoStart/aiDemoState)
 │   ├── Engine.java      学习引擎(SM-2/错题本/温故/会话; JAVA/ALGO/CO/OS/EN五套章节表; main()=自测)
-│   ├── AiDemoStore.java AI实时演示(仅Java课, 调Ollama生成coder代码, 按卡缓存; main()=Java演示自测)
-│   ├── AiTransStore.java AI翻译(仅英语课, 单槽异步现翻不缓存; main()=翻译自测)
 │   ├── CheckinStore.java 每日打卡(全局, synchronized多实例安全)
 │   ├── NotesStore.java  卡片笔记
 │   ├── AnimStore.java   动画合集(只记"生成过", 不存脚本)
@@ -78,8 +64,6 @@ java-shan/
 - settings.txt: 音效开关
 - checkin.jsonl: 打卡(全局一份)
 - notes-{course}.jsonl / anims-{course}.jsonl: 笔记与合集
-- aidemos-java.jsonl: Java课AI演示缓存
-- ai.txt: AI配置(model=qwen2.5:1.5b, base=http://127.0.0.1:11434/v1/chat/completions)
 
 ## 四、内容文件格式
 
@@ -121,9 +105,9 @@ cp cards-*.jsonl dist/JavaShan/
 11. **截图用 view.snapshot()**: 不用 java.awt.Robot(200%缩放坐标对不上)
 12. **弹窗与键盘互斥**: 面板打开时 modalOpen()+typingHere() 拦截做题快捷键
 13. **Bridge 字段名 java 遮蔽 java.* 包名**: 全限定名不可用, 必须 import 短名
-14. **Ollama 校园网拉模型**: TUN模式劫持DNS致协议失败; 需关TUN(Mihomo Party设置)再ollama pull
-15. **Ollama 核显加速**: 需 OLLAMA_VULKAN=1 + OLLAMA_IGPU_ENABLE=1(已setx持久化); 默认100% CPU
-16. **1.5b 模型只跟英文指令**: 中文指令会复述要求或输出无关内容; 指令用英文, 输出要求中文
+14. ~~**Ollama 校园网拉模型**~~ (AI功能已移除, 留作环境备忘): TUN模式劫持DNS致协议失败; 需关TUN(Mihomo Party设置)再ollama pull
+15. ~~**Ollama 核显加速**~~ (AI功能已移除, 留作环境备忘): 需 OLLAMA_VULKAN=1 + OLLAMA_IGPU_ENABLE=1(已setx持久化); 默认100% CPU
+16. ~~**1.5b 模型只跟英文指令**~~ (AI功能已移除, 留作经验): 中文指令会复述要求或输出无关内容; 指令用英文, 输出要求中文
 17. **改 app.html 后必须语法检查**: `node -e` 抠出 script 内容 new Function() 检查; 一行语法错误会整页白屏
 18. **豆包(Electron)窗口位置**: 应用退出时记住坐标, 并排平铺后必须把它挪回去, 否则独立打开永远停在右半屏; 外部改位只在窗口**可见**时生效(MoveWindow), 最小化时 SetWindowPlacement/MoveWindow 都会被它内部状态顶回; 最大化态窗口需先 SW_SHOWNORMAL(1) 再摆位; 最小化窗口的真实几何用 GetWindowPlacement.rcNormal 读(此时 GetWindowRect 返回-32000)
 19. **ps1 语法检查**: `PSParser::Tokenize` 脚本文件方式跑, 不要 bash 内联 -Command(bash 会吞 $ 变量)
@@ -131,7 +115,6 @@ cp cards-*.jsonl dist/JavaShan/
 ## 七、自测手段
 
 - `java -cp out Engine`: 引擎逻辑自测(五课程加载/错题本/温故)
-- `java -cp out AiDemoStore`: Java课AI演示生成自测(需Ollama)
 - `JavaShan.exe --auto-close`: 4秒自检(bridge ready/章节卡数/温故调用)
 - `node -e "..."`: 抠 app.html 内联 script 做 JS 语法检查(改界面后必跑)
 
@@ -161,3 +144,4 @@ cp cards-*.jsonl dist/JavaShan/
 - 2026-11-07 v1.12: **计组/OS恢复AI入口, 改为「🌰 AI类比」** — 概念课不再让AI重复解析(那是v1.10平庸被移除的原因), 改为只补生活类比: 2-3句中文(点名概念→日常类比→映射回考点), 喂卡片解析当原料让1.5b只做转写, 校验含概念名+长度15-200最多重掷3次不达标不缓存(qwen2.5:1.5b, temp 0.7)。按钮三课显示且计组/OS换标签; 缓存aidemos-{co,os}.jsonl重新累积。实测: 信号量→信号灯/停车位, Cache→汽车后备箱, 类比贴切
 - 2026-11-07 v1.12.1: **算法课恢复AI入口, 同走「🌰 AI类比」** — 用户点名不让AI出完整代码(1.5b写代码错得隐蔽=毒药), 算法120卡中88张本就是概念卡, 直接复用概念课类比管线(Bridge放行algo+提示词含"算法"+按钮标签); 类比提示词加"抓住机制而非目的"要求(实测: 回溯法从含糊的食谱故事变为解谜剪枝/迷宫岔路)。四课AI现状: Java=代码演示, 计组/OS/算法=类比, 英语=答题后AI翻译
 - 2026-11-07 v1.12.2: **修复Java演示输出索要信息的废话** — 卡142(转型)AI演示返回「好的, 请给出问题的详细信息…」并被永久缓存: Java路径是唯一没有输出校验的AI功能。修复: javaGenerate加代码形态校验(含类/方法/打印/分号花括号+长度≥40+拒绝请给出/请提供/请告诉我的元文本)最多重掷3次不达标不缓存; temp降0.5; 提示词加"题目已完整, 不要索要信息"; 顺手剥离```java围栏残留的语言标记行; 已删缓存坏条目142, main自测用例换成该卡做回归
+- 2026-11-07 v1.13: **全部本地AI功能移除(仅保留豆包并排)** — 用户最终决定: 小模型生成式教学内容可信度不足以支撑学习(代码演示逻辑有错且初学者无法辨别)。移除: AI演示(Java代码/概念课类比)、AI翻译; 删AiDemoStore.java/AiTransStore.java、Bridge的aiDemo*/aiTrans*方法、app.html全部AI按钮与JS; 清~/.javashan/{aidemos-*.jsonl,ai.txt,aitrans.log}。学习主线回归纯手工内容: 题目+解析(711卡)+SM-2复习+错题本+温故+打卡+笔记+豆包并排。编译/Engine/JS/auto-close全过

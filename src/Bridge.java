@@ -148,32 +148,6 @@ public class Bridge {
     }
 
 
-    /* ---- AI 实时演示生成(Java=代码演示, 计组/OS/算法=生活类比): 点击现做, 结果按课缓存 ---- */
-    private final java.util.Map<String, AiDemoStore> aiStores = new java.util.HashMap<>();
-    private AiDemoStore ai(String course) {
-        if (!"java".equals(course) && !"co".equals(course) && !"os".equals(course)
-                && !"algo".equals(course)) return null;   // 英语已停用
-        return aiStores.computeIfAbsent(course, k ->
-                new AiDemoStore(dataHome.resolve("aidemos-" + k + ".jsonl")));
-    }
-    public String aiDemoState(String course, int id) {
-        AiDemoStore s = ai(course);
-        if (s == null) return "";
-        String st = s.state(id);
-        return "done".equals(st) ? s.get(id) : st;
-    }
-    public void aiDemoStart(String course, int id, String courseName, String topic,
-                            String question, String answer, String explain) {
-        AiDemoStore s = ai(course);
-        if (s != null) s.generateAsync(dataHome, id, courseName, topic, question, answer, explain);
-    }
-
-    /* ---- AI翻译(仅英语课): 答题后把正确答案句翻成地道中文 ---- */
-    private final AiTransStore trans = new AiTransStore();
-    public void aiTransStart(String text) { trans.start(dataHome, text); }
-    public String aiTransState() { return trans.state(); }
-    public void aiTransWarm() { trans.warm(dataHome); }
-
     /* ---- 外部应用: 豆包 ---- */
     /** 唤起豆包并排分屏; 关闭豆包窗口后由守望脚本自动还原百词斩原位 */
     public void openDoubao() {
