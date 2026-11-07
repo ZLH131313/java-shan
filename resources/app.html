@@ -122,9 +122,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .zhanBtn{border:1px solid var(--line);background:#fffdf7;
   color:var(--warn);border-radius:12px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;font-family:inherit}
 .zhanBtn:hover{background:#fff7ed}
-.peekBtn{border:1px solid var(--line);background:#f8f7ff;
-  color:#6d28d9;border-radius:12px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;font-family:inherit}
-.peekBtn:hover{background:#ede9fe}
 .toolBtn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:7px 13px;
   font-size:13px;font-weight:700;color:var(--sub);cursor:pointer;transition:.15s;font-family:inherit}
 .toolBtn:hover{transform:translateY(-2px)}
@@ -179,7 +176,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .verdict{font-size:19px;font-weight:800;white-space:nowrap;padding:6px 16px;border-radius:12px}
 .verdict.ok{color:var(--ok);background:var(--okBg)}
 .verdict.bad{color:var(--bad);background:var(--badBg)}
-.verdict.peek{color:#6d28d9;background:#f5f3ff}
 .explText{flex:1;font-size:15px;line-height:1.7;color:#334155}
 .explText b{color:var(--ink)}
 .code{background:#0f172a;color:#e2e8f0;font-family:Consolas,'Courier New',monospace;font-size:13px;
@@ -439,7 +435,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
       <input id="keycap" autocomplete="off" style="position:fixed;top:-60px;left:0;width:8px;height:8px;opacity:0;border:none;padding:0">
       <div class="qcard" id="qcard">
         <div class="cardTools">
-          <button class="peekBtn" id="peekBtn" title="直接看答案(按K), 按错题处理">👀 看答案</button>
           <button class="zhanBtn" id="zhanBtn">⚔ 斩</button>
         </div>
         <div class="chips" id="chips"></div>
@@ -553,7 +548,7 @@ function toast(msg, ms){
   var t = $('toast'); t.textContent = msg;
   /* 按内容自动选配色: 斩=琥珀, 错误类=红, 赞美/解锁=绿, 其余=靛蓝 */
   var type = /已斩/.test(msg) ? 'zhan'
-           : /答错|看答案|失败|失效|不能/.test(msg) ? 'bad'
+           : /答错|失败|失效|不能/.test(msg) ? 'bad'
            : /漂亮|解锁|答对|打卡成功/.test(msg) ? 'good' : 'info';
   t.className = type;
   t.classList.add('show');
@@ -662,7 +657,7 @@ function refreshCheckin(){
   $('ckPill').className = 'ckPill' + (c.streak > 0 ? ' blaze' : '') + (c.checkedToday ? ' done' : '');
   $('ckPill').title = c.checkedToday
     ? '今日已打卡 ✔ 点击查看打卡日历'
-    : '再答 ' + c.need + ' 张卡就打卡成功(三门课累计, 看答案也算)';
+    : '再答 ' + c.need + ' 张卡就打卡成功(三门课累计)';
   var chip = $('ckChip');
   if (!chip){
     chip = document.createElement('div');
@@ -715,8 +710,8 @@ function renderCheckinPanel(){
     '<div class="n"><b>' + c.total + '</b><span>累计天数</span></div>' +
     '<div class="n"><b>' + d.count + '</b><span>' + (d.isNow ? '本月打卡' : '该月打卡') + '</span></div>';
   $('ckFoot').innerHTML = c.checkedToday
-    ? '今天已打卡 ✔ 共答了 <b>' + c.today + '</b> 张。规则: 每天答满 ' + c.goal + ' 张即打卡, 三门课程累计, 答对答错、看答案都算; 断一天连续清零, 最长连击永久保留。'
-    : '今天答了 <b>' + c.today + '/' + c.goal + '</b> 张, 再答 <b>' + c.need + '</b> 张就打卡成功。规则: 三门课程累计, 答对答错、看答案都算; 断一天连续清零, 最长连击永久保留。';
+    ? '今天已打卡 ✔ 共答了 <b>' + c.today + '</b> 张。规则: 每天答满 ' + c.goal + ' 张即打卡, 三门课程累计, 答对答错都算; 断一天连续清零, 最长连击永久保留。'
+    : '今天答了 <b>' + c.today + '/' + c.goal + '</b> 张, 再答 <b>' + c.need + '</b> 张就打卡成功。规则: 三门课程累计, 答对答错都算; 断一天连续清零, 最长连击永久保留。';
   return true;
 }
 
@@ -1141,36 +1136,6 @@ function zhanCurrent(){
   $('qcard').classList.add('zhaned');
   setTimeout(nextCard, 420);   /* 下一张的存档由 nextCard/finishSession 处理 */
 }
-/* 看答案: 未作答直接看 = 按答错处理(错题本/清连击/排到队尾), 计入答题数 */
-function revealAnswer(){
-  if (waiting || qidx < 0 || !queue[qidx]) return;
-  var c = queue[qidx];
-  waiting = true;
-  bridge.answer(currentCourse, c.id, false);
-  streak = 0; $('streakN').textContent = '0';
-  if (!c.fill){
-    var opts = $('options').children;
-    for (var k = 0; k < opts.length; k++) opts[k].classList.add("locked");
-    var ansBtn = opts[dispOrder.indexOf(c.ans)];
-    ansBtn.classList.add('reveal');
-    ansBtn.insertAdjacentHTML('beforeend', '<span class="mk mkAns">正确答案</span>');
-  } else {
-    var inp2 = $('fillInput');
-    inp2.disabled = true; $('fillOk').disabled = true;
-  }
-  queue.push(c);
-  toast('已看答案, 按错题处理, 排到队尾');
-  bridge.sfx('bad');
-  answered++;
-  var v = $('verdict');
-  v.textContent = '👀 已看答案';
-  v.className = 'verdict peek';
-  $('explText').innerHTML =
-      '<b>正确答案: ' + richText(c.fill ? c.ans : c.opts[c.ans]) + '</b><br>💡 ' + richText(c.e);
-  $('sheet').classList.add('show');
-  $('nextBtn').focus();
-  var keep = qidx; qidx++; persistSession(); qidx = keep;
-}
 function finishSession(){
   clearSession();                       /* 全部完成, 清掉恢复点 */
   $('pfill').style.width = '100%';
@@ -1202,7 +1167,6 @@ $('doubaoBtn').onclick = function(){
 };
 $('nextBtn').onclick = nextFromSheet;
 $('zhanBtn').onclick = zhanCurrent;
-$('peekBtn').onclick = revealAnswer;
 $('fillOk').onclick = fillSubmit;
 $('fillInput').addEventListener('keydown', function(e){
   if (isEnter(e)){ e.preventDefault(); fillSubmit(); }
@@ -1339,7 +1303,6 @@ document.addEventListener('keypress', function(e){
   if (waiting || qidx < 0 || !queue[qidx] || queue[qidx].fill) return;
   if ($('sheet').classList.contains('show') || $('study').classList.contains('hidden')) return;
   var ch = String.fromCharCode(e.charCode || e.keyCode || 0).toLowerCase();
-  if (ch === 'k' && !queue[qidx].fill){ revealAnswer(); return; }   /* 填空题打字不误触 */
   var idx = ch ? 'abcd'.indexOf(ch) : -1;
   if (idx < 0 && ch >= '1' && ch <= '4') idx = ch.charCodeAt(0) - 49;
   if (idx >= 0 && idx < queue[qidx].opts.length && $('options').children[idx]){
@@ -1360,7 +1323,6 @@ document.addEventListener('keypress', function(e){
     if (waiting || qidx < 0 || !queue[qidx] || queue[qidx].fill) return;
     if ($('sheet').classList.contains('show') || $('study').classList.contains('hidden')) return;
     var ch = v.charAt(v.length - 1).toLowerCase();
-    if (ch === 'k'){ revealAnswer(); return; }
     var idx = ch ? 'abcd'.indexOf(ch) : -1;
     if (idx < 0 && ch >= '1' && ch <= '4') idx = ch.charCodeAt(0) - 49;
     if (idx >= 0 && idx < queue[qidx].opts.length && $('options').children[idx]){
