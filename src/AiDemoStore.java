@@ -113,9 +113,9 @@ public class AiDemoStore {
             throw new IllegalStateException("远程API需配置key(本地Ollama无需): 在 ~/.javashan/ai.txt 写入 key=你的key");
         }
         String prompt = "为知识点[" + topic + "]写一段Java代码演示:\n"
-                + "要求: 8-15行, 标准缩进(4空格), 每个关键步骤前加中文注释, System.out.println展示结果, 字符串用单引号, 只输出代码";
+                + "要求: 6-10行, 标准缩进(4空格), 关键步骤前加简短中文注释, System.out.println展示结果, 字符串用单引号, 只输出代码";
         String body = "{\"model\":\"" + cfg[1] + "\",\"messages\":[{\"role\":\"user\",\"content\":\""
-                + esc(prompt) + "\"}]}";
+                + esc(prompt) + "\"}],\"max_tokens\":280}";
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(cfg[2]))
                 .timeout(Duration.ofSeconds(180))
