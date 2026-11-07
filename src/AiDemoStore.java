@@ -112,7 +112,7 @@ public class AiDemoStore {
         if (cfg[0].isEmpty() && !cfg[2].contains("localhost") && !cfg[2].contains("127.0.0.1")) {
             throw new IllegalStateException("远程API需配置key(本地Ollama无需): 在 ~/.javashan/ai.txt 写入 key=你的key");
         }
-        // 按课程分流: 英语课生成例句演示(英文指令效果更好), 其他课生成代码演示
+        // 按课程分流: 1.5b模型英文指令服从性远好于中文, 统一英文指令+代码内中文注释
         String prompt;
         if (courseName != null && courseName.contains("英语")) {
             prompt = "Write 5 English example sentences showing usage of this CET-4 knowledge point: ["
@@ -120,14 +120,27 @@ public class AiDemoStore {
                     + "Rules: first sentence is the simplest, then progressively harder; "
                     + "each sentence is followed by its Chinese translation in parentheses; "
                     + "output only the sentences.";
+        } else if (courseName != null && courseName.contains("算法")) {
+            prompt = "Topic: " + topic + ". Question: " + question
+                    + " Answer: " + answer + " Explanation: " + explain + "\n"
+                    + "Write 6-10 lines of pseudocode or Java demonstrating the core algorithm steps "
+                    + "directly related to this question's scenario. "
+                    + "Rules: Chinese comments, print/show each step's result, output only the code.";
+        } else if (courseName != null && courseName.contains("Java")) {
+            prompt = "Topic: " + topic + ". Question: " + question
+                    + " Answer: " + answer + " Explanation: " + explain + "\n"
+                    + "Write 6-10 lines of Java code demonstrating the exact behavior this question tests. "
+                    + "Rules: must directly demonstrate the question's scenario (not a generic example), "
+                    + "standard indentation, Chinese comments, use System.out.println to show results, "
+                    + "use single quotes for strings, output only the code.";
         } else {
-            // 题目+答案+解析全部喂给AI, 确保演示紧扣这道题考察的具体知识点
-            prompt = "这道题考察知识点[" + topic + "]:\n题目: " + question
-                    + "\n正确答案: " + answer + "\n解析: " + explain + "\n"
-                    + "请写一段Java代码演示「这道题考察的核心行为」(6-10行):\n"
-                    + "要求: 代码必须直接演示题目中的具体场景或易错点(不要写泛泛的通用示例), "
-                    + "标准缩进(4空格), 关键步骤前加简短中文注释, System.out.println展示结果, "
-                    + "字符串用单引号, 只输出代码";
+            prompt = "Topic: " + topic + ". Question: " + question
+                    + " Answer: " + answer + " Explanation: " + explain + "\n"
+                    + "Demonstrate this concept in the most intuitive way (choose one):\n"
+                    + "- C-style pseudocode (if there's a specific operation)\n"
+                    + "- Step-by-step calculation (if there are numbers)\n"
+                    + "- ASCII memory layout or flow diagram\n"
+                    + "Rules: 6-12 lines, Chinese annotations, output only the demonstration.";
         }
         String body = "{\"model\":\"" + cfg[1] + "\",\"messages\":[{\"role\":\"user\",\"content\":\""
                 + esc(prompt) + "\"}],\"max_tokens\":280,\"keep_alive\":\"30m\"}";
