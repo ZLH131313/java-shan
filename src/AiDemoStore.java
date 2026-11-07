@@ -115,11 +115,15 @@ public class AiDemoStore {
         // 按课程分流: 1.5b模型英文指令服从性远好于中文, 统一英文指令+代码内中文注释
         String prompt;
         if (courseName != null && courseName.contains("英语")) {
-            prompt = "Write 5 English example sentences showing usage of this CET-4 knowledge point: ["
+            prompt = "You are an English teacher. Write 5 example sentences for CET-4 point: ["
                     + topic + "], question: " + question + "\n"
-                    + "Rules: first sentence is the simplest, then progressively harder; "
-                    + "each sentence is followed by its Chinese translation in parentheses; "
-                    + "output only the sentences.";
+                    + "Rules: first sentence simplest, then harder; "
+                    + "each sentence followed by Chinese translation in parentheses; "
+                    + "output only the sentences.\n"
+                    + "IMPORTANT grammar rules:\n"
+                    + "- NEVER use 'although...but' together (use only ONE of them)\n"
+                    + "- NEVER use 'because...so' together\n"
+                    + "- Check each sentence is grammatically correct before output";
         } else if (courseName != null && courseName.contains("算法")) {
             prompt = "Topic: " + topic + ". Question: " + question
                     + " Answer: " + answer + " Explanation: " + explain + "\n"
@@ -143,7 +147,10 @@ public class AiDemoStore {
                     + "- ASCII memory layout or flow diagram\n"
                     + "Rules: 6-12 lines, Chinese annotations, output only the demonstration.";
         }
-        String body = "{\"model\":\"" + cfg[1] + "\",\"messages\":[{\"role\":\"user\",\"content\":\""
+        // 英语课用通用模型(语法好), 技术课用编码模型(代码好)
+        String model = (courseName != null && courseName.contains("英语"))
+                ? "qwen2.5:1.5b" : cfg[1];
+        String body = "{\"model\":\"" + model + "\",\"messages\":[{\"role\":\"user\",\"content\":\""
                 + esc(prompt) + "\"}],\"max_tokens\":280,\"keep_alive\":\"30m\"}";
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(cfg[2]))
