@@ -309,36 +309,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .noteActs .x{flex:0 0 88px;background:#f1f5f9;color:var(--sub)}
 .noteActs button:hover{transform:translateY(-2px)}
 
-/* ============ 首页: 动画合集入口卡 ============ */
-.animEntry{display:flex;align-items:center;gap:12px;background:var(--card);
-  border:1px solid var(--line);border-radius:16px;padding:12px 16px;cursor:pointer;
-  margin-bottom:12px;transition:transform .18s;animation:fadeUp .45s ease both}
-.animEntry:hover{transform:translateY(-3px)}
-.animEntry .ico{width:40px;height:40px;border-radius:12px;background:#0d9488;color:#fff;
-  display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}
-.animEntry .txt{flex:1;min-width:0;font-size:14px;font-weight:700}
-.animEntry .txt span{display:block;font-size:11.5px;font-weight:600;color:var(--sub);margin-top:3px}
-.animEntry .num{flex:none;font-size:12px;font-weight:700;color:#0d9488;background:#f0fdfa;
-  border-radius:99px;padding:5px 12px}
 
-/* ============ 合集列表面板 ============ */
-.collBox{background:#fff;border-radius:24px;padding:22px 24px;width:600px;max-height:88vh;
-  display:flex;flex-direction:column}
-.collHead{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex:none}
-.collHead h3{font-size:16.5px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.collList{overflow-y:auto}
-.collRow{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:14px;
-  padding:9px 11px;margin-bottom:9px}
-.collRow .cq{flex:1;min-width:0;font-size:13px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.collRow .cm{flex:none;font-size:11px;color:var(--sub)}
-.collRow button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px 11px;
-  font-size:12.5px;font-weight:700;cursor:pointer;flex:none;font-family:inherit;transition:.15s}
-.collRow .pl{background:#0d9488;color:#fff;border-color:#0d9488}
-.collRow .pl:hover{filter:brightness(1.08)}
-.collRow .rm{color:var(--sub);flex:0 0 34px}
-.collRow .rm:hover{background:#fef2f2;color:var(--bad);border-color:#fecaca}
-.collEmpty{text-align:center;color:var(--sub);font-size:13.5px;padding:26px 10px;line-height:1.9}
-.collFoot{font-size:12px;color:var(--sub);margin-top:12px;line-height:1.7;flex:none}
 
 /* ============ 知识点演示动画播放器 ============ */
 .animBox{background:#fff;border-radius:24px;padding:20px 24px 18px;width:620px;max-height:90vh;
@@ -383,7 +354,7 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
   border-radius:14px;padding:11px 14px;font-size:15px;color:#065f46;font-weight:700;margin-top:12px}
 .anCode{background:#0f172a;color:#e2e8f0;font-family:Consolas,'Courier New',monospace;font-size:13px;
   line-height:1.65;padding:12px 14px;border-radius:10px;white-space:pre-wrap;word-break:break-all;margin-top:4px}
-.anCode .cl{display:block;border-radius:6px;padding:1px 6px}
+.anCode .cl{display:block;border-radius:6px;padding:1px 6px;white-space:pre}
 .anCode .cl.done{color:#e2e8f0}
 .anCode .cl.now{color:#e2e8f0}
 .anCode .cl.todo{color:#e2e8f0}
@@ -547,24 +518,10 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
     <div class="animFoot">
       <button id="animPrev" style="display:none" title="上一步(左方向键)">⏮ 上一步</button>
       <button class="pp" id="animNext" style="display:none" title="下一步(回车 / 空格 / 右方向键)">下一步 ›</button>
-      <button id="animReplay" title="回到第一步">↻ 重来</button>
-      <button class="coll" id="animDel" title="把这张卡移出动画合集">✕ 移出合集</button>
     </div>
   </div>
 </div>
 
-<!-- 动画合集列表 -->
-<div class="overlay" id="collOverlay">
-  <div class="collBox">
-    <div class="collHead">
-      <h3 id="collTitle">🎬 动画合集</h3>
-      <button class="animX" id="collClose" title="关闭">✕</button>
-    </div>
-    <div class="collList" id="collList"></div>
-    <div class="collFoot">合集按课程分开保存(本机 <b>.javashan\anims-课程.jsonl</b>)。
-    动画不存脚本, 每次播放都按卡片当下的内容重新生成 —— 改了题卡, 动画自动跟着变。</div>
-  </div>
-</div>
 
 <canvas id="confetti"></canvas>
 <div id="toast"></div>
@@ -573,13 +530,6 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 
 <script>
 'use strict';
-/* 任何界面异常都弹出来, 不再静默失败 */
-window.onerror = function(msg, src, line){
-  var t = document.getElementById('toast');
-  if (t){ t.textContent = '界面异常: ' + msg + ' (行' + line + ')'; t.classList.add('show');
-    clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove('show'); }, 4000); }
-  return false;
-};
 
 /* ================= 状态 ================= */
 var chaptersCache = [], queue = [], qidx = -1;
@@ -1098,7 +1048,7 @@ function buildSteps(c){
   var lines = c.d ? c.d.split('¶') : [];
   var code = '';
   for (var i = 0; i < lines.length; i++) {
-    if (lines[i].trim()) code += '<span class="cl now">' + escHtml(lines[i].trim()) + '</span>';
+    if (lines[i].trim()) code += '<span class="cl now">' + escHtml(lines[i]) + '</span>';
   }
   return [{ label: c.topic || '', html: code ? '<pre class="anCode">' + code + '</pre>' : '' }];
 }
@@ -1508,7 +1458,6 @@ function finishSession(){
 function goHome(keepOverlay){
   if ($('animOverlay').classList.contains('show')) closeAnim();
   if ($('noteOverlay').classList.contains('show')) closeNotePanel();
-  if ($('collOverlay').classList.contains('show')) closeCollection();
   show($('study'), false); show($('home'), true);
   refreshHome();
   if (!keepOverlay) $('doneOverlay').classList.remove('show');
@@ -1559,12 +1508,9 @@ $('noteClose').onclick = closeNotePanel;
 $('noteOverlay').onclick = function(e){ if (e.target === this) closeNotePanel(); };
 $('animPrev').onclick = function(){ animStepBy(-1); };
 $('animNext').onclick = function(){ animStepBy(1); };
-$('animReplay').onclick = animReplay;
 $('animClose').onclick = closeAnim;
 $('animDel').onclick = function(){ removeFromColl(anim.cardId); };
 $('animOverlay').onclick = function(e){ if (e.target === this) closeAnim(); };
-$('animEntry').onclick = openCollection;
-$('collClose').onclick = closeCollection;
 $('collOverlay').onclick = function(e){ if (e.target === this) closeCollection(); };
 $('tabJava').onclick = function(){ switchCourse('java'); };
 $('tabAlgo').onclick = function(){ switchCourse('algo'); };
@@ -1657,8 +1603,7 @@ function armEnterKey(){
   pendingEnter = setTimeout(function(){
     pendingEnter = null;
     if ($('animOverlay').classList.contains('show')){ animStepBy(1); return; }
-    if ($('collOverlay').classList.contains('show')){ closeCollection(); return; }
-    if ($('noteOverlay').classList.contains('show')) return;                       /* 笔记里回车=换行 */
+      if ($('noteOverlay').classList.contains('show')) return;                       /* 笔记里回车=换行 */
     if ($('ckOverlay').classList.contains('show')){ closeCheckinPanel(); return; }   /* JavaFX 真实回车走这条路径 */
     if ($('sheet').classList.contains('show')){ nextFromSheet(); return; }
     var inp = $('fillInput');
