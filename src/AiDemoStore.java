@@ -112,10 +112,20 @@ public class AiDemoStore {
         if (cfg[0].isEmpty() && !cfg[2].contains("localhost") && !cfg[2].contains("127.0.0.1")) {
             throw new IllegalStateException("远程API需配置key(本地Ollama无需): 在 ~/.javashan/ai.txt 写入 key=你的key");
         }
-        String prompt = "为知识点[" + topic + "]写一段Java代码演示:\n"
-                + "要求: 6-10行, 标准缩进(4空格), 关键步骤前加简短中文注释, System.out.println展示结果, 字符串用单引号, 只输出代码";
+        // 按课程分流: 英语课生成例句演示(英文指令效果更好), 其他课生成代码演示
+        String prompt;
+        if (courseName != null && courseName.contains("英语")) {
+            prompt = "Write 5 English example sentences showing usage of this CET-4 knowledge point: ["
+                    + topic + "], question: " + question + "\n"
+                    + "Rules: first sentence is the simplest, then progressively harder; "
+                    + "each sentence is followed by its Chinese translation in parentheses; "
+                    + "output only the sentences.";
+        } else {
+            prompt = "为知识点[" + topic + "]写一段尽量短的Java代码演示(6-10行):\n"
+                    + "要求: 6-10行, 标准缩进(4空格), 关键步骤前加简短中文注释, System.out.println展示结果, 字符串用单引号, 只输出代码";
+        }
         String body = "{\"model\":\"" + cfg[1] + "\",\"messages\":[{\"role\":\"user\",\"content\":\""
-                + esc(prompt) + "\"}],\"max_tokens\":280}";
+                + esc(prompt) + "\"}],\"max_tokens\":280,\"keep_alive\":\"30m\"}";
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(cfg[2]))
                 .timeout(Duration.ofSeconds(180))
