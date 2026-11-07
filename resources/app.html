@@ -149,6 +149,13 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 #cardFlash.ok{background:rgba(220,252,231,.85);border:4px solid var(--ok);animation:cardShine .55s ease}
 @keyframes cardShine{0%{opacity:0}20%{opacity:.95}100%{opacity:0}}
 .qcard.shake{animation:cardShake .45s ease}
+/* 五连胜起答对冒火: 🔥火苗从卡片底部升腾(transform/opacity合成器动画, 无粒子无JS逐帧) */
+.cardFire{position:absolute;bottom:6px;pointer-events:none;opacity:0;z-index:7;animation:fireRise .9s ease-out both}
+@keyframes fireRise{
+  0%{opacity:0;transform:translateY(8px) scale(.5) rotate(-10deg)}
+  18%{opacity:1}
+  100%{opacity:0;transform:translateY(-130px) scale(1.3) rotate(12deg)}
+}
 @keyframes cardShake{0%,100%{transform:translateX(0)}18%{transform:translateX(-12px)}36%{transform:translateX(10px)}54%{transform:translateX(-7px)}72%{transform:translateX(5px)}88%{transform:translateX(-3px)}}
 
 .opt:hover{border-color:#a5b4fc;transform:translateY(-2px);background:#f5f7ff}
@@ -554,8 +561,28 @@ function flash(ok){
   card.classList.remove('shake');
   f.className = '';
   void card.offsetWidth;   /* 强制回流, 连续答题时动画能重播 */
-  if (ok) f.className = 'ok';
+  if (ok){
+    f.className = 'ok';
+    if (streak >= 5) fireBurst();   /* 五连胜起, 每次答对冒火 */
+  }
   else card.classList.add('shake');
+}
+function fireBurst(){
+  var card = $('qcard');
+  var sizes = [22, 28, 24, 30, 20];
+  for (var i = 0; i < 5; i++){
+    var f = document.createElement('span');
+    f.className = 'cardFire';
+    f.textContent = '🔥';
+    f.style.left = (14 + i * 18 + (Math.random() * 8 - 4)) + '%';
+    f.style.fontSize = sizes[i] + 'px';
+    f.style.animationDelay = (i * 70) + 'ms';
+    card.appendChild(f);
+  }
+  setTimeout(function(){
+    var fs = document.querySelectorAll('.cardFire');
+    for (var j = 0; j < fs.length; j++) fs[j].remove();
+  }, 1400);
 }
 function toast(msg, ms){
   var t = $('toast'); t.textContent = msg;
