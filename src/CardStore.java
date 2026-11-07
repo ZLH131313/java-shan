@@ -47,7 +47,8 @@ public class CardStore {
                     raw.get("topic"), raw.get("tag"), raw.get("q"),
                     options, answerIndex, answerText, raw.get("e")));
         }
-        mergeDemos(file, cards);
+        // demos-*.jsonl 已删除, AI实时生成替代
+        // mergeDemos(file, cards);
         return cards;
     }
 

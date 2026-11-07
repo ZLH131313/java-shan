@@ -159,3 +159,4 @@ cp cards-java.jsonl demos-java.jsonl cards-algo.jsonl demos-algo.jsonl cards-co.
 - 2026-11-07(四): AI演示改为本地模型直连(默认Ollama localhost:11434, model=qwen2.5-coder:7b, 免key); 清除上一轮手写的45张预存算法演示(恢复原始13条); Ollama已安装(0.40.15), 模型qwen2.5-coder:7b下载中(4.7GB受校园网影响较慢); ai.txt已写入~/.javashan/
 - 2026-11-07(五): 修复"章节全不见"bug — 我插入AI按钮时一行绑定代码缺了选择器前缀(.onclick=aiGenDemo;), 导致整个JS语法错误页面全白
 - 2026-11-07(六): 删除🎬规则动画按钮与genAnim函数(仅保留✨AI演示为唯一演示入口); AI生成成功后自动收入合集(不再手动); 动画播放器/buildSteps保留(AI演示的展示层)
+- 2026-11-07(七): 删除全部预存演示(demos-*.jsonl + demoBlock + mergeDemos); AI演示代码块改为纯黑底白字(去掉蓝色行高亮); 演示体验: 点AI→等几秒→看代码→关

@@ -384,9 +384,9 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
 .anCode{background:#0f172a;color:#e2e8f0;font-family:Consolas,'Courier New',monospace;font-size:13px;
   line-height:1.65;padding:12px 14px;border-radius:10px;white-space:pre-wrap;word-break:break-all;margin-top:4px}
 .anCode .cl{display:block;border-radius:6px;padding:1px 6px}
-.anCode .cl.done{color:#94a3b8}
-.anCode .cl.now{background:#1d4ed8;color:#fff}
-.anCode .cl.todo{color:#475569}
+.anCode .cl.done{color:#e2e8f0}
+.anCode .cl.now{color:#e2e8f0}
+.anCode .cl.todo{color:#e2e8f0}
 .animFoot{display:flex;gap:8px;align-items:center;flex:none}
 .animFoot button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px 13px;
   font-size:13px;font-weight:700;color:var(--sub);cursor:pointer;font-family:inherit;transition:.15s;flex:none}
@@ -1423,13 +1423,6 @@ function showStreakTip(n){
   clearTimeout(el._h);
   el._h = setTimeout(function(){ el.classList.remove('show'); }, 1800);
 }
-/* 代码演示块: § 代替双引号, ¶ 代替换行(demos.jsonl 约定) */
-function demoBlock(d){
-  if (!d) return '';
-  var code = d.replace(/§/g, '"').replace(/¶/g, '\n')
-              .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return '<pre class="code">' + code + '</pre>';
-}
 function showSheet(ok, c){
   answered++; if (ok) correct++;
   var v = $('verdict');
@@ -1437,7 +1430,7 @@ function showSheet(ok, c){
   v.className = 'verdict ' + (ok ? 'ok' : 'bad');
   $('explText').innerHTML =
     (ok ? '' : '<b>正确答案: ' + (c.fill ? c.ans : c.opts[c.ans]) + '</b><br>') +
-    '💡 ' + richText(c.e) + demoBlock(c.d);
+    '💡 ' + richText(c.e);
   $('sheet').classList.add('show');
   $('nextBtn').focus();
   /* 已作答: 存档指向下一张(退出后恢复时不重做这张) */
@@ -1491,7 +1484,7 @@ function revealAnswer(){
   v.textContent = '👀 已看答案';
   v.className = 'verdict peek';
   $('explText').innerHTML =
-      '<b>正确答案: ' + richText(c.fill ? c.ans : c.opts[c.ans]) + '</b><br>💡 ' + richText(c.e) + demoBlock(c.d);
+      '<b>正确答案: ' + richText(c.fill ? c.ans : c.opts[c.ans]) + '</b><br>💡 ' + richText(c.e);
   $('sheet').classList.add('show');
   $('nextBtn').focus();
   var keep = qidx; qidx++; persistSession(); qidx = keep;
