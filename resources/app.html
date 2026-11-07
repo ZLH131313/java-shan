@@ -1147,9 +1147,10 @@ function closeAnim(){
   refocusCard();
 }
 
-/* ✨ AI实时演示: 点击现生成(异步), 完成即进播放器; 同卡缓存秒出 */
+/* ✨ AI实时演示(仅Java课程): 点击现生成(异步), 完成即进播放器; 同卡缓存秒出 */
 var aiBusy = false;
 function aiGenDemo(){
+  if (currentCourse !== 'java') { toast('AI演示仅☕ Java课程提供'); return; }
   if (aiBusy) { toast('AI正在生成, 稍等…'); return; }
   if (qidx < 0 || !queue[qidx]) { toast('先回到一张卡片上'); return; }
   var c = queue[qidx];
@@ -1581,6 +1582,7 @@ $('tabEn').onclick = function(){ switchCourse('en'); };
 function switchCourse(c){
   if (currentCourse === c) return;
   currentCourse = c;
+  $('aiDemoBtn').style.display = (c === 'java') ? '' : 'none';   /* AI演示仅Java课程提供 */
   $('tabJava').classList.toggle('on', c === 'java');
   $('tabAlgo').classList.toggle('on', c === 'algo');
   $('tabCo').classList.toggle('on', c === 'co');

@@ -25,31 +25,16 @@
 - 豆包位置善后(v1.9): 并排前存豆包原始位置(%TEMP%\shan-doubao.txt, GetWindowPlacement读还原位置, 拒绝平铺位/最大化态), 会话结束守望进程等豆包下次**可见**时把它挪回原位/居中(最多10分钟) — 防止豆包记住右半屏导致独立打开默认靠右
 - 反馈系统: CSS动效+分色toast+合成音效
 
-### ✨ AI 实时演示(核心功能)
-- 每张卡可点「✨ AI演示」现场生成知识点演示(5-15秒), 按课程缓存到 `~/.javashan/aidemos-{course}.jsonl`
-- **双模型路由**: 英语课+OS/计组用 `qwen2.5:1.5b`(通用, 解释/语法好), Java/算法用 `qwen2.5-coder:1.5b`(代码好)
-- **四路提示词分流**(详见 AiDemoStore.java):
-  - Java: 生成 Java 代码(紧扣题目场景, 中文注释)
-  - 算法: 生成 C++/伪代码(中文注释)
-  - OS/计组: 生成中文知识点解释(是什么/为什么/怎么算)
-  - 英语: 生成例句(卡片自带解析做知识点说明, AI只写例句+翻译)
-- **1.5b 模型只跟英文指令**(中文指令会复述要求或输出无关内容), 代码注释和解释输出用中文
-- 英语演示面板结构: 绿色区(卡片解析=知识点) + 黑底区(AI例句+翻译)
-- **英语例句多样化机制**(v1.8, 防止四句抄题面同一个故事):
-  - 不喂题面(题面会让1.5b锚定情境, 四句全抄), 只给考点+正确形式
-  - 提示词强制: 四句不同故事/不同主语/不同动词 + 从20条场景池随机抽4条指定
-  - temperature=0.5 + 固定格式示例 + Java侧输出校验(4句英文+4行中文翻译, 抄示例/丢考点则重掷, 最多3次)
-  - 三次重掷仍丢翻译时走「翻译修复」: 句子单独再调一次只做中译, Java拼回 英文+(中文); 修复失败返回错误**不缓存**(杜绝无翻译演示入库)
-  - 相关性加固(v1.9.2): 修复路径同样过考点过滤(短语词干/时态标记, 剔除抄示例句), 相关句<3即报错; 短语卡4句全含考点+必须人类主语; 14张阅读技巧卡(抓主干/指代题/切分法等)内置手写演示不走AI(无考点可校验, AI必跑题)
-  - 连词类(because/so, although/but不能连用): 走中译英路线(Java内置4句中文源句, 翻译是1.5b强项), 校验每句恰好1个连词且because须接从句
-  - 时态类: 轻量标记校验(过去完成时→had+分词≥3句, 将来进行时→will be doing, 虚拟→should/wish)
-  - 情境表达类(加油/welcome): 直接内置固定例句, 不走AI
-  - 短语类(acquire knowledge等): MUST行强制每句包含短语任意形态
+### ✨ AI 实时演示(仅☕ Java课程)
+- Java课每张卡可点「✨ AI演示」现场生成实战代码演示(5-15秒), 缓存到 `~/.javashan/aidemos-java.jsonl`; 其余四课按钮隐藏(v1.10停用)
+- 模型: `~/.javashan/ai.txt` 的 `model=`(当前 qwen2.5-coder:1.5b), 本地 Ollama
+- **1.5b 模型只跟英文指令**(中文指令会复述要求或输出无关内容), 指令用英文, 代码注释要求中文
 
 ### 已删除的功能(勿恢复)
 - ~~手机访问/WebServer~~ (v1.7 删除)
 - ~~规则引擎动画 🎬~~ (已被 AI 演示替代)
 - ~~预存演示 demos-*.jsonl~~ (已被 AI 实时生成替代, demos 文件已删除)
+- ~~算法/计组/OS/英语四课的 AI 演示~~ (v1.10 停用 — 1.5b 在非代码任务上质量不稳: 英语例句抄题面/丢翻译/跑题, OS解释平庸; 代码类才是 coder 模型强项。UI: 按钮仅java课显示+点击守卫; Bridge: ai()对非java返回null; AiDemoStore已瘦身为Java单路提示词; aidemos-{co,en,algo,os}.jsonl已删, 英语的提示词工程(场景池/校验重试/翻译修复/内置例句)全部移除)
 
 ## 三、架构
 
@@ -61,7 +46,7 @@ java-shan/
 │   │                    单实例锁: ServerSocket(48765), 双开自动退出
 │   ├── Bridge.java      JS↔Java 桥(方法首参=课程号; 方法名全唯一无重载; AI演示aiDemoStart/aiDemoState)
 │   ├── Engine.java      学习引擎(SM-2/错题本/温故/会话; JAVA/ALGO/CO/OS/EN五套章节表; main()=自测)
-│   ├── AiDemoStore.java AI实时演示(调用Ollama生成, 按课程缓存, 异步线程; main()=英语例句自测)
+│   ├── AiDemoStore.java AI实时演示(仅Java课, 调Ollama生成coder代码, 按卡缓存; main()=Java演示自测)
 │   ├── CheckinStore.java 每日打卡(全局, synchronized多实例安全)
 │   ├── NotesStore.java  卡片笔记
 │   ├── AnimStore.java   动画合集(只记"生成过", 不存脚本)
@@ -85,7 +70,7 @@ java-shan/
 - settings.txt: 音效开关
 - checkin.jsonl: 打卡(全局一份)
 - notes-{course}.jsonl / anims-{course}.jsonl: 笔记与合集
-- aidemos-{course}.jsonl: AI演示缓存
+- aidemos-java.jsonl: Java课AI演示缓存
 - ai.txt: AI配置(model=qwen2.5:1.5b, base=http://127.0.0.1:11434/v1/chat/completions)
 
 ## 四、内容文件格式
@@ -138,6 +123,7 @@ cp cards-*.jsonl dist/JavaShan/
 ## 七、自测手段
 
 - `java -cp out Engine`: 引擎逻辑自测(五课程加载/错题本/温故)
+- `java -cp out AiDemoStore`: Java课AI演示生成自测(需Ollama)
 - `JavaShan.exe --auto-close`: 4秒自检(bridge ready/章节卡数/温故调用)
 - `node -e "..."`: 抠 app.html 内联 script 做 JS 语法检查(改界面后必跑)
 
@@ -160,3 +146,4 @@ cp cards-*.jsonl dist/JavaShan/
 - 2026-11-07 v1.9: **修复豆包独立打开默认跑到屏幕右边** — 根因: 豆包(Electron)退出时记住窗口坐标, 并排平铺把它停在右半屏后一关, 之后每次独立打开都恢复右半屏。修复: layout存豆包原始位置(拒绝平铺位/最大化态)+豆包平铺前SW_SHOWNORMAL解最大化(之前最大化态铺不动); restore守望改两段: 先回位百词斩, 再等豆包下次可见时挪回原位/居中(10分钟上限, 新会话自动取消)。三场景实测通过(最小化/关闭重启/连续并排)
 - 2026-11-07 v1.9.1: **修复英语演示偶发无翻译** — 兜底路径把3次重掷都丢翻译的结果永久缓存了(实例: 卡41 look up)。修复: 重掷耗尽后句子够4句就单独调一次「只做中译」的修复调用, Java拼回英文+(中文)格式; 修复失败返回错误不缓存。已清英语缓存
 - 2026-11-07 v1.9.2: **修复英语演示句子与题目无关** — 三个洞: ①修复路径绕过考点校验(卡41把抄的格式示例+3句场景句翻译入库); ②短语卡3/4阈值放进1句无关句; ③14张阅读技巧卡无考点可校验AI必跑题。修复: 考点正则统一(词干带\b/时态标记), 修复路径复用过滤且相关句<3报错不缓存; 短语卡阈值升4/4+强制人类主语(防"火车旅行查地图"式无灵主语); 技巧卡+情境卡共16个topic内置手写演示。尝试次数3→4; 已清英语缓存
+- 2026-11-07 v1.10: **AI演示收窄为仅Java课程** — 用户决定移除非Java模块的AI演示(1.5b在英语/解释类任务上问题反复: 抄题面/丢翻译/跑题, 修不胜修)。改法: switchCourse里按钮显隐(java课才显示)+aiGenDemo课程守卫; Bridge.ai()非java返回null; AiDemoStore瘦身为Java单路提示词(删掉英语的全部提示词工程与四路分流); aidemos-{algo,co,os,en}.jsonl已删, 保留aidemos-java.jsonl与ai.txt; 演示播放器对非Java课成为无入口死代码(合集入口本就CSS隐藏)。Engine自测/JS语法检查/auto-close全过, Java演示真实生成验证通过
