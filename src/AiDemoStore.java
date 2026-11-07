@@ -113,7 +113,11 @@ public class AiDemoStore {
         if (cfg[0].isEmpty() && !cfg[2].contains("localhost") && !cfg[2].contains("127.0.0.1")) {
             throw new IllegalStateException("远程API需配置key(本地Ollama无需): 在 ~/.javashan/ai.txt 写入 key=你的key");
         }
-        // 1.5b级小模型只跟英文指令(中文指令会复述要求), 指令用英文, 代码注释要求中文
+        // 概念课(计组/OS): AI不做解释者(解析已经讲清了), 只补"生活类比"建直觉
+        if (courseName != null && (courseName.contains("操作") || courseName.contains("组成"))) {
+            return analogyGenerate(cfg, topic, explain);
+        }
+        // Java课: 生成代码演示。1.5b级小模型只跟英文指令(中文指令会复述要求), 指令用英文, 代码注释要求中文
         String prompt = "ALL COMMENTS MUST BE IN CHINESE (中文注释).\n"
                 + "Topic: " + topic + ". Question: " + question
                 + " Answer: " + answer + " Explanation: " + explain + "\n"
@@ -122,6 +126,32 @@ public class AiDemoStore {
                 + "use System.out.println to show results, "
                 + "use single quotes for strings, output only the code.";
         return postChat(cfg, cfg[1], prompt, "");
+    }
+
+    /**
+     * 概念课类比生成: 喂卡片解析当原料(模型只做"转写"不做"回忆", 这是小模型的可靠区),
+     * 2-3句中文: 点名概念 → 一个日常类比 → 一句映射回概念。
+     * 校验: 必须含概念名且长度合理, 最多3次, 不达标不缓存。
+     */
+    private static String analogyGenerate(String[] cfg, String topic, String explain) throws Exception {
+        String prompt = "You explain computer concepts with daily-life analogies.\n"
+                + "Concept: " + topic + "\n"
+                + "Textbook explanation (material only, do NOT copy it): "
+                + (explain == null ? "" : explain) + "\n"
+                + "Write in Chinese, 2-3 short sentences. First sentence MUST name the concept "
+                + "「" + topic + "」and its job. Then give ONE vivid everyday analogy. "
+                + "Last sentence maps the analogy back to the concept. "
+                + "Output ONLY those sentences.";
+        String last = null;
+        for (int i = 0; i < 3; i++) {
+            last = postChat(cfg, "qwen2.5:1.5b", prompt, ",\"temperature\":0.7");
+            last = last.replace("¶", " ").trim();
+            String t = topic.replace(" ", "");
+            if ((last.contains(topic) || last.contains(t)) && last.length() >= 15 && last.length() <= 200) {
+                return last;
+            }
+        }
+        return null;   // 不达标不缓存, 前端提示重点一次
     }
 
     /** 发一次 chat 请求并反转义(\n->¶换行, 双引号->单引号, 去围栏); AiTransStore 也复用 */
@@ -157,9 +187,18 @@ public class AiDemoStore {
         return m.group(1);
     }
 
-    /** 自测: 跑一次Java代码演示生成, 肉眼检查代码与注释质量(需Ollama已启动) */
+    /** 自测: java=Java代码演示 / analogy=概念课类比(需Ollama已启动) */
     public static void main(String[] args) throws Exception {
         java.nio.file.Path home = java.nio.file.Path.of(System.getProperty("user.home"), ".javashan");
+        if (args.length > 0 && args[0].equals("analogy")) {
+            String a = callApi(home, "🖥 操作系统", "信号量", "test", "",
+                    "semaphore = value + 等待队列; P(wait)/V(signal) 是原子操作, 由内核实现。");
+            System.out.println("[os类比] " + a);
+            String b = callApi(home, "🖧 计算机组成", "Cache", "test", "",
+                    "局部性使小容量 Cache 命中率可达 90% 以上, 以低成本逼近 CPU 速度。");
+            System.out.println("[co类比] " + b);
+            return;
+        }
         String demo = callApi(home, "☕ Java 基础", "String不可变",
                 "String s = 'a'; s.concat('b'); System.out.println(s); 输出什么?", "a",
                 "concat 返回新字符串, 原串不变, 所以仍输出 a");

@@ -1151,10 +1151,12 @@ function closeAnim(){
   refocusCard();
 }
 
-/* ✨ AI实时演示(仅Java课程): 点击现生成(异步), 完成即进播放器; 同卡缓存秒出 */
+/* ✨ AI实时演示(Java=代码演示, 计组/OS=生活类比): 点击现生成(异步), 完成即进播放器; 同卡缓存秒出 */
 var aiBusy = false;
 function aiGenDemo(){
-  if (currentCourse !== 'java') { toast('AI演示仅☕ Java课程提供'); return; }
+  if (currentCourse !== 'java' && currentCourse !== 'co' && currentCourse !== 'os') {
+    toast('AI演示仅☕ Java / 🔗 计组 / 🖥 OS 课程提供'); return;
+  }
   if (aiBusy) { toast('AI正在生成, 稍等…'); return; }
   if (qidx < 0 || !queue[qidx]) { toast('先回到一张卡片上'); return; }
   var c = queue[qidx];
@@ -1634,7 +1636,8 @@ $('tabEn').onclick = function(){ switchCourse('en'); };
 function switchCourse(c){
   if (currentCourse === c) return;
   currentCourse = c;
-  $('aiDemoBtn').style.display = (c === 'java') ? '' : 'none';   /* AI演示仅Java课程提供 */
+  $('aiDemoBtn').style.display = (c === 'java' || c === 'co' || c === 'os') ? '' : 'none';   /* AI演示: Java代码/计组OS类比 */
+  $('aiDemoBtn').textContent = c === 'java' ? '✨ AI演示' : '🌰 AI类比';
   if (c === 'en'){ try { bridge.aiTransWarm(); } catch (e) {} }  /* 预热翻译模型, 首次点击不用等冷加载 */
   $('tabJava').classList.toggle('on', c === 'java');
   $('tabAlgo').classList.toggle('on', c === 'algo');
