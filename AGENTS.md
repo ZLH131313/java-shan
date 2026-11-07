@@ -33,7 +33,8 @@
 ### 🌐 AI翻译(仅📖 英语四级)
 - **答题后**的解析面板出现「🌐 AI翻译」按钮: 把本题正确答案句翻成地道中文, 点按钮→翻译(约3-8秒)→结果展示在按钮下方
 - 只在英语课且答案含英文时出现; 填空题翻「题干挖空处填上答案后的完整句」, 选择题翻正确选项整句
-- 单槽异步不缓存(AiTransStore, 每次现翻); 模型固定 qwen2.5:1.5b(翻译是小模型强项), Bridge方法 aiTransStart/aiTransState
+- 单槽异步不缓存(AiTransStore, 每次现翻); 模型固定 qwen2.5:1.5b(翻译是小模型强项), Bridge方法 aiTransStart/aiTransState/aiTransWarm
+- **进英语课自动预热**(v1.11.1): switchCourse('en')后台发迷你请求把模型拉进显存(keep_alive 30m), 否则隔半小时首次点击要等冷加载, 用户等不及按回车走了, 结果出来时面板已关=「点了不出结果」; 轮询30秒上限+日志 ~/.javashan/aitrans.log
 
 ### 已删除的功能(勿恢复)
 - ~~手机访问/WebServer~~ (v1.7 删除)
@@ -154,3 +155,4 @@ cp cards-*.jsonl dist/JavaShan/
 - 2026-11-07 v1.9.2: **修复英语演示句子与题目无关** — 三个洞: ①修复路径绕过考点校验(卡41把抄的格式示例+3句场景句翻译入库); ②短语卡3/4阈值放进1句无关句; ③14张阅读技巧卡无考点可校验AI必跑题。修复: 考点正则统一(词干带\b/时态标记), 修复路径复用过滤且相关句<3报错不缓存; 短语卡阈值升4/4+强制人类主语(防"火车旅行查地图"式无灵主语); 技巧卡+情境卡共16个topic内置手写演示。尝试次数3→4; 已清英语缓存
 - 2026-11-07 v1.10: **AI演示收窄为仅Java课程** — 用户决定移除非Java模块的AI演示(1.5b在英语/解释类任务上问题反复: 抄题面/丢翻译/跑题, 修不胜修)。改法: switchCourse里按钮显隐(java课才显示)+aiGenDemo课程守卫; Bridge.ai()非java返回null; AiDemoStore瘦身为Java单路提示词(删掉英语的全部提示词工程与四路分流); aidemos-{algo,co,os,en}.jsonl已删, 保留aidemos-java.jsonl与ai.txt; 演示播放器对非Java课成为无入口死代码(合集入口本就CSS隐藏)。Engine自测/JS语法检查/auto-close全过, Java演示真实生成验证通过
 - 2026-11-07 v1.11: **英语课新增「🌐 AI翻译」** — 答题后解析面板内一键把正确答案翻成地道中文(约3-8秒): 按钮/结果区放解析面板里天然满足「只能答题后用」; 仅英语课且答案含英文时显示; 填空翻补全句/选择翻正确选项; 新增AiTransStore(单槽异步, qwen2.5:1.5b, temperature 0.2, 不缓存), 复用AiDemoStore.config/postChat; Bridge加aiTransStart/aiTransState。实测两句翻译地道准确
+- 2026-11-07 v1.11.1: **修复AI翻译「点了不出结果」** — 根因: qwen2.5:1.5b超过keep_alive(30m)被Ollama踢出显存后, 首次点击触发冷加载(十几秒+), 用户等不及按回车进下一张, 翻译结果回来时解析面板已关闭。修复: 进英语课tab即后台预热模型(迷你请求+keep_alive续命); 轮询加30秒上限明确提示超时; AiTransStore加日志(~/.javashan/aitrans.log)便于排查

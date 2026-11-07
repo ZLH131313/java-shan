@@ -1,17 +1,31 @@
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalTime;
 
 /**
  * AI翻译(仅英语课): 答题后把本题正确答案句翻成地道中文。
  * 单槽异步; state 协议与 aiDemoState 一致: ""空闲 / pending / err:xxx / 其余=翻译结果。
+ * 日志: ~/.javashan/aitrans.log(排查不出结果用)。
  */
 public class AiTransStore {
 
     private volatile String state = "";
 
+    private static void log(String s) {
+        try {
+            Files.writeString(Path.of(System.getProperty("user.home"), ".javashan", "aitrans.log"),
+                    LocalTime.now() + " " + s + "\n", StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        } catch (Exception ignored) { }
+    }
+
     public void start(Path dataHome, String text) {
         if (text == null || text.isBlank()) { state = "err:没有可翻译的内容"; return; }
         if ("pending".equals(state)) return;   // 正在翻(前端有transBusy守卫, 双保险)
         state = "pending";
+        log("start: " + text);
         Thread t = new Thread(() -> {
             try {
                 String[] cfg = AiDemoStore.config(dataHome);
@@ -25,10 +39,29 @@ public class AiTransStore {
                 String r = AiDemoStore.postChat(cfg, "qwen2.5:1.5b", prompt, ",\"temperature\":0.2");
                 r = r.replace("¶", " ").trim();
                 state = r.isEmpty() ? "err:翻译结果为空, 再点一次" : r;
+                log("done: " + state);
             } catch (Exception e) {
                 state = "err:" + e.getMessage();
+                log("err: " + e);
             }
         }, "aitrans");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    /** 预热: 后台发个迷你请求把 qwen2.5:1.5b 拉进显存(keep_alive 30m), 首次点击不用等冷加载 */
+    public void warm(Path dataHome) {
+        if ("pending".equals(state)) return;
+        Thread t = new Thread(() -> {
+            try {
+                String[] cfg = AiDemoStore.config(dataHome);
+                if (cfg[0].isEmpty() && !cfg[2].contains("localhost") && !cfg[2].contains("127.0.0.1")) return;
+                AiDemoStore.postChat(cfg, "qwen2.5:1.5b", "Reply with: ok", "");
+                log("warmed");
+            } catch (Exception e) {
+                log("warm err: " + e);
+            }
+        }, "aitrans-warm");
         t.setDaemon(true);
         t.start();
     }

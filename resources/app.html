@@ -1210,11 +1210,18 @@ $('aiTransBtn').onclick = function(){
     transBusy = false; $('aiTransBtn').textContent = '🌐 AI翻译';
     toast('启动翻译失败: ' + e); return;
   }
+  var n = 0;
   (function poll(){
     setTimeout(function(){
       var s = '';
       try { s = bridge.aiTransState() || ''; } catch (e) {}
-      if (s === 'pending'){ poll(); return; }
+      if (s === 'pending'){
+        if (++n > 75){   /* 30秒上限: 冷加载/卡死不再无限等 */
+          transBusy = false; $('aiTransBtn').textContent = '🌐 AI翻译';
+          toast('翻译超时(模型可能在冷加载), 请再点一次', 5000); return;
+        }
+        poll(); return;
+      }
       transBusy = false; $('aiTransBtn').textContent = '🌐 AI翻译';
       if (!s){ toast('翻译失败, 再点一次'); return; }
       if (s.indexOf('err:') === 0){ toast('翻译失败: ' + s.slice(4), 5000); return; }
@@ -1626,6 +1633,7 @@ function switchCourse(c){
   if (currentCourse === c) return;
   currentCourse = c;
   $('aiDemoBtn').style.display = (c === 'java') ? '' : 'none';   /* AI演示仅Java课程提供 */
+  if (c === 'en'){ try { bridge.aiTransWarm(); } catch (e) {} }  /* 预热翻译模型, 首次点击不用等冷加载 */
   $('tabJava').classList.toggle('on', c === 'java');
   $('tabAlgo').classList.toggle('on', c === 'algo');
   $('tabCo').classList.toggle('on', c === 'co');

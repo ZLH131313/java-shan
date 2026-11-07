@@ -171,6 +171,7 @@ public class Bridge {
     private final AiTransStore trans = new AiTransStore();
     public void aiTransStart(String text) { trans.start(dataHome, text); }
     public String aiTransState() { return trans.state(); }
+    public void aiTransWarm() { trans.warm(dataHome); }
 
     /* ---- 外部应用: 豆包 ---- */
     /** 唤起豆包并排分屏; 关闭豆包窗口后由守望脚本自动还原百词斩原位 */
