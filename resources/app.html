@@ -539,14 +539,14 @@ header{display:flex;align-items:center;gap:14px;padding:16px 4px 12px}
   <div class="animBox">
     <div class="animHead">
       <h3 id="animTitle">🎬 知识点演示</h3>
-      <div class="animStep" id="animCap">1 / 1</div>
+      <div class="animStep" id="animCap" style="display:none">1 / 1</div>
       <button class="animX" id="animClose" title="关闭(Esc)">✕</button>
     </div>
-    <div class="anBar"><div class="anFill" id="anFill"></div></div>
+    <div style="display:none" id="anBar"></div>
     <div class="anStage" id="animStage"></div>
     <div class="animFoot">
-      <button id="animPrev" title="上一步(左方向键)">⏮ 上一步</button>
-      <button class="pp" id="animNext" title="下一步(回车 / 空格 / 右方向键)">下一步 ›</button>
+      <button id="animPrev" style="display:none" title="上一步(左方向键)">⏮ 上一步</button>
+      <button class="pp" id="animNext" style="display:none" title="下一步(回车 / 空格 / 右方向键)">下一步 ›</button>
       <button id="animReplay" title="回到第一步">↻ 重来</button>
       <button class="coll" id="animDel" title="把这张卡移出动画合集">✕ 移出合集</button>
     </div>
@@ -1095,91 +1095,12 @@ function outLit(s){
   return '「' + txt + '」' + (more ? ' 再拼上算出来的值' : '');
 }
 function buildSteps(c){
-  var steps = [], i;
-  function add(label, html){ steps.push({ label: label, html: html }); }
-  var chName = chapterName(c.ch);
-  var bullets = splitSent(c.e);
-
-  add('今天要弄明白的知识点',
-      '<div class="anCover"><b>' + escHtml(c.topic || chName) + '</b><span>' +
-      escHtml(chName) + ' · ' + escHtml(c.tag || '') + '</span></div>' +
-      '<div class="anQ">' + escHtml(c.q) + '</div>' +
-      '<div class="anHint">下面不教你怎么选, 只把这件事本身演示清楚。</div>');
-
-  var terms = termsIn([c.topic, c.q, c.e], 6);
-  var tg = chunk(terms, 2);
-  for (i = 0; i < tg.length; i++){
-    var rows = '';
-    for (var r = 0; r < tg[i].length; r++)
-      rows += '<div class="anTerm"><b>' + escHtml(tg[i][r]) + '</b><span>' +
-              escHtml(GLOSS[tg[i][r]]) + '</span></div>';
-    add(tg.length > 1 ? '关键词是什么意思 (' + (i + 1) + '/' + tg.length + ')' : '关键词是什么意思',
-        '<div class="anTerms">' + rows + '</div>');
+  var lines = c.d ? c.d.split('¶') : [];
+  var code = '';
+  for (var i = 0; i < lines.length; i++) {
+    if (lines[i].trim()) code += '<span class="cl now">' + escHtml(lines[i].trim()) + '</span>';
   }
-
-  if (c.d){
-    var all = demoLines(c.d), keep = [];
-    for (i = 0; i < all.length; i++) if (String(all[i]).trim()) keep.push(all[i]);
-    var per = Math.max(1, Math.ceil(keep.length / 5));   /* 手动步进: 最多约五步, 别让人狂点 */
-    for (var p = 0; p * per < keep.length; p++){
-      var from = p * per, upto = Math.min(keep.length, from + per), code = '', say = '';
-      for (var k = 0; k < keep.length; k++){
-        var cls = k < from ? 'done' : (k < upto ? 'now' : 'todo');
-        code += '<span class="cl ' + cls + '">' + escHtml(keep[k]) + '</span>';
-      }
-      for (var q = from; q < upto; q++){
-        var s1 = lineSay(keep[q]);
-        if (s1) say += (say ? '  ' : '') + s1;
-      }
-      add('逐行看它怎么跑 (' + upto + '/' + keep.length + ')',
-          '<pre class="anCode">' + code + '</pre>' +
-          '<div class="anSay">▸ ' + escHtml(say || '接着往下看') + '</div>');
-    }
-    var prints = [];
-    for (i = 0; i < keep.length; i++)
-      if (/System\.(out|err)\.print/.test(keep[i])) prints.push(outLit(keep[i]));
-    if (prints.length){
-      var out = '';
-      for (i = 0; i < prints.length; i++) out += (i ? '\n' : '') + escHtml(prints[i]);
-      add('跑完屏幕上留下什么',
-          '<div class="anOut">' + out + '</div>' +
-          '<div class="anHint">知识点就落在这个结果上 —— 能说出为什么是这个结果, 才算真懂。</div>');
-    }
-  }
-
-  var bg = chunk(bullets, 2);
-  if (bg.length > 3){                        /* 句子太多就并成三段, 免得演示拖沓 */
-    var rest = [];
-    for (var t2 = 2; t2 < bg.length; t2++) rest = rest.concat(bg[t2]);
-    bg = [bg[0], bg[1], rest];
-  }
-  for (var b = 0; b < bg.length; b++){
-    var ps = '';
-    for (var w = 0; w < bg[b].length; w++) ps += '<p>' + escHtml(bg[b][w]) + '</p>';
-    add(bg.length > 1 ? '这个道理拆开看 (' + (b + 1) + '/' + bg.length + ')' : '这个道理拆开看',
-        '<div class="anBullets">' + ps + '</div>');
-  }
-
-  if (c.fill){
-    add('标准写法',
-        '<div class="anQ">' + escHtml(c.q) + '</div>' +
-        '<div class="anAns">✎ ' + escHtml(String(c.ans)) + '</div>' +
-        '<div class="anHint">连起来整句读一遍, 记整个说法而不是单个词。</div>');
-  } else if (c.opts && c.opts.length >= 2){
-    var mix = -1;
-    for (i = 0; i < c.opts.length; i++)
-      if (i !== c.ans && String(c.e || '').indexOf(c.opts[i]) >= 0){ mix = i; break; }
-    if (mix < 0) for (i = 0; i < c.opts.length; i++) if (i !== c.ans){ mix = i; break; }
-    add('成立的说法 vs 容易混的说法',
-        '<div class="anPair ok"><b>成立</b><div>' + escHtml(c.opts[c.ans]) + '</div></div>' +
-        '<div class="anPair mix"><b>易混</b><div>' + escHtml(c.opts[mix]) + '</div></div>' +
-        '<div class="anHint">把这两句差在哪说清楚, 这个知识点就是你的了。</div>');
-  }
-
-  add('一句话记住',
-      '<div class="anQ">' + escHtml(bullets.length ? bullets[0] : (c.topic || '')) + '</div>' +
-      '<div class="anHint">下次碰到「' + escHtml(c.topic || chName) + '」, 先在脑子里重放这段演示。</div>');
-  return steps;
+  return [{ label: c.topic || '', html: code ? '<pre class="anCode">' + code + '</pre>' : '' }];
 }
 
 /* ---------- 播放器: 手动逐步(一步一停, 看明白了再按下一步) ---------- */

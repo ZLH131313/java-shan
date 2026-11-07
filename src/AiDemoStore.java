@@ -112,13 +112,11 @@ public class AiDemoStore {
         if (cfg[0].isEmpty() && !cfg[2].contains("localhost") && !cfg[2].contains("127.0.0.1")) {
             throw new IllegalStateException("远程API需配置key(本地Ollama无需): 在 ~/.javashan/ai.txt 写入 key=你的key");
         }
-        String prompt = "你是编程教师。课程: " + courseName + ", 知识点: " + topic + "\n"
-                + "题目: " + question + "\n正确答案: " + answer + "\n解析: " + explain + "\n"
-                + "请为这个知识点生成一个实战代码演示, 要求:\n"
-                + "1. Java代码(算法课可用伪代码注释), 5-10行, 用System.out.println展示关键结果\n"
-                + "2. 第一行用注释概括知识点, 其余每行一个动作\n"
-                + "3. 代码中需要字符串字面量时一律用单引号, 禁止双引号\n"
-                + "4. 只输出代码行本身, 不要解释和代码块围栏";
+        String prompt = "为知识点[" + topic + "]写一段Java演示代码(5-15行):\n"
+                + "1. 每行用注释解释在做什么(中文)\n"
+                + "2. 用System.out.println展示关键结果\n"
+                + "3. 字符串字面量用单引号\n"
+                + "4. 只输出代码, 不要解释";
         String body = "{\"model\":\"" + cfg[1] + "\",\"messages\":[{\"role\":\"user\",\"content\":\""
                 + esc(prompt) + "\"}]}";
         HttpRequest req = HttpRequest.newBuilder()
